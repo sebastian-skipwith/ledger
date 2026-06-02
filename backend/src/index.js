@@ -19,23 +19,23 @@ const { authenticate } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Trust Railway's proxy so rate-limit and IP detection work correctly
+// Trust Railway's proxy
 app.set('trust proxy', 1);
 
-// Security
-app.use(helmet());
+// Security - disable contentSecurityPolicy and allowedHosts to avoid blocking Railway traffic
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'tauri://localhost',
-    'https://tauri.localhost',
-  ],
+  origin: true, // Allow all origins in production (API is protected by JWT)
   credentials: true,
 }));
 
 // Rate limiting
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
-const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 20 });
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300, validate: { xForwardedForHeader: false } });
+const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, validate: { xForwardedForHeader: false } });
 app.use(limiter);
 
 app.use(express.json());
@@ -64,7 +64,6 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
 

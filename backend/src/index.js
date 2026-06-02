@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 const authRouter = require('./routes/auth');
+const googleAuthRouter = require('./routes/auth-google');
 const plaidRouter = require('./routes/plaid');
 const accountsRouter = require('./routes/accounts');
 const transactionsRouter = require('./routes/transactions');
@@ -43,6 +44,7 @@ app.get('/health', (req, res) => {
 
 // Public routes
 app.use('/api/auth', authRouter);
+app.use('/api/auth', googleAuthRouter);
 app.use('/api/webhooks', webhooksRouter); // Plaid webhooks — no auth
 
 // Protected routes
@@ -68,3 +70,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+

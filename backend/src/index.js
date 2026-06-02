@@ -19,12 +19,15 @@ const { authenticate } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust Railway's proxy so rate-limit and IP detection work correctly
+app.set('trust proxy', 1);
+
 // Security
 app.use(helmet());
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:3000',
-    'tauri://localhost',           // Tauri desktop bar
+    'tauri://localhost',
     'https://tauri.localhost',
   ],
   credentials: true,
@@ -45,7 +48,7 @@ app.get('/health', (req, res) => {
 // Public routes
 app.use('/api/auth', authRouter);
 app.use('/api/auth', googleAuthRouter);
-app.use('/api/webhooks', webhooksRouter); // Plaid webhooks — no auth
+app.use('/api/webhooks', webhooksRouter);
 
 // Protected routes
 app.use('/api/plaid',        authenticate, plaidRouter);
@@ -70,4 +73,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-

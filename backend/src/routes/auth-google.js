@@ -1,9 +1,7 @@
 const router = require('express').Router();
-const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
+const https = require('https');
 const { query } = require('../db');
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 function signTokens(userId) {
   const access = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
@@ -11,22 +9,47 @@ function signTokens(userId) {
   return { access, refresh };
 }
 
+// Decode a JWT without verification (we verify via Google's tokeninfo endpoint instead)
+function decodeJwt(token) {
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('Invalid token format');
+  const payload = Buffer.from(parts[1], 'base64url').toString('utf8');
+  return JSON.parse(payload);
+}
+
+// Verify token via Google's tokeninfo endpoint (no SSL issues, no library needed)
+function verifyWithGoogle(idToken) {
+  return new Promise((resolve, reject) => {
+    const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`;
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const payload = JSON.parse(data);
+          if (payload.error) return reject(new Error(payload.error_description || payload.error));
+          if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+            return reject(new Error('Token audience mismatch'));
+          }
+          resolve(payload);
+        } catch (e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
+}
+
 router.post('/google', async (req, res) => {
   try {
     const { credential } = req.body;
     if (!credential) return res.status(400).json({ error: 'Google credential required' });
 
-    // Verify the Google ID token
+    // Verify token via Google's own endpoint
     let payload;
     try {
-      const ticket = await client.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      payload = ticket.getPayload();
+      payload = await verifyWithGoogle(credential);
     } catch (verifyErr) {
-      console.error('Google token verification failed:', verifyErr.message);
-      return res.status(401).json({ error: 'Invalid Google token: ' + verifyErr.message });
+      console.error('Google verify failed:', verifyErr.message);
+      return res.status(401).json({ error: 'Google verification failed: ' + verifyErr.message });
     }
 
     const { email, name, sub: googleId } = payload;
@@ -49,8 +72,8 @@ router.post('/google', async (req, res) => {
     return res.json({ user: safeUser, ...tokens });
 
   } catch (err) {
-    console.error('Google auth unexpected error:', err);
-    return res.status(500).json({ error: 'Authentication failed: ' + err.message });
+    console.error('Google auth error:', err);
+    return res.status(500).json({ error: 'Auth failed: ' + err.message });
   }
 });
 

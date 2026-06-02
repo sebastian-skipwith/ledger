@@ -39,7 +39,7 @@ export default function DashboardPage() {
               Good {timeGreeting()}, {user.full_name?.split(' ')[0]}.
             </h1>
             <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-              {summary ? `Net worth ${formatCurrency(summary.net_worth)} — here is your full picture.` : 'Loading your financial data...'}
+              {summary ? `Net worth ${formatCurrency(summary.net_worth)}` : 'Loading...'}
             </p>
           </div>
           <InsightStrip insights={insights} loading={loading} />
@@ -50,7 +50,7 @@ export default function DashboardPage() {
           </div>
           {accounts.length === 0 && !loading && (
             <div style={{ padding: 32, textAlign: 'center', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 12 }}>
-              <p style={{ color: 'var(--muted)', marginBottom: 16, fontSize: 14 }}>No accounts linked yet. Connect your bank to get started.</p>
+              <p style={{ color: 'var(--muted)', marginBottom: 16, fontSize: 14 }}>No accounts linked yet.</p>
               <PlaidLinkButton token={accessToken} onSuccess={loadData} />
             </div>
           )}
@@ -80,10 +80,14 @@ function AuthScreen() {
     if (!googleClientId) return;
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true; script.defer = true;
+    script.async = true;
+    script.defer = true;
     document.body.appendChild(script);
     script.onload = () => {
-      (window as any).google?.accounts.id.initialize({ client_id: googleClientId, callback: handleGoogleResponse });
+      (window as any).google?.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (r: any) => handleGoogleResponse(r),
+      });
     };
     return () => { document.body.removeChild(script); };
   }, []);
@@ -91,7 +95,10 @@ function AuthScreen() {
   async function handleGoogleResponse(response: any) {
     setError(''); setLoading(true);
     try {
-      const data = await apiCall('/api/auth/google', { method: 'POST', body: JSON.stringify({ credential: response.credential }) });
+      const data = await apiCall('/api/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential: response.credential }),
+      });
       setAuth(data.user, data.access, data.refresh);
     } catch (err: any) { setError(err.message); } finally { setLoading(false); }
   }
@@ -149,7 +156,7 @@ function AuthScreen() {
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
           </div>
           <div style={{ display: 'flex', marginBottom: 20, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
-            {(['login','register'] as const).map(m => (
+            {(['login', 'register'] as const).map(m => (
               <button key={m} onClick={() => setMode(m)} style={{
                 flex: 1, padding: '8px 0', fontSize: 13, fontFamily: 'var(--font-syne)',
                 border: 'none', cursor: 'pointer', fontWeight: 500,

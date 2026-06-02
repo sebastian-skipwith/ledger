@@ -1,0 +1,98 @@
+/* globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink:     #0a0a0f;
+  --ink2:    #14141f;
+  --ink3:    #1e1e2e;
+  --surface: #242436;
+  --border:  rgba(255,255,255,0.08);
+  --muted:   #6666a0;
+  --subtle:  #9999c0;
+  --white:   #f0f0f8;
+
+  --green:   #16c784;
+  --red:     #f04f54;
+  --amber:   #f5a623;
+  --blue:    #3b7dff;
+  --purple:  #a78bfa;
+  --gold:    #d4af37;
+  --teal:    #1d9e75;
+
+  --font-display: var(--font-serif);
+  --font-body:    var(--font-syne);
+  --font-code:    var(--font-mono);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--ink);
+  color: var(--white);
+  font-family: var(--font-syne), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Selection */
+::selection { background: rgba(212,175,55,0.3); color: white; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid rgba(212,175,55,0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Number font */
+.mono { font-family: var(--font-mono), 'SF Mono', monospace; }
+.serif { font-family: var(--font-serif), Georgia, serif; }
+
+/* Color utilities */
+.text-green  { color: var(--green); }
+.text-red    { color: var(--red); }
+.text-amber  { color: var(--amber); }
+.text-purple { color: var(--purple); }
+.text-gold   { color: var(--gold); }
+.text-muted  { color: var(--muted); }
+.text-subtle { color: var(--subtle); }
+
+/* Animated gradient for loading */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 37%,
+    rgba(255,255,255,0.04) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* Card */
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* SSE streaming cursor */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.cursor::after {
+  content: '▋';
+  animation: blink 1s step-end infinite;
+  color: var(--gold);
+  margin-left: 1px;
+}

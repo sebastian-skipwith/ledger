@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Your Financial Cockpit</title>
+<meta name="description" content="A beautiful, persistent financial HUD for your desktop. AI-powered money management. Connect your bank, watch your wealth grow.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --ink: #080810; --ink2: #0e0e1a; --gold: #d4af37; --gold2: #e8c84a;
+  --green: #16c784; --red: #f04f54; --purple: #a78bfa; --amber: #f5a623;
+  --muted: rgba(255,255,255,0.35); --subtle: rgba(255,255,255,0.6);
+  --border: rgba(255,255,255,0.08);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--ink); color: #f0f0f8;
+  font-family: 'Syne', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+::selection { background: rgba(212,175,55,0.3); }
+a { text-decoration: none; color: inherit; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 60px; display: flex; align-items: center; padding: 0 40px;
+  background: rgba(8,8,16,0.8); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: var(--gold); }
+.nav-links { display: flex; gap: 28px; margin-left: 48px; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--muted); transition: color .15s; }
+.nav-links a:hover { color: #f0f0f8; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.btn-outline { padding: 7px 18px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .15s; background: transparent; }
+.btn-outline:hover { border-color: rgba(255,255,255,0.2); color: #f0f0f8; }
+.btn-cta { padding: 8px 20px; border-radius: 7px; font-size: 13px; font-weight: 700; color: var(--ink); background: var(--gold); border: none; cursor: pointer; letter-spacing: .2px; transition: opacity .15s; }
+.btn-cta:hover { opacity: .87; }
+
+/* HERO */
+.hero {
+  padding: 140px 40px 80px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 800px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.eyebrow {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--gold);
+  padding: 5px 14px; border-radius: 20px;
+  background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2);
+  margin-bottom: 24px;
+}
+h1 {
+  font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(48px, 7vw, 88px);
+  line-height: 1.05; letter-spacing: -1px; margin-bottom: 20px;
+}
+h1 em { font-style: italic; color: var(--gold); }
+.hero-sub {
+  font-size: 18px; color: var(--muted); max-width: 560px; margin: 0 auto 40px;
+  line-height: 1.65; font-weight: 400;
+}
+.hero-cta { display: flex; gap: 12px; justify-content: center; align-items: center; margin-bottom: 64px; flex-wrap: wrap; }
+.btn-hero { padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: .2px; border: none; transition: all .15s; }
+.btn-hero-primary { background: var(--gold); color: var(--ink); }
+.btn-hero-primary:hover { opacity: .88; transform: translateY(-1px); }
+.btn-hero-secondary { background: rgba(255,255,255,0.06); color: #f0f0f8; border: 1px solid var(--border); }
+.btn-hero-secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* HUD PREVIEW */
+.hud-preview {
+  max-width: 1100px; margin: 0 auto;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border); border-radius: 16px;
+  overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+}
+.hud-bar {
+  height: 52px; background: rgba(10,10,15,0.95);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px; gap: 0;
+}
+.hud-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: var(--gold); margin-right: 24px; flex-shrink: 0; }
+.hud-tile { padding: 0 14px; border-right: 1px solid var(--border); flex-shrink: 0; }
+.hud-label { font-size: 8px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--muted); margin-bottom: 1px; }
+.hud-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+.hud-sub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--muted); }
+.hud-dashboard {
+  height: 420px; background: var(--ink);
+  display: grid; grid-template-columns: 200px 1fr 280px;
+}
+.hud-sidebar {
+  border-right: 1px solid var(--border);
+  padding: 16px 0; background: rgba(255,255,255,0.01);
+}
+.hud-nav-item { padding: 7px 16px; font-size: 12px; color: rgba(200,200,220,0.5); display: flex; align-items: center; gap: 8px; }
+.hud-nav-item.active { color: var(--gold); background: rgba(212,175,55,0.08); }
+.hud-main { padding: 20px; }
+.hud-section-title { font-family: 'Instrument Serif', serif; font-size: 22px; margin-bottom: 4px; }
+.hud-section-sub { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+.hud-mini-chart { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; height: 100px; margin-bottom: 12px; padding: 12px 14px; display: flex; flex-direction: column; }
+.hud-chart-svg { flex: 1; }
+.mini-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mini-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.mini-card-label { font-size: 9px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.mini-card-val { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+.hud-chat { border-left: 1px solid var(--border); padding: 14px; background: rgba(255,255,255,0.01); display: flex; flex-direction: column; }
+.chat-header { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+.chat-avatar { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg,#d4af37,#f5a623); display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 14px; color: var(--ink); font-weight: 700; flex-shrink: 0; }
+.chat-name { font-size: 12px; font-weight: 600; }
+.chat-status { font-size: 9px; color: var(--green); }
+.chat-msgs { flex: 1; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.chat-msg { padding: 8px 10px; border-radius: 8px; font-size: 10px; line-height: 1.6; }
+.chat-msg.ai { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: rgba(180,180,200,0.9); border-radius: 3px 8px 8px 8px; }
+.chat-msg.user { background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); color: #f0f0f8; margin-left: auto; max-width: 80%; border-radius: 8px 3px 8px 8px; }
+
+/* SECTIONS */
+section { padding: 100px 40px; max-width: 1100px; margin: 0 auto; }
+.section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+h2 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(36px, 4vw, 56px); line-height: 1.1; margin-bottom: 20px; }
+h2 em { font-style: italic; color: var(--gold); }
+.section-sub { font-size: 16px; color: var(--muted); max-width: 540px; line-height: 1.7; margin-bottom: 48px; }
+
+/* FEATURES GRID */
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 48px; }
+.feature-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 24px;
+  transition: border-color .2s, background .2s;
+}
+.feature-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.14); }
+.feature-icon { font-size: 24px; margin-bottom: 14px; }
+.feature-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.feature-body { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+/* HOW IT WORKS */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 48px; }
+.step-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 500; margin-bottom: 10px; letter-spacing: 1px; }
+.step-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.step-body { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+/* PRICING */
+.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+.plan {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border); border-radius: 16px; padding: 28px;
+}
+.plan.featured { border-color: rgba(212,175,55,0.4); background: rgba(212,175,55,0.04); }
+.plan-badge { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--gold); background: rgba(212,175,55,0.12); padding: 3px 9px; border-radius: 4px; display: inline-block; margin-bottom: 16px; }
+.plan-name { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.plan-price { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 300; color: #f0f0f8; margin-bottom: 4px; }
+.plan-price span { font-size: 16px; color: var(--muted); }
+.plan-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+.plan-features { list-style: none; display: flex; flex-direction: column; gap: 9px; margin-bottom: 24px; }
+.plan-features li { font-size: 13px; color: var(--subtle); display: flex; align-items: flex-start; gap: 8px; }
+.plan-features li::before { content: '✓'; color: var(--green); font-weight: 600; flex-shrink: 0; }
+.plan-btn { width: 100%; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; font-family: 'Syne', sans-serif; transition: all .15s; }
+.plan-btn-primary { background: var(--gold); color: var(--ink); }
+.plan-btn-primary:hover { opacity: .88; }
+.plan-btn-outline { background: transparent; color: #f0f0f8; border: 1px solid var(--border); }
+.plan-btn-outline:hover { background: rgba(255,255,255,0.06); }
+
+/* TESTIMONIALS */
+.testimonials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+.testimonial { background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+.testimonial-text { font-size: 13px; color: var(--subtle); line-height: 1.75; margin-bottom: 16px; font-style: italic; }
+.testimonial-author { font-size: 12px; font-weight: 600; }
+.testimonial-role { font-size: 11px; color: var(--muted); }
+
+/* CTA SECTION */
+.cta-section {
+  text-align: center; padding: 100px 40px;
+  background: linear-gradient(180deg, transparent 0%, rgba(212,175,55,0.04) 50%, transparent 100%);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  max-width: unset; margin: 0;
+}
+.cta-section h2 { max-width: 600px; margin: 0 auto 20px; }
+
+/* FOOTER */
+footer {
+  padding: 40px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: var(--gold); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { font-size: 12px; color: var(--muted); transition: color .15s; }
+.footer-links a:hover { color: #f0f0f8; }
+.footer-copy { font-size: 12px; color: var(--muted); }
+
+/* ANIMATION */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp .7s ease forwards; }
+.delay-1 { animation-delay: .1s; opacity: 0; }
+.delay-2 { animation-delay: .2s; opacity: 0; }
+.delay-3 { animation-delay: .3s; opacity: 0; }
+
+@media (max-width: 768px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .hero { padding: 100px 20px 60px; }
+  section { padding: 60px 20px; }
+  .steps, .plans, .testimonials { grid-template-columns: 1fr; }
+  .hud-dashboard { grid-template-columns: 1fr; height: auto; }
+  .hud-sidebar, .hud-chat { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">ledger</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/mcp">MCP</a>
+    <a href="/blog">Blog</a>
+  </div>
+  <div class="nav-right">
+    <button class="btn-outline">Sign in</button>
+    <button class="btn-cta">Get started free</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow">Personal Finance, Reimagined</div>
+  <h1 class="fade-up">Your money, always<br><em>in plain sight.</em></h1>
+  <p class="hero-sub fade-up delay-1">
+    A persistent financial HUD for your desktop. AI that actually knows your accounts. Connect once, stay informed forever.
+  </p>
+  <div class="hero-cta fade-up delay-2">
+    <button class="btn-hero btn-hero-primary">Start for free →</button>
+    <button class="btn-hero btn-hero-secondary">See how it works</button>
+  </div>
+
+  <!-- LIVE HUD PREVIEW -->
+  <div class="hud-preview fade-up delay-3">
+    <!-- Top bar -->
+    <div class="hud-bar">
+      <div class="hud-brand">ledger</div>
+      <div class="hud-tile">
+        <div class="hud-label">Net Worth</div>
+        <div class="hud-val" style="color:#16c784">$284,674</div>
+        <div class="hud-sub" style="color:#16c784">↑ $1,287</div>
+      </div>
+      <div class="hud-tile">
+        <div class="hud-label">CC Debt</div>
+        <div class="hud-val" style="color:#f04f54">$4,327</div>
+        <div class="hud-sub" style="color:#f04f54">↑ $219 mo</div>
+      </div>
+      <div class="hud-tile">
+        <div class="hud-label">Monthly Bills</div>
+        <div class="hud-val" style="color:#f5a623">$2,842</div>
+        <div class="hud-sub">of $3,650 (78%)</div>
+      </div>
+      <div class="hud-tile">
+        <div class="hud-label">Cash</div>
+        <div class="hud-val">$18,920</div>
+        <div class="hud-sub">2 accounts</div>
+      </div>
+      <div class="hud-tile">
+        <div class="hud-label">Investments</div>
+        <div class="hud-val" style="color:#a78bfa">$265,754</div>
+        <div class="hud-sub" style="color:#16c784">↑ 2.1% YTD</div>
+      </div>
+      <div class="hud-tile">
+        <div class="hud-label">Retirement</div>
+        <div class="hud-val" style="color:#f5a623">$102,843</div>
+        <div class="hud-sub">401k + IRA</div>
+      </div>
+      <div class="hud-tile" style="border-right:none">
+        <div class="hud-label">This Month</div>
+        <div class="hud-val" style="color:#16c784">+$1,532</div>
+        <div class="hud-sub">Income − Exp</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;padding-left:12px;">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.3);">Jun 1</span>
+        <button style="background:#d4af37;color:#0a0a0f;border:none;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Ask AI ↗</button>
+      </div>
+    </div>
+
+    <!-- Dashboard body -->
+    <div class="hud-dashboard">
+      <div class="hud-sidebar">
+        <div class="hud-nav-item active">⊞ Dashboard</div>
+        <div class="hud-nav-item">↗ Net Worth</div>
+        <div class="hud-nav-item">≡ Transactions</div>
+        <div class="hud-nav-item">◷ Bills</div>
+        <div class="hud-nav-item">◎ Goals</div>
+        <div style="height:1px;background:rgba(255,255,255,0.06);margin:12px 0;"></div>
+        <div style="padding:8px 14px;font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,0.2);">Accounts</div>
+        <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
+          <div style="width:6px;height:6px;border-radius:50%;background:#16c784;"></div>Chase Checking
+        </div>
+        <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
+          <div style="width:6px;height:6px;border-radius:50%;background:#a78bfa;"></div>Fidelity
+        </div>
+        <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
+          <div style="width:6px;height:6px;border-radius:50%;background:#f04f54;"></div>Chase Sapphire
+        </div>
+      </div>
+
+      <div class="hud-main">
+        <div class="hud-section-title">Good morning.</div>
+        <div class="hud-section-sub">Net worth up $1,287 since yesterday.</div>
+        <div class="hud-mini-chart">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:11px;font-weight:600;">Net Worth — 6M</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.3);">$284,674 ↑</span>
+          </div>
+          <svg class="hud-chart-svg" viewBox="0 0 400 50" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#d4af37" stop-opacity=".4"/>
+                <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <polyline points="0,40 60,35 120,28 160,32 220,18 280,12 340,6 400,2" fill="none" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <polygon points="0,40 60,35 120,28 160,32 220,18 280,12 340,6 400,2 400,50 0,50" fill="url(#g)"/>
+            <circle cx="400" cy="2" r="3" fill="#d4af37"/>
+          </svg>
+        </div>
+        <div class="mini-cards">
+          <div class="mini-card">
+            <div class="mini-card-label">Cash</div>
+            <div class="mini-card-val" style="color:#16c784">$18,920</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-card-label">Investments</div>
+            <div class="mini-card-val" style="color:#a78bfa">$265,754</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-card-label">Retirement</div>
+            <div class="mini-card-val" style="color:#f5a623">$102,843</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-card-label">Debt</div>
+            <div class="mini-card-val" style="color:#f04f54">$4,327</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-chat">
+        <div class="chat-header">
+          <div class="chat-avatar">L</div>
+          <div>
+            <div class="chat-name">Ledger AI</div>
+            <div class="chat-status">● Online</div>
+          </div>
+        </div>
+        <div class="chat-msgs">
+          <div class="chat-msg ai">Your net worth hit <strong style="color:#f0f0f8">$284,674</strong>. CC balance up $219 — at current rate, paid off in <strong style="color:#f0f0f8">21 days</strong> if you apply this month's surplus.</div>
+          <div class="chat-msg user">What if I put $500/mo extra toward the CC?</div>
+          <div class="chat-msg ai">Payoff in <strong style="color:#16c784">~7 months</strong>, saving ~$340 in interest. Want me to set up an auto-transfer rule?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">Built Different</div>
+  <h2>Everything your finances<br>need. <em>Nothing they don't.</em></h2>
+  <p class="section-sub">Ledger is the financial cockpit you've been missing — always visible, always accurate, always one question away from an answer.</p>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">⊞</div>
+      <div class="feature-title">Persistent Desktop HUD</div>
+      <div class="feature-body">A 52px overlay that lives at the top of every screen. Net worth, debt, cash flow — always in view, never in the way. macOS, Windows, Linux.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✦</div>
+      <div class="feature-title">AI Financial Advisor</div>
+      <div class="feature-body">Claude-powered chat that knows your actual balances, transactions, and goals. Ask anything. Get real answers with real numbers — not generic advice.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <div class="feature-title">MCP Server</div>
+      <div class="feature-body">Connect your finances to Claude Desktop, ChatGPT, or any MCP-compatible AI. Your money becomes a tool every AI can use — safely.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Smart Automation</div>
+      <div class="feature-body">Set rules, let AI execute them. "Move $500 to savings when checking hits $8k." "Alert me if a bill doubles." Propose, confirm, done.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <div class="feature-title">Every Device</div>
+      <div class="feature-body">iOS home screen and lock screen widgets. Android Glance widgets. Apple Watch complications. Your net worth is always one glance away.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏦</div>
+      <div class="feature-title">Plaid Integration</div>
+      <div class="feature-body">Connect 12,000+ financial institutions. Checking, savings, credit cards, loans, 401k, IRA, brokerage — everything in one view.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" style="padding-top:0;">
+  <div class="section-label">Simple Setup</div>
+  <h2>Three steps to<br><em>financial clarity.</em></h2>
+
+  <div class="steps">
+    <div>
+      <div class="step-num">01 — Create account</div>
+      <div class="step-title">Sign up in 60 seconds</div>
+      <div class="step-body">Email and password — that's it. No credit card. No endless onboarding. Your dashboard is ready immediately.</div>
+    </div>
+    <div>
+      <div class="step-num">02 — Connect your bank</div>
+      <div class="step-title">Link accounts via Plaid</div>
+      <div class="step-body">Securely connect checking, savings, credit cards, and investment accounts. Ledger syncs everything automatically.</div>
+    </div>
+    <div>
+      <div class="step-num">03 — Install the HUD</div>
+      <div class="step-title">Download the desktop app</div>
+      <div class="step-body">Install the Tauri app, add the iOS widget, connect to Claude Desktop via MCP. Your financial cockpit is live.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label">Straightforward Pricing</div>
+  <h2>Start free. <em>Scale when<br>you need it.</em></h2>
+
+  <div class="plans">
+    <div class="plan">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">$0 <span>/ month</span></div>
+      <div class="plan-sub">Perfect for getting started</div>
+      <ul class="plan-features">
+        <li>Dashboard + net worth chart</li>
+        <li>Up to 2 Plaid accounts</li>
+        <li>AI chat (10 messages/day)</li>
+        <li>iOS home screen widget</li>
+        <li>Basic bill tracking</li>
+      </ul>
+      <button class="plan-btn plan-btn-outline">Get started free</button>
+    </div>
+
+    <div class="plan featured">
+      <div class="plan-badge">Most Popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$9 <span>/ month</span></div>
+      <div class="plan-sub">For serious financial oversight</div>
+      <ul class="plan-features">
+        <li>Unlimited Plaid accounts</li>
+        <li>Unlimited AI chat</li>
+        <li>Desktop HUD (all platforms)</li>
+        <li>All device widgets incl. Watch</li>
+        <li>MCP server access</li>
+        <li>Smart automation rules</li>
+        <li>AI spending insights</li>
+        <li>Bill & goal tracking</li>
+      </ul>
+      <button class="plan-btn plan-btn-primary">Start Pro free for 14 days</button>
+    </div>
+
+    <div class="plan">
+      <div class="plan-name">Wealth</div>
+      <div class="plan-price">$29 <span>/ month</span></div>
+      <div class="plan-sub">For serious investors</div>
+      <ul class="plan-features">
+        <li>Everything in Pro</li>
+        <li>Portfolio performance analysis</li>
+        <li>Tax-loss harvesting signals</li>
+        <li>AI investment research (beta)</li>
+        <li>Multi-user / household</li>
+        <li>Priority support</li>
+        <li>API access</li>
+      </ul>
+      <button class="plan-btn plan-btn-outline">Contact us</button>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="section-label">Early Users</div>
+  <h2><em>What people are saying.</em></h2>
+
+  <div class="testimonials">
+    <div class="testimonial">
+      <div class="testimonial-text">"I glance at my net worth more than I check Slack. Ledger made me actually care about my money."</div>
+      <div class="testimonial-author">Sarah K.</div>
+      <div class="testimonial-role">Software engineer, Bay Area</div>
+    </div>
+    <div class="testimonial">
+      <div class="testimonial-text">"Asked the AI 'am I saving enough for retirement?' and it gave me a specific, correct answer in 5 seconds. Insane."</div>
+      <div class="testimonial-author">Marcus T.</div>
+      <div class="testimonial-role">Product manager, Austin</div>
+    </div>
+    <div class="testimonial">
+      <div class="testimonial-text">"The MCP integration means Claude Desktop can now answer questions about my actual portfolio. This is the future."</div>
+      <div class="testimonial-author">Priya N.</div>
+      <div class="testimonial-role">Data scientist, NYC</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="section-label">Your cockpit awaits</div>
+  <h2>Stop forgetting what<br>your money is doing.</h2>
+  <p style="color:rgba(255,255,255,0.4);font-size:16px;max-width:480px;margin:0 auto 36px;line-height:1.7;">
+    Free to start. No credit card. 60-second setup. Your net worth on every screen in minutes.
+  </p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn-hero btn-hero-primary">Start for free →</button>
+    <button class="btn-hero btn-hero-secondary">Download desktop app</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">ledger</div>
+  <div class="footer-links">
+    <a href="#">Features</a>
+    <a href="#">Pricing</a>
+    <a href="#">MCP</a>
+    <a href="#">API Docs</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+  </div>
+  <div class="footer-copy">© 2026 Ledger. All rights reserved.</div>
+</footer>
+
+<script>
+// Animate elements on scroll
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.animation = 'fadeUp 0.7s ease forwards';
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.feature-card, .step, .plan, .testimonial').forEach(el => {
+  el.style.opacity = '0';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>

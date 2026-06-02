@@ -1,0 +1,17 @@
+{
+  "name": "ledger-mcp-server",
+  "version": "1.0.0",
+  "description": "Ledger MCP server — connect your finances to any AI assistant",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.5",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

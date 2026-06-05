@@ -185,10 +185,10 @@
   <button class="btn-ask" onclick="openDashboard()">Open ↗</button>
 </div>
 
-<script>
+<script src="login.js"></script><script>
 const { invoke } = window.__TAURI__?.core || { invoke: () => Promise.reject('no tauri') };
 
-const API = 'http://localhost:3001';
+const API = 'https://ledger-production-5649.up.railway.app';
 let token = null;
 let data = null;
 
@@ -209,7 +209,7 @@ async function getToken() {
 }
 
 async function fetchData() {
-  if (!token) return;
+  await getToken(); if (!token) return;
   try {
     const [accounts, insights] = await Promise.all([
       fetch(`${API}/api/accounts`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
@@ -293,7 +293,7 @@ function openDashboard() {
 
 // Init
 (async () => {
-  await getToken();
+  await window.ensureAuth(); await getToken();
   await fetchData();
   setInterval(fetchData, 5 * 60 * 1000); // Refresh every 5 min
 })();

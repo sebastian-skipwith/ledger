@@ -9,6 +9,7 @@ use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
     tray::{TrayIconBuilder, TrayIconEvent},
 };
+use tauri_plugin_autostart::ManagerExt;
 
 fn main() {
     tauri::Builder::default()
@@ -18,6 +19,9 @@ fn main() {
         ))
         .setup(|app| {
             let handle = app.handle().clone();
+
+            // Launch automatically on login (makes the HUD persistent across reboots)
+            let _ = app.autolaunch().enable();
 
             // Get primary monitor dimensions
             let monitor = app.primary_monitor()?.unwrap();
@@ -32,13 +36,47 @@ fn main() {
             .title("Ledger")
             .inner_size(screen_w, 52.0)
             .position(0.0, 0.0)
-            .decorations(false)           // No title bar
-            .transparent(true)            // See-through background
-            .always_on_top(true)          // Always visible
-            .skip_taskbar(true)           // Don't show in taskbar
-            .resizable(false)
+            .decorations(false)              // No title bar
+            .transparent(true)               // See-through background
+            .always_on_top(true)             // Always visible
+            .visible_on_all_workspaces(true) // Show on every virtual desktop / space
+            .skip_taskbar(true)              // Don't show in taskbar
+            .resizable(true)                 // Allow resizing
+            .min_inner_size(220.0, 40.0)     // Don't let it collapse to nothing
             .shadow(false)
             .build()?;
+
+            // Edge snapping: when the window is moved within SNAP px of a monitor
+            // edge, pull it flush to that edge. Loop-safe because snapping an
+            // already-snapped position yields the same coordinates.
+            {
+                let snap_win = win.clone();
+                win.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Moved(pos) = event {
+                        const SNAP: i32 = 24; // px "magnet" distance
+                        if let (Ok(Some(mon)), Ok(size)) =
+                            (snap_win.current_monitor(), snap_win.outer_size())
+                        {
+                            let (mp, ms) = (mon.position(), mon.size());
+                            let (w, h) = (size.width as i32, size.height as i32);
+                            let (left, top) = (mp.x, mp.y);
+                            let right = mp.x + ms.width as i32;
+                            let bottom = mp.y + ms.height as i32;
+
+                            let mut x = pos.x;
+                            let mut y = pos.y;
+                            if (x - left).abs() <= SNAP { x = left; }
+                            if (x + w - right).abs() <= SNAP { x = right - w; }
+                            if (y - top).abs() <= SNAP { y = top; }
+                            if (y + h - bottom).abs() <= SNAP { y = bottom - h; }
+
+                            if x != pos.x || y != pos.y {
+                                let _ = snap_win.set_position(tauri::PhysicalPosition::new(x, y));
+                            }
+                        }
+                    }
+                });
+            }
 
             // macOS: make window ignore mouse when not hovering a tile
             #[cfg(target_os = "macos")]

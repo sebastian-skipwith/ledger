@@ -10,15 +10,20 @@ use tauri::{
     tray::{TrayIconBuilder, TrayIconEvent},
 };
 use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_shell::ShellExt;
+use serde_json::{json, Value};
+
+const API_BASE: &str = "https://ledger-production-5649.up.railway.app";
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![]),
         ))
         .setup(|app| {
-            let handle = app.handle().clone();
+            let _handle = app.handle().clone();
 
             // Launch automatically on login (makes the HUD persistent across reboots)
             let _ = app.autolaunch().enable();
@@ -78,13 +83,6 @@ fn main() {
                 });
             }
 
-            // macOS: make window ignore mouse when not hovering a tile
-            #[cfg(target_os = "macos")]
-            {
-                use tauri::utils::config::WindowEffectsConfig;
-                // Optional: vibrancy blur effect
-            }
-
             // System tray
             let quit = MenuItemBuilder::with_id("quit", "Quit Ledger").build(app)?;
             let show = MenuItemBuilder::with_id("show", "Open Dashboard").build(app)?;
@@ -105,12 +103,8 @@ fn main() {
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "quit" => app.exit(0),
                     "show" => {
-                        // Open full web dashboard
-                        let _ = tauri_plugin_shell::open(
-                            &app.shell(),
-                            "http://localhost:3000",
-                            None,
-                        );
+                        // Open full web dashboard in the default browser
+                        let _ = app.shell().open("http://localhost:3000".to_string(), None);
                     }
                     _ => {}
                 })
@@ -121,20 +115,97 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_token,
             set_token,
+            login,
+            refresh,
+            is_authenticated,
+            logout,
         ])
         .run(tauri::generate_context!())
         .expect("error running Ledger desktop bar");
 }
 
+// ── Keychain helpers ────────────────────────────────────────────────
+fn kc(key: &str) -> Result<keyring::Entry, String> {
+    keyring::Entry::new("ledger", key).map_err(|e| e.to_string())
+}
+
 /// Store auth token securely in system keychain
 #[tauri::command]
 fn set_token(token: String) -> Result<(), String> {
-    let entry = keyring::Entry::new("ledger", "auth_token").map_err(|e| e.to_string())?;
-    entry.set_password(&token).map_err(|e| e.to_string())
+    kc("auth_token")?.set_password(&token).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn get_token() -> Result<String, String> {
-    let entry = keyring::Entry::new("ledger", "auth_token").map_err(|e| e.to_string())?;
-    entry.get_password().map_err(|e| e.to_string())
+    kc("auth_token")?.get_password().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn is_authenticated() -> bool {
+    kc("auth_token")
+        .and_then(|e| e.get_password().map_err(|err| err.to_string()))
+        .map(|t| !t.is_empty())
+        .unwrap_or(false)
+}
+
+#[tauri::command]
+fn logout() -> Result<(), String> {
+    if let Ok(e) = kc("auth_token") { let _ = e.delete_credential(); }
+    if let Ok(e) = kc("refresh_token") { let _ = e.delete_credential(); }
+    Ok(())
+}
+
+/// Log in against the Ledger backend and store both tokens in the keychain.
+#[tauri::command]
+async fn login(email: String, password: String) -> Result<Value, String> {
+    let client = reqwest::Client::new();
+    let res = client
+        .post(format!("{API_BASE}/api/auth/login"))
+        .json(&json!({ "email": email, "password": password }))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let status = res.status();
+    let body: Value = res.json().await.map_err(|e| e.to_string())?;
+    if !status.is_success() {
+        return Err(body
+            .get("error")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Login failed")
+            .to_string());
+    }
+    let access = body.get("access").and_then(|v| v.as_str()).unwrap_or_default();
+    let refresh = body.get("refresh").and_then(|v| v.as_str()).unwrap_or_default();
+    kc("auth_token")?.set_password(access).map_err(|e| e.to_string())?;
+    kc("refresh_token")?.set_password(refresh).map_err(|e| e.to_string())?;
+    Ok(body.get("user").cloned().unwrap_or(Value::Null))
+}
+
+/// Exchange the stored refresh token for a fresh access token.
+#[tauri::command]
+async fn refresh() -> Result<String, String> {
+    let refresh_tok = kc("refresh_token")?
+        .get_password()
+        .map_err(|_| "Not logged in".to_string())?;
+    let client = reqwest::Client::new();
+    let res = client
+        .post(format!("{API_BASE}/api/auth/refresh"))
+        .json(&json!({ "refresh": refresh_tok }))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !res.status().is_success() {
+        return Err("Session expired".into());
+    }
+    let body: Value = res.json().await.map_err(|e| e.to_string())?;
+    let access = body
+        .get("access")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+    let _ = kc("auth_token")?.set_password(&access);
+    if let Some(r) = body.get("refresh").and_then(|v| v.as_str()) {
+        let _ = kc("refresh_token")?.set_password(r);
+    }
+    Ok(access)
 }

@@ -1,26 +1,84 @@
 'use client';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { useState, useCallback, useEffect } from 'react';
+import { usePlaidLink } from 'react-plaid-link';
+import { apiCall } from '@/lib/store';
 
 export default function PlaidLinkButton({ token, onSuccess }: { token: string; onSuccess: () => void }) {
-  async function openPlaid() {
-    const res = await fetch(`${API}/api/plaid/create-link-token`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    });
-    const data = await res.json();
-    // In production: initialize Plaid Link with data.link_token via react-plaid-link
-    console.log('Plaid link token:', data.link_token);
-    alert(`Link token ready: ${data.link_token}\n\nIn production this opens Plaid Link.`);
-  }
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Step 1: ask the backend for a Plaid link_token
+  const startLink = useCallback(async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const data = await apiCall('/api/plaid/create-link-token', { method: 'POST', token });
+      setLinkToken(data.link_token);
+    } catch (e: any) {
+      setError(e?.message || 'Could not start Plaid Link.');
+      setLoading(false);
+    }
+  }, [token]);
+
+  // Step 3: after the user finishes Plaid Link, exchange the public_token
+  const handleSuccess = useCallback(
+    async (public_token: string, metadata: any) => {
+      try {
+        await apiCall('/api/plaid/exchange-token', {
+          method: 'POST',
+          token,
+          body: JSON.stringify({ public_token, institution: metadata?.institution }),
+        });
+        onSuccess();
+      } catch (e: any) {
+        setError(e?.message || 'Could not link your account.');
+      } finally {
+        setLoading(false);
+        setLinkToken(null);
+      }
+    },
+    [token, onSuccess]
+  );
+
+  const { open, ready } = usePlaidLink({
+    token: linkToken,
+    onSuccess: handleSuccess,
+    onExit: () => {
+      setLoading(false);
+      setLinkToken(null);
+    },
+  });
+
+  // Step 2: once we have a token and Plaid is ready, open the modal
+  useEffect(() => {
+    if (linkToken && ready) open();
+  }, [linkToken, ready, open]);
 
   return (
-    <button onClick={openPlaid} style={{
-      background: '#3b7dff', color: 'white', border: 'none', borderRadius: 8,
-      padding: '10px 20px', fontSize: 13, fontWeight: 600,
-      fontFamily: 'var(--font-syne)', cursor: 'pointer',
-    }}>
-      Connect Bank Account (via Plaid)
-    </button>
+    <div>
+      <button
+        onClick={startLink}
+        disabled={loading}
+        style={{
+          background: '#3b7dff',
+          color: 'white',
+          border: 'none',
+          borderRadius: 8,
+          padding: '10px 20px',
+          fontSize: 13,
+          fontWeight: 600,
+          fontFamily: 'var(--font-syne)',
+          cursor: loading ? 'wait' : 'pointer',
+          opacity: loading ? 0.7 : 1,
+        }}
+      >
+        {loading ? 'Connecting…' : 'Connect Bank Account (via Plaid)'}
+      </button>
+      {error && (
+        <p style={{ color: '#ff6b6b', marginTop: 8, fontSize: 12 }}>{error}</p>
+      )}
+    </div>
   );
 }

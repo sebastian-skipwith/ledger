@@ -87,23 +87,69 @@ export const useStore = create<AppState>()(
 );
 
 // ─────────────────────────────────────────────
-// API CLIENT
+// API CLIENT (with automatic access-token refresh)
 // ─────────────────────────────────────────────
+
+// De-dupe concurrent refreshes so a burst of 401s triggers only one refresh call.
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  const { refreshToken } = useStore.getState();
+  if (!refreshToken) return null;
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const res = await fetch(`${API}/api/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+        if (!res.ok) {
+          // Refresh token is gone/expired — force a clean re-login.
+          useStore.getState().logout();
+          return null;
+        }
+        const data = await res.json(); // { access, refresh }
+        const user = useStore.getState().user;
+        if (user) useStore.getState().setAuth(user, data.access, data.refresh);
+        return data.access as string;
+      } catch {
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
+}
 
 export async function apiCall(
   path: string,
   options: RequestInit & { token?: string } = {}
 ): Promise<any> {
   const { token, ...rest } = options;
-  const res = await fetch(`${API}${path}`, {
-    ...rest,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(rest.headers || {}),
-    },
-    body: rest.body,
-  });
+
+  const send = (bearer?: string) =>
+    fetch(`${API}${path}`, {
+      ...rest,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...(rest.headers || {}),
+      },
+      body: rest.body,
+    });
+
+  // Use the explicitly-passed token, falling back to the stored access token.
+  const bearer = token ?? useStore.getState().accessToken ?? undefined;
+  let res = await send(bearer);
+
+  // If the access token is expired/invalid, refresh once and retry.
+  if (res.status === 401 && useStore.getState().refreshToken) {
+    const fresh = await refreshAccessToken();
+    if (fresh) res = await send(fresh);
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `API error ${res.status}`);

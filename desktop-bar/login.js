@@ -1,53 +1,68 @@
-// Ledger HUD — login overlay + token-refresh bootstrap.
+// Persistence HUD - login overlay + token bootstrap.
 // Exposes window.ensureAuth(): resolves once a valid session token is stored.
 (() => {
-  const invoke = window.__TAURI__?.core?.invoke || (() => Promise.reject('no tauri'));
+  const core = window.__TAURI__?.core;
+  const invoke = core?.invoke || (() => Promise.reject('no tauri'));
+  const TW = window.__TAURI__?.window;
+  const shell = window.__TAURI__?.shell;
+  const DESKTOP_URL = 'https://ledger-theta-puce.vercel.app/desktop';
+
+  async function sizeForLogin() {
+    try {
+      const win = TW.getCurrentWindow();
+      const W = 400, H = 540;
+      const sw = window.screen.availWidth || 1280;
+      const sh = window.screen.availHeight || 800;
+      await win.setSize(new TW.LogicalSize(W, H));
+      await win.setPosition(new TW.LogicalPosition(Math.round((sw - W) / 2), Math.round((sh - H) / 2)));
+    } catch (e) { console.error('sizeForLogin', e); }
+  }
+
+  async function restoreBar() {
+    try {
+      const win = TW.getCurrentWindow();
+      const sw = window.screen.availWidth || 1280;
+      await win.setSize(new TW.LogicalSize(sw, 52));
+      await win.setPosition(new TW.LogicalPosition(0, 0));
+    } catch (e) { console.error('restoreBar', e); }
+  }
 
   function showOverlay() {
     return new Promise((resolve) => {
       const wrap = document.createElement('div');
-      wrap.id = 'ledger-login';
-      wrap.style.cssText = [
-        'position:fixed', 'inset:0', 'z-index:99999',
-        'background:rgba(8,8,14,0.97)', 'backdrop-filter:blur(20px)',
-        'display:flex', 'align-items:center', 'justify-content:center',
-        '-webkit-app-region:no-drag', 'font-family:SF Mono, Consolas, monospace',
-      ].join(';');
-      wrap.innerHTML = `
-        <div style="width:280px;display:flex;flex-direction:column;gap:10px;">
-          <div style="font-family:Georgia,serif;font-style:italic;color:#d4af37;font-size:20px;text-align:center;margin-bottom:4px;">ledger</div>
-          <input id="lg-email" type="email" placeholder="Email" autocomplete="username"
-            style="padding:9px 11px;border-radius:7px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;outline:none;" />
-          <input id="lg-pass" type="password" placeholder="Password" autocomplete="current-password"
-            style="padding:9px 11px;border-radius:7px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;outline:none;" />
-          <button id="lg-btn"
-            style="margin-top:2px;padding:9px;border:none;border-radius:7px;background:#d4af37;color:#0b0b12;font-weight:700;font-size:13px;cursor:pointer;">Sign In</button>
-          <div id="lg-err" style="color:#f04f54;font-size:11px;min-height:14px;text-align:center;"></div>
-        </div>`;
+      wrap.id = 'persistence-login';
+      wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#ffffff;color:#000;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-app-region:no-drag;font-family:Georgia, serif;';
+      wrap.innerHTML = '<div style="width:320px;display:flex;flex-direction:column;gap:13px;padding:28px 0;text-align:center;">' +
+        '<div style="font-family:Georgia,serif;font-weight:700;font-size:52px;line-height:1;">P</div>' +
+        '<div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;">Persistence</div>' +
+        '<button id="lg-google" style="padding:12px;border:1px solid #000;background:#000;color:#fff;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;">Sign in with Google</button>' +
+        '<div style="font-size:11px;color:#555;line-height:1.5;margin-top:2px;">A browser window opens. Sign in, copy the code shown, paste it below.</div>' +
+        '<input id="lg-code" type="text" placeholder="Paste code" style="padding:11px;border:1px solid #000;background:#fff;color:#000;font-size:12px;outline:none;font-family:monospace;text-align:center;" />' +
+        '<button id="lg-connect" style="padding:12px;border:1px solid #000;background:#fff;color:#000;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;">Connect</button>' +
+        '<div id="lg-err" style="color:#000;font-size:11px;min-height:14px;"></div>' +
+        '</div>';
       document.body.appendChild(wrap);
-
-      const email = wrap.querySelector('#lg-email');
-      const pass = wrap.querySelector('#lg-pass');
-      const btn = wrap.querySelector('#lg-btn');
+      const code = wrap.querySelector('#lg-code');
+      const gbtn = wrap.querySelector('#lg-google');
+      const cbtn = wrap.querySelector('#lg-connect');
       const err = wrap.querySelector('#lg-err');
-
-      async function submit() {
+      gbtn.addEventListener('click', () => { try { shell.open(DESKTOP_URL); } catch (e) { err.textContent = 'Could not open browser'; } });
+      async function connect() {
+        const v = code.value.trim();
+        if (!v) { err.textContent = 'Paste the code first'; return; }
         err.textContent = '';
-        btn.disabled = true;
-        btn.textContent = 'Signing in...';
+        cbtn.disabled = true; cbtn.textContent = 'CONNECTING...';
         try {
-          await invoke('login', { email: email.value.trim(), password: pass.value });
+          await invoke('set_session', { refresh: v });
           wrap.remove();
           resolve();
         } catch (e) {
-          err.textContent = (e && e.toString) ? e.toString() : 'Login failed';
-          btn.disabled = false;
-          btn.textContent = 'Sign In';
+          err.textContent = (e && e.toString) ? e.toString() : 'Could not connect';
+          cbtn.disabled = false; cbtn.textContent = 'Connect';
         }
       }
-      btn.addEventListener('click', submit);
-      pass.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submit(); });
-      setTimeout(() => email.focus(), 50);
+      cbtn.addEventListener('click', connect);
+      code.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') connect(); });
     });
   }
 
@@ -55,9 +70,10 @@
     let authed = false;
     try { authed = await invoke('is_authenticated'); } catch (e) { authed = false; }
     if (!authed) {
+      await sizeForLogin();
       await showOverlay();
+      await restoreBar();
     }
-    // Proactively refresh the 15-minute access token before it expires.
     setInterval(() => { invoke('refresh').catch(() => {}); }, 12 * 60 * 1000);
   };
 })();

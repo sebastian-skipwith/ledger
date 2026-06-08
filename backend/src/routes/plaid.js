@@ -216,25 +216,35 @@ async function syncTransactions(userId, plaidItemId, accessToken) {
 }
 
 async function snapshotNetWorth(userId) {
-  const { rows } = await query(
-    `SELECT type, SUM(current_balance) as total
-     FROM accounts WHERE user_id=$1 AND is_hidden=false
-     GROUP BY type`, [userId]
+  // Pull every account so we can compute per-metric breakdown, not just totals.
+  const { rows: accts } = await query(
+    `SELECT type, subtype, current_balance
+     FROM accounts WHERE user_id=$1 AND is_hidden=false`, [userId]
   );
 
+  const num = (v) => parseFloat(v) || 0;
+  const isRetirement = (a) => ['401k','ira','roth'].some(k => (a.subtype || '').toLowerCase().includes(k));
+
+  const cash = accts.filter(a => a.type === 'depository').reduce((t,a)=>t+num(a.current_balance),0);
+  const investments = accts.filter(a => a.type === 'investment' && !isRetirement(a)).reduce((t,a)=>t+num(a.current_balance),0);
+  const retirement = accts.filter(a => a.type === 'investment' && isRetirement(a)).reduce((t,a)=>t+num(a.current_balance),0);
+  const debt = accts.filter(a => ['credit','loan'].includes(a.type)).reduce((t,a)=>t+Math.abs(num(a.current_balance)),0);
+
   let assets = 0, liabilities = 0;
-  for (const row of rows) {
-    const val = parseFloat(row.total) || 0;
-    if (['credit', 'loan'].includes(row.type)) liabilities += Math.abs(val);
+  for (const a of accts) {
+    const val = num(a.current_balance);
+    if (['credit','loan'].includes(a.type)) liabilities += Math.abs(val);
     else assets += val;
   }
 
+  const breakdown = { cash, investments, retirement, debt, net_worth: assets - liabilities };
+
   await query(
-    `INSERT INTO net_worth_snapshots (user_id, snapshot_date, total_assets, total_liabilities, net_worth)
-     VALUES ($1, CURRENT_DATE, $2, $3, $4)
+    `INSERT INTO net_worth_snapshots (user_id, snapshot_date, total_assets, total_liabilities, net_worth, breakdown)
+     VALUES ($1, CURRENT_DATE, $2, $3, $4, $5)
      ON CONFLICT (user_id, snapshot_date) DO UPDATE SET
-       total_assets=$2, total_liabilities=$3, net_worth=$4`,
-    [userId, assets, liabilities, assets - liabilities]
+       total_assets=$2, total_liabilities=$3, net_worth=$4, breakdown=$5`,
+    [userId, assets, liabilities, assets - liabilities, JSON.stringify(breakdown)]
   );
 }
 

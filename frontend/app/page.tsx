@@ -14,6 +14,8 @@ export default function DashboardPage() {
   const { user, accessToken, accounts, summary,
           setAccounts, setSummary, setInsights, insights } = useStore();
   const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<any[]>([]);
+  const [period, setPeriod] = useState<'day'|'week'|'month'>('day');
   useEffect(() => { if (!accessToken) return; loadData(); }, [accessToken]);
   async function loadData() {
     setLoading(true);
@@ -25,12 +27,38 @@ export default function DashboardPage() {
       setAccounts(accts);
       setSummary({ ...computeSummary(accts), monthly_bills: insightsData?.context?.monthly_bills || 0 });
       setInsights(insightsData?.insights || []);
+      try {
+        const hist = await apiCall('/api/net-worth?days=120', { token: accessToken! });
+        setHistory(Array.isArray(hist) ? hist : []);
+      } catch (e) { /* history optional */ }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
+  function computeDeltas() {
+    if (!summary || !history || history.length === 0) return null;
+    const daysBack = period === 'day' ? 1 : period === 'week' ? 7 : 30;
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - daysBack);
+    const sorted = [...history].sort((a,b)=> new Date(a.snapshot_date).getTime() - new Date(b.snapshot_date).getTime());
+    let past = sorted[0];
+    for (const row of sorted) { if (new Date(row.snapshot_date) <= cutoff) past = row; }
+    const b = past && past.breakdown ? past.breakdown : {};
+    const prev: any = { net_worth: Number(past?.net_worth), cash: Number(b.cash), investments: Number(b.investments), retirement: Number(b.retirement), total_debt: Number(b.debt) };
+    const out: any = {};
+    for (const k of ['net_worth','cash','investments','retirement','total_debt']) {
+      const now = Number((summary as any)[k]);
+      const was = prev[k];
+      if (was === undefined || isNaN(was) || isNaN(now)) { out[k] = null; continue; }
+      const diff = now - was;
+      const pct = was !== 0 ? (diff / Math.abs(was)) * 100 : null;
+      out[k] = { diff, pct };
+    }
+    return out;
+  }
+
   if (!user || !accessToken) return <AuthScreen />;
+  const deltas = computeDeltas();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <TopBar summary={summary} loading={loading} />
+      <TopBar summary={summary} loading={loading} deltas={deltas} period={period} onPeriodChange={setPeriod} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', marginTop: 52 }}>
         <Sidebar />
         <main style={{ flex: 1, overflow: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>

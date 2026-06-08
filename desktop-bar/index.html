@@ -3,299 +3,223 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledger Bar</title>
+<title>Persistence</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
 
-  body {
-    width: 100vw;
-    height: 52px;
-    background: rgba(8, 8, 14, 0.88);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    overflow: hidden;
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    gap: 0;
-    /* Drag the bar to move (macOS) */
-    -webkit-app-region: drag;
-  }
+body {
+  width: 100vw;
+  height: 52px;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  overflow: hidden;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  color: #fff;
+  -webkit-app-region: drag;
+}
 
-  .brand {
-    font-family: 'Georgia', serif;
-    font-size: 15px;
-    color: #d4af37;
-    font-style: italic;
-    letter-spacing: -0.3px;
-    margin-right: 20px;
-    flex-shrink: 0;
-    -webkit-app-region: no-drag;
-  }
+.brand {
+  font-family: 'Georgia', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-right: 22px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+  line-height: 1;
+}
 
-  .tiles {
-    display: flex;
-    flex: 1;
-    height: 100%;
-    overflow: hidden;
-  }
+.tiles { display: flex; flex: 1; height: 100%; overflow: hidden; }
 
-  .tile {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 14px;
-    border-right: 1px solid rgba(255,255,255,0.07);
-    cursor: pointer;
-    transition: background 0.15s;
-    -webkit-app-region: no-drag;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .tile:hover { background: rgba(255,255,255,0.06); }
-  .tile:hover .tooltip { opacity: 1; pointer-events: auto; }
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 16px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-app-region: no-drag;
+  position: relative;
+  flex-shrink: 0;
+}
+.tile:hover { background: rgba(255,255,255,0.08); }
+.tile:hover .tooltip { opacity: 1; pointer-events: auto; }
 
-  .tile-label {
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    margin-bottom: 1px;
-  }
-  .tile-value {
-    font-size: 13px;
-    font-weight: 500;
-    color: #ffffff;
-    letter-spacing: -0.2px;
-  }
-  .tile-sub {
-    font-size: 8.5px;
-    color: rgba(255,255,255,0.3);
-    margin-top: 1px;
-  }
+.tile-label {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 2px;
+}
+.tile-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+.tile-sub {
+  font-size: 8.5px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 1px;
+}
+.dim { color: rgba(255,255,255,0.55); }
 
-  /* Color variants */
-  .green  { color: #16c784; }
-  .red    { color: #f04f54; }
-  .amber  { color: #f5a623; }
-  .purple { color: #a78bfa; }
+.loading { animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:1} }
 
-  /* Loading pulse */
-  .loading { animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+.tooltip {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  min-width: 200px;
+  background: rgba(0,0,0,0.97);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.7;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 999;
+  white-space: nowrap;
+}
+.tooltip-row { display: flex; justify-content: space-between; gap: 20px; }
+.tooltip-key { color: rgba(255,255,255,0.45); }
+.tooltip-val { font-weight: 600; }
 
-  /* Tooltip on hover */
-  .tooltip {
-    position: absolute;
-    top: 56px;
-    left: 0;
-    min-width: 200px;
-    background: rgba(10,10,18,0.96);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 11px;
-    color: rgba(255,255,255,0.8);
-    line-height: 1.7;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s;
-    z-index: 999;
-    white-space: nowrap;
-  }
-  .tooltip-row { display: flex; justify-content: space-between; gap: 20px; }
-  .tooltip-key { color: rgba(255,255,255,0.4); }
-  .tooltip-val { font-weight: 600; }
+.right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+.time { font-size: 12px; color: rgba(255,255,255,0.4); }
 
-  /* Right side */
-  .right {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    -webkit-app-region: no-drag;
-  }
+.sync-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  flex-shrink: 0;
+}
+.sync-dot.stale { background: rgba(255,255,255,0.4); }
+.sync-dot.error { background: transparent; border: 1px solid rgba(255,255,255,0.6); }
 
-  .time {
-    font-size: 12px;
-    color: rgba(255,255,255,0.35);
-  }
-
-  .sync-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #16c784;
-    flex-shrink: 0;
-  }
-  .sync-dot.stale { background: #f5a623; }
-  .sync-dot.error { background: #f04f54; }
-
-  .btn-ask {
-    background: rgba(212,175,55,0.15);
-    border: 1px solid rgba(212,175,55,0.3);
-    color: #d4af37;
-    border-radius: 5px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.12s;
-  }
-  .btn-ask:hover {
-    background: rgba(212,175,55,0.25);
-    border-color: rgba(212,175,55,0.5);
-  }
-
-  /* Progress ring for bills */
-  .ring-wrap {
-    position: relative;
-    width: 28px; height: 28px;
-    flex-shrink: 0;
-  }
-  .ring-wrap svg { width: 28px; height: 28px; transform: rotate(-90deg); }
-  .ring-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 2.5; }
-  .ring-fg { fill: none; stroke: #3b7dff; stroke-width: 2.5; stroke-linecap: round; transition: stroke-dasharray 0.5s; }
-  .ring-text {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 8px; color: rgba(255,255,255,0.6); font-weight: 600;
-  }
+.btn-ask {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.btn-ask:hover { background: #fff; color: #000; }
 </style>
 </head>
 <body data-tauri-drag-region>
 
-<div class="brand">ledger</div>
+<div class="brand">P</div>
 
 <div class="tiles" id="tiles">
-  <!-- Tiles injected by JS -->
-  <div class="tile">
-    <div class="tile-label">Loading</div>
-    <div class="tile-value loading" style="width:60px;height:13px;background:rgba(255,255,255,0.1);border-radius:3px;"></div>
-  </div>
+<div class="tile">
+<div class="tile-label">Loading</div>
+<div class="tile-value loading" style="width:60px;height:13px;background:rgba(255,255,255,0.15);border-radius:3px;"></div>
+</div>
 </div>
 
 <div class="right">
-  <div class="sync-dot" id="sync-dot" title="Data sync status"></div>
-  <div class="time" id="clock"></div>
-  <button class="btn-ask" onclick="openDashboard()">Open ↗</button>
+<div class="sync-dot" id="sync-dot" title="Data sync status"></div>
+<div class="time" id="clock"></div>
+<button class="btn-ask" onclick="openDashboard()">Open</button>
 </div>
 
 <script src="login.js"></script><script>
 const { invoke } = window.__TAURI__?.core || { invoke: () => Promise.reject('no tauri') };
-
-const API = 'https://ledger-production-5649.up.railway.app';
-let token = null;
 let data = null;
 
-// Clock
 function updateClock() {
   const d = new Date();
-  let h = d.getHours(), m = d.getMinutes();
+  let h = d.getHours();
+  const m = d.getMinutes();
   const ampm = h >= 12 ? 'PM' : 'AM';
-  if (h > 12) h -= 12; if (h === 0) h = 12;
-  document.getElementById('clock').textContent =
-    `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+  if (h > 12) h -= 12;
+  if (h === 0) h = 12;
+  document.getElementById('clock').textContent = h + ':' + String(m).padStart(2, '0') + ' ' + ampm;
 }
 setInterval(updateClock, 10000);
 updateClock();
 
-async function getToken() {
-  try { token = await invoke('get_token'); } catch {}
-}
-
 async function fetchData() {
-  await getToken(); if (!token) return;
   try {
-    const [accounts, insights] = await Promise.all([
-      fetch(`${API}/api/accounts`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-      fetch(`${API}/api/ai/insights`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-    ]);
-
-    const accts = Array.isArray(accounts) ? accounts : [];
-    const cash = accts.filter(a => a.type === 'depository').reduce((s,a) => s + +a.current_balance, 0);
-    const investments = accts.filter(a => a.type === 'investment').reduce((s,a) => s + +a.current_balance, 0);
-    const retirement = accts.filter(a => ['401k','ira','roth'].some(k => (a.subtype||'').toLowerCase().includes(k))).reduce((s,a) => s + +a.current_balance, 0);
-    const debt = accts.filter(a => ['credit','loan'].includes(a.type)).reduce((s,a) => s + Math.abs(+a.current_balance), 0);
-    const ctx = insights?.context || {};
-
+    const ctx = await invoke('fetch_summary');
+    const c = ctx || {};
     data = {
-      netWorth: ctx.net_worth || Math.round(cash + investments - debt),
-      cash: Math.round(cash),
-      investments: Math.round(investments),
-      retirement: Math.round(retirement),
-      debt: Math.round(debt),
-      monthlyBills: ctx.monthly_bills || 0,
+      netWorth: Math.round(Number(c.net_worth) || 0),
+      cash: Math.round(Number(c.cash) || 0),
+      investments: Math.round(Number(c.investments) || 0),
+      retirement: Math.round(Number(c.retirement) || 0),
+      debt: Math.round(Number(c.total_debt) || 0),
+      monthlyBills: Math.round(Number(c.monthly_bills) || 0)
     };
-
     renderTiles();
     document.getElementById('sync-dot').className = 'sync-dot';
   } catch (err) {
-    console.error('Fetch error:', err);
+    console.error('fetch_summary error:', err);
     document.getElementById('sync-dot').className = 'sync-dot error';
   }
 }
 
 function fmt(n) {
-  if (Math.abs(n) >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
-  if (Math.abs(n) >= 1000) return '$' + Math.round(n/1000) + 'k';
+  if (Math.abs(n) >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1000) return '$' + Math.round(n / 1000) + 'k';
   return '$' + Math.round(n);
+}
+
+function tile(label, value, sub, cls) {
+  return '<div class="tile" onclick="openDashboard()">' +
+    '<div class="tile-label">' + label + '</div>' +
+    '<div class="tile-value ' + (cls || '') + '">' + value + '</div>' +
+    '<div class="tile-sub">' + sub + '</div>' +
+    '</div>';
 }
 
 function renderTiles() {
   if (!data) return;
   const tiles = document.getElementById('tiles');
-  tiles.innerHTML = `
-    <div class="tile" onclick="openDashboard()">
-      <div class="tile-label">Net Worth</div>
-      <div class="tile-value green">${fmt(data.netWorth)}</div>
-      <div class="tile-sub">all accounts</div>
-    </div>
-    <div class="tile">
-      <div class="tile-label">Cash</div>
-      <div class="tile-value">${fmt(data.cash)}</div>
-      <div class="tile-sub">checking + savings</div>
-    </div>
-    <div class="tile">
-      <div class="tile-label">Investments</div>
-      <div class="tile-value purple">${fmt(data.investments)}</div>
-      <div class="tile-sub">brokerage</div>
-      <div class="tooltip">
-        <div class="tooltip-row"><span class="tooltip-key">Brokerage</span><span class="tooltip-val">${fmt(data.investments)}</span></div>
-        <div class="tooltip-row"><span class="tooltip-key">Retirement</span><span class="tooltip-val">${fmt(data.retirement)}</span></div>
-      </div>
-    </div>
-    <div class="tile">
-      <div class="tile-label">Retirement</div>
-      <div class="tile-value amber">${fmt(data.retirement)}</div>
-      <div class="tile-sub">401k + IRA</div>
-    </div>
-    <div class="tile">
-      <div class="tile-label">Debt</div>
-      <div class="tile-value ${data.debt > 0 ? 'red' : 'green'}">${data.debt > 0 ? fmt(data.debt) : 'None'}</div>
-      <div class="tile-sub">credit + loans</div>
-    </div>
-    <div class="tile">
-      <div class="tile-label">Monthly Bills</div>
-      <div class="tile-value">${fmt(data.monthlyBills)}</div>
-      <div class="tile-sub">recurring</div>
-    </div>
-  `;
+  tiles.innerHTML =
+    tile('Net Worth', fmt(data.netWorth), 'all accounts', '') +
+    tile('Cash', fmt(data.cash), 'checking + savings', '') +
+    tile('Investments', fmt(data.investments), 'brokerage', 'dim') +
+    tile('Retirement', fmt(data.retirement), '401k + IRA', 'dim') +
+    tile('Debt', (data.debt > 0 ? fmt(data.debt) : 'None'), 'credit + loans', '') +
+    tile('Monthly Bills', fmt(data.monthlyBills), 'recurring', 'dim');
 }
 
 function openDashboard() {
-  window.__TAURI__?.shell?.open('http://localhost:3000');
+  if (window.__TAURI__ && window.__TAURI__.shell) {
+    window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app');
+  }
 }
 
-// Init
 (async () => {
-  await window.ensureAuth(); await getToken();
+  await window.ensureAuth();
   await fetchData();
-  setInterval(fetchData, 5 * 60 * 1000); // Refresh every 5 min
+  setInterval(fetchData, 5 * 60 * 1000);
 })();
 </script>
 </body>

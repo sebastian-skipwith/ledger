@@ -112,6 +112,7 @@ fn main() {
             is_authenticated,
             logout,
             set_session,
+            fetch_summary,
         ])
         .run(tauri::generate_context!())
         .expect("error running Persistence desktop bar");
@@ -222,4 +223,26 @@ async fn set_session(refresh: String) -> Result<(), String> {
         let _ = kc("refresh_token")?.set_password(rr);
     }
     Ok(())
+}
+
+#[tauri::command]
+async fn fetch_summary() -> Result<Value, String> {
+    let mut token = kc("auth_token")
+        .and_then(|e| e.get_password().map_err(|x| x.to_string()))
+        .unwrap_or_default();
+    if token.is_empty() {
+        token = refresh().await?;
+    }
+    let client = reqwest::Client::new();
+    let url = format!("{API_BASE}/api/ai/insights");
+    let mut res = client.get(&url).bearer_auth(&token).send().await.map_err(|e| e.to_string())?;
+    if res.status().as_u16() == 401 {
+        token = refresh().await?;
+        res = client.get(&url).bearer_auth(&token).send().await.map_err(|e| e.to_string())?;
+    }
+    if !res.status().is_success() {
+        return Err(format!("insights HTTP {}", res.status().as_u16()));
+    }
+    let body: Value = res.json().await.map_err(|e| e.to_string())?;
+    Ok(body.get("context").cloned().unwrap_or(Value::Null))
 }

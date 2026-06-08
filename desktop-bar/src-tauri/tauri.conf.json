@@ -1,10 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Ledger Bar",
+  "productName": "Persistence",
   "version": "1.0.0",
-  "identifier": "com.ledger.bar",
+  "identifier": "com.persistence.desktop",
   "build": {
-    "frontendDist": "../"
+    "frontendDist": "../ui"
   },
   "app": {
     "withGlobalTauri": true,

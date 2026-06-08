@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { formatCurrency } from '@/lib/store';
 
 interface TopBarProps {
@@ -20,7 +20,7 @@ export default function TopBar({ summary, loading }: TopBarProps) {
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       height: 52,
-      background: 'rgba(10,10,15,0.92)',
+      background: 'var(--bar-bg)',
       borderBottom: '1px solid rgba(var(--fg),0.07)',
       backdropFilter: 'blur(20px)',
       display: 'flex', alignItems: 'center',
@@ -49,7 +49,7 @@ export default function TopBar({ summary, loading }: TopBarProps) {
               fontFamily: 'var(--font-mono)', fontSize: 13.5, fontWeight: 500,
               color: loading ? 'rgba(var(--fg),0.15)' : tile.color,
             }}>
-              {loading ? '———' : formatCurrency(summary?.[tile.key] || 0, true)}
+              {loading ? 'â€”â€”â€”' : formatCurrency(summary?.[tile.key] || 0, true)}
             </div>
           </div>
         ))}
@@ -57,7 +57,7 @@ export default function TopBar({ summary, loading }: TopBarProps) {
 
       {/* Right side */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }} title="Toggle light/dark" style={{ background:'transparent', border:'none', color:'var(--text)', cursor:'pointer', fontSize:15, opacity:0.65, padding:'2px 4px' }}>◐</button>
+        <button onClick={() => { const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }} title="Toggle light/dark" style={{ background:'transparent', border:'none', color:'var(--text)', cursor:'pointer', fontSize:15, opacity:0.65, padding:'2px 4px' }}>â—</button>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(var(--fg),0.3)' }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
         </div>
@@ -69,7 +69,7 @@ export default function TopBar({ summary, loading }: TopBarProps) {
           fontWeight: 600, fontFamily: 'var(--font-syne)',
           cursor: 'pointer',
         }}>
-          Ask AI ↗
+          Ask AI â†—
         </button>
       </div>
     </div>

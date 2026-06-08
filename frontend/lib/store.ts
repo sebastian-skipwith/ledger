@@ -161,19 +161,19 @@ export async function apiCall(
 export function computeSummary(accounts: Account[]): FinancialSummary {
   const cash = accounts
     .filter(a => a.type === 'depository')
-    .reduce((s, a) => s + (a.current_balance || 0), 0);
+    .reduce((s, a) => s + (Number(a.current_balance) || 0), 0);
 
   const investments = accounts
     .filter(a => a.type === 'investment' && !['401k','ira','roth'].some(k => a.subtype?.toLowerCase().includes(k)))
-    .reduce((s, a) => s + (a.current_balance || 0), 0);
+    .reduce((s, a) => s + (Number(a.current_balance) || 0), 0);
 
   const retirement = accounts
     .filter(a => ['401k','ira','roth'].some(k => a.subtype?.toLowerCase().includes(k)))
-    .reduce((s, a) => s + (a.current_balance || 0), 0);
+    .reduce((s, a) => s + (Number(a.current_balance) || 0), 0);
 
   const total_debt = accounts
     .filter(a => ['credit','loan'].includes(a.type))
-    .reduce((s, a) => s + Math.abs(a.current_balance || 0), 0);
+    .reduce((s, a) => s + Math.abs(Number(a.current_balance) || 0), 0);
 
   return {
     net_worth: cash + investments + retirement - total_debt,

@@ -1,6 +1,6 @@
 'use client';
 
-const typeColors: Record<string, string> = { alert: '#f04f54', opportunity: '#16c784', info: '#f5a623' };
+const typeColors: Record<string, string> = { alert: '#b3b3b3', opportunity: '#f0f0f8', info: '#cccccc' };
 const typeIcons: Record<string, string> = { alert: '⚡', opportunity: '↑', info: '◎' };
 
 export default function InsightStrip({ insights, loading }: { insights: any[]; loading: boolean }) {

@@ -7,12 +7,12 @@ interface TopBarProps {
 }
 
 const tiles = [
-  { key: 'net_worth',    label: 'Net Worth',    color: '#16c784', prefix: '' },
-  { key: 'total_debt',   label: 'CC / Debt',    color: '#f04f54', prefix: '' },
-  { key: 'monthly_bills',label: 'Monthly Bills',color: '#f5a623', prefix: '' },
+  { key: 'net_worth',    label: 'Net Worth',    color: '#f0f0f8', prefix: '' },
+  { key: 'total_debt',   label: 'CC / Debt',    color: '#b3b3b3', prefix: '' },
+  { key: 'monthly_bills',label: 'Monthly Bills',color: '#cccccc', prefix: '' },
   { key: 'cash',         label: 'Cash',         color: '#f0f0f8', prefix: '' },
-  { key: 'investments',  label: 'Investments',  color: '#a78bfa', prefix: '' },
-  { key: 'retirement',   label: 'Retirement',   color: '#f5a623', prefix: '' },
+  { key: 'investments',  label: 'Investments',  color: '#cccccc', prefix: '' },
+  { key: 'retirement',   label: 'Retirement',   color: '#cccccc', prefix: '' },
 ];
 
 export default function TopBar({ summary, loading }: TopBarProps) {
@@ -27,13 +27,7 @@ export default function TopBar({ summary, loading }: TopBarProps) {
       padding: '0 20px', gap: 0,
     }}>
       {/* Brand */}
-      <div style={{
-        fontFamily: 'var(--font-serif)', fontStyle: 'italic',
-        fontSize: 20, color: '#d4af37',
-        marginRight: 28, flexShrink: 0,
-      }}>
-        ledger
-      </div>
+      <img src="/logo-white.png" alt="Persistence" style={{ height: 22, width: 'auto', marginRight: 28, flexShrink: 0 }} />
 
       {/* Metric tiles */}
       <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
@@ -67,9 +61,9 @@ export default function TopBar({ summary, loading }: TopBarProps) {
           {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
         </div>
         <button style={{
-          background: 'rgba(212,175,55,0.15)',
-          border: '1px solid rgba(212,175,55,0.3)',
-          color: '#d4af37', borderRadius: 6,
+          background: 'rgba(255,255,255,0.15)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          color: '#ffffff', borderRadius: 6,
           padding: '5px 12px', fontSize: 12,
           fontWeight: 600, fontFamily: 'var(--font-syne)',
           cursor: 'pointer',

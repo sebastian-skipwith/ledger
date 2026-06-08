@@ -13,12 +13,12 @@
   --subtle:  #9999c0;
   --white:   #f0f0f8;
 
-  --green:   #16c784;
-  --red:     #f04f54;
-  --amber:   #f5a623;
+  --green:   #f0f0f8;
+  --red:     #b3b3b3;
+  --amber:   #cccccc;
   --blue:    #3b7dff;
-  --purple:  #a78bfa;
-  --gold:    #d4af37;
+  --purple:  #cccccc;
+  --gold:    #ffffff;
   --teal:    #1d9e75;
 
   --font-display: var(--font-serif);
@@ -44,11 +44,11 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 /* Selection */
-::selection { background: rgba(212,175,55,0.3); color: white; }
+::selection { background: rgba(255,255,255,0.3); color: white; }
 
 /* Focus ring */
 :focus-visible {
-  outline: 2px solid rgba(212,175,55,0.6);
+  outline: 2px solid rgba(255,255,255,0.6);
   outline-offset: 2px;
   border-radius: 4px;
 }

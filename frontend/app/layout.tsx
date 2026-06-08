@@ -11,9 +11,9 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: 'Ledger — Personal Finance Platform',
+  title: 'Persistence — Personal Finance',
   description: 'Your financial cockpit. AI-powered money management with persistent HUD.',
-  icons: { icon: '/favicon.svg' },
+  icons: { icon: '/favicon.png' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

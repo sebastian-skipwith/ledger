@@ -14,8 +14,8 @@ export default function Sidebar() {
   ];
 
   const acctColors: Record<string, string> = {
-    depository: '#16c784', investment: '#a78bfa',
-    credit: '#f04f54', loan: '#f04f54',
+    depository: '#f0f0f8', investment: '#cccccc',
+    credit: '#b3b3b3', loan: '#b3b3b3',
   };
 
   return (
@@ -32,8 +32,8 @@ export default function Sidebar() {
             display: 'flex', alignItems: 'center', gap: 9,
             width: '100%', padding: '7px 8px', borderRadius: 7,
             border: 'none', cursor: 'pointer',
-            background: activeSection === item.id ? 'rgba(212,175,55,0.1)' : 'transparent',
-            color: activeSection === item.id ? '#d4af37' : 'rgba(180,180,200,0.7)',
+            background: activeSection === item.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+            color: activeSection === item.id ? '#ffffff' : 'rgba(180,180,200,0.7)',
             fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-syne)',
             textAlign: 'left', marginBottom: 2, transition: 'all 0.12s',
           }}>
@@ -58,7 +58,7 @@ export default function Sidebar() {
             <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: acctColors[acct.type] || '#666' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(200,200,220,0.8)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{acct.name}</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: ['credit','loan'].includes(acct.type) ? '#f04f54' : 'rgba(150,150,170,0.7)' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: ['credit','loan'].includes(acct.type) ? '#b3b3b3' : 'rgba(150,150,170,0.7)' }}>
                 {formatCurrency(Math.abs(acct.current_balance), true)}
               </div>
             </div>

@@ -1,0 +1,6 @@
+desktop-bar/src-tauri/target/
+node_modules/
+frontend/.next/
+frontend/node_modules/
+.env
+.env.local

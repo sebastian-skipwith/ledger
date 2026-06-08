@@ -9,10 +9,10 @@ export default function AccountCards({ accounts, loading }: { accounts: any[]; l
   );
 
   const groups = [
-    { type: 'depository', label: 'Cash & Savings', color: '#16c784' },
-    { type: 'investment',  label: 'Investments',   color: '#a78bfa' },
-    { type: 'credit',      label: 'Credit Cards',  color: '#f04f54' },
-    { type: 'loan',        label: 'Loans',         color: '#f04f54' },
+    { type: 'depository', label: 'Cash & Savings', color: '#f0f0f8' },
+    { type: 'investment',  label: 'Investments',   color: '#cccccc' },
+    { type: 'credit',      label: 'Credit Cards',  color: '#b3b3b3' },
+    { type: 'loan',        label: 'Loans',         color: '#b3b3b3' },
   ];
 
   return (

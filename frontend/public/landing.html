@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledger — Your Financial Cockpit</title>
+<title>Persistence — Your Financial Cockpit</title>
 <meta name="description" content="A beautiful, persistent financial HUD for your desktop. AI-powered money management. Connect your bank, watch your wealth grow.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --ink: #080810; --ink2: #0e0e1a; --gold: #d4af37; --gold2: #e8c84a;
-  --green: #16c784; --red: #f04f54; --purple: #a78bfa; --amber: #f5a623;
+  --ink: #080810; --ink2: #0e0e1a; --gold: #ffffff; --gold2: #e6e6e6;
+  --green: #f0f0f8; --red: #b3b3b3; --purple: #cccccc; --amber: #cccccc;
   --muted: rgba(255,255,255,0.35); --subtle: rgba(255,255,255,0.6);
   --border: rgba(255,255,255,0.08);
 }
@@ -22,7 +22,7 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
-::selection { background: rgba(212,175,55,0.3); }
+::selection { background: rgba(255,255,255,0.3); }
 a { text-decoration: none; color: inherit; }
 
 /* NAV */
@@ -51,14 +51,14 @@ nav {
   content: '';
   position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
   width: 800px; height: 800px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
   pointer-events: none;
 }
 .eyebrow {
   display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
   text-transform: uppercase; color: var(--gold);
   padding: 5px 14px; border-radius: 20px;
-  background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2);
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
   margin-bottom: 24px;
 }
 h1 {
@@ -103,7 +103,7 @@ h1 em { font-style: italic; color: var(--gold); }
   padding: 16px 0; background: rgba(255,255,255,0.01);
 }
 .hud-nav-item { padding: 7px 16px; font-size: 12px; color: rgba(200,200,220,0.5); display: flex; align-items: center; gap: 8px; }
-.hud-nav-item.active { color: var(--gold); background: rgba(212,175,55,0.08); }
+.hud-nav-item.active { color: var(--gold); background: rgba(255,255,255,0.08); }
 .hud-main { padding: 20px; }
 .hud-section-title { font-family: 'Instrument Serif', serif; font-size: 22px; margin-bottom: 4px; }
 .hud-section-sub { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
@@ -115,13 +115,13 @@ h1 em { font-style: italic; color: var(--gold); }
 .mini-card-val { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
 .hud-chat { border-left: 1px solid var(--border); padding: 14px; background: rgba(255,255,255,0.01); display: flex; flex-direction: column; }
 .chat-header { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
-.chat-avatar { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg,#d4af37,#f5a623); display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 14px; color: var(--ink); font-weight: 700; flex-shrink: 0; }
+.chat-avatar { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg,#ffffff,#cccccc); display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 14px; color: var(--ink); font-weight: 700; flex-shrink: 0; }
 .chat-name { font-size: 12px; font-weight: 600; }
 .chat-status { font-size: 9px; color: var(--green); }
 .chat-msgs { flex: 1; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
 .chat-msg { padding: 8px 10px; border-radius: 8px; font-size: 10px; line-height: 1.6; }
 .chat-msg.ai { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: rgba(180,180,200,0.9); border-radius: 3px 8px 8px 8px; }
-.chat-msg.user { background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2); color: #f0f0f8; margin-left: auto; max-width: 80%; border-radius: 8px 3px 8px 8px; }
+.chat-msg.user { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #f0f0f8; margin-left: auto; max-width: 80%; border-radius: 8px 3px 8px 8px; }
 
 /* SECTIONS */
 section { padding: 100px 40px; max-width: 1100px; margin: 0 auto; }
@@ -155,8 +155,8 @@ h2 em { font-style: italic; color: var(--gold); }
   background: rgba(255,255,255,0.025);
   border: 1px solid var(--border); border-radius: 16px; padding: 28px;
 }
-.plan.featured { border-color: rgba(212,175,55,0.4); background: rgba(212,175,55,0.04); }
-.plan-badge { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--gold); background: rgba(212,175,55,0.12); padding: 3px 9px; border-radius: 4px; display: inline-block; margin-bottom: 16px; }
+.plan.featured { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); }
+.plan-badge { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--gold); background: rgba(255,255,255,0.12); padding: 3px 9px; border-radius: 4px; display: inline-block; margin-bottom: 16px; }
 .plan-name { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
 .plan-price { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 300; color: #f0f0f8; margin-bottom: 4px; }
 .plan-price span { font-size: 16px; color: var(--muted); }
@@ -180,7 +180,7 @@ h2 em { font-style: italic; color: var(--gold); }
 /* CTA SECTION */
 .cta-section {
   text-align: center; padding: 100px 40px;
-  background: linear-gradient(180deg, transparent 0%, rgba(212,175,55,0.04) 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
   border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
   max-width: unset; margin: 0;
 }
@@ -219,7 +219,7 @@ footer {
 
 <!-- NAV -->
 <nav>
-  <div class="nav-brand">ledger</div>
+  <div class="nav-brand"><img src="/logo-white.png" alt="Persistence" style="height:26px;width:auto;vertical-align:middle;"></div>
   <div class="nav-links">
     <a href="#features">Features</a>
     <a href="#how-it-works">How it works</a>
@@ -249,20 +249,20 @@ footer {
   <div class="hud-preview fade-up delay-3">
     <!-- Top bar -->
     <div class="hud-bar">
-      <div class="hud-brand">ledger</div>
+      <div class="hud-brand"><img src="/logo-white.png" alt="Persistence" style="height:18px;width:auto;vertical-align:middle;"></div>
       <div class="hud-tile">
         <div class="hud-label">Net Worth</div>
-        <div class="hud-val" style="color:#16c784">$284,674</div>
-        <div class="hud-sub" style="color:#16c784">↑ $1,287</div>
+        <div class="hud-val" style="color:#f0f0f8">$284,674</div>
+        <div class="hud-sub" style="color:#f0f0f8">↑ $1,287</div>
       </div>
       <div class="hud-tile">
         <div class="hud-label">CC Debt</div>
-        <div class="hud-val" style="color:#f04f54">$4,327</div>
-        <div class="hud-sub" style="color:#f04f54">↑ $219 mo</div>
+        <div class="hud-val" style="color:#b3b3b3">$4,327</div>
+        <div class="hud-sub" style="color:#b3b3b3">↑ $219 mo</div>
       </div>
       <div class="hud-tile">
         <div class="hud-label">Monthly Bills</div>
-        <div class="hud-val" style="color:#f5a623">$2,842</div>
+        <div class="hud-val" style="color:#cccccc">$2,842</div>
         <div class="hud-sub">of $3,650 (78%)</div>
       </div>
       <div class="hud-tile">
@@ -272,22 +272,22 @@ footer {
       </div>
       <div class="hud-tile">
         <div class="hud-label">Investments</div>
-        <div class="hud-val" style="color:#a78bfa">$265,754</div>
-        <div class="hud-sub" style="color:#16c784">↑ 2.1% YTD</div>
+        <div class="hud-val" style="color:#cccccc">$265,754</div>
+        <div class="hud-sub" style="color:#f0f0f8">↑ 2.1% YTD</div>
       </div>
       <div class="hud-tile">
         <div class="hud-label">Retirement</div>
-        <div class="hud-val" style="color:#f5a623">$102,843</div>
+        <div class="hud-val" style="color:#cccccc">$102,843</div>
         <div class="hud-sub">401k + IRA</div>
       </div>
       <div class="hud-tile" style="border-right:none">
         <div class="hud-label">This Month</div>
-        <div class="hud-val" style="color:#16c784">+$1,532</div>
+        <div class="hud-val" style="color:#f0f0f8">+$1,532</div>
         <div class="hud-sub">Income − Exp</div>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:10px;padding-left:12px;">
         <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.3);">Jun 1</span>
-        <button style="background:#d4af37;color:#0a0a0f;border:none;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Ask AI ↗</button>
+        <button style="background:#ffffff;color:#0a0a0f;border:none;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Ask AI ↗</button>
       </div>
     </div>
 
@@ -302,13 +302,13 @@ footer {
         <div style="height:1px;background:rgba(255,255,255,0.06);margin:12px 0;"></div>
         <div style="padding:8px 14px;font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,0.2);">Accounts</div>
         <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
-          <div style="width:6px;height:6px;border-radius:50%;background:#16c784;"></div>Chase Checking
+          <div style="width:6px;height:6px;border-radius:50%;background:#f0f0f8;"></div>Chase Checking
         </div>
         <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
-          <div style="width:6px;height:6px;border-radius:50%;background:#a78bfa;"></div>Fidelity
+          <div style="width:6px;height:6px;border-radius:50%;background:#cccccc;"></div>Fidelity
         </div>
         <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
-          <div style="width:6px;height:6px;border-radius:50%;background:#f04f54;"></div>Chase Sapphire
+          <div style="width:6px;height:6px;border-radius:50%;background:#b3b3b3;"></div>Chase Sapphire
         </div>
       </div>
 
@@ -323,31 +323,31 @@ footer {
           <svg class="hud-chart-svg" viewBox="0 0 400 50" preserveAspectRatio="none">
             <defs>
               <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#d4af37" stop-opacity=".4"/>
-                <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+                <stop offset="0%" stop-color="#ffffff" stop-opacity=".4"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
               </linearGradient>
             </defs>
-            <polyline points="0,40 60,35 120,28 160,32 220,18 280,12 340,6 400,2" fill="none" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <polyline points="0,40 60,35 120,28 160,32 220,18 280,12 340,6 400,2" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
             <polygon points="0,40 60,35 120,28 160,32 220,18 280,12 340,6 400,2 400,50 0,50" fill="url(#g)"/>
-            <circle cx="400" cy="2" r="3" fill="#d4af37"/>
+            <circle cx="400" cy="2" r="3" fill="#ffffff"/>
           </svg>
         </div>
         <div class="mini-cards">
           <div class="mini-card">
             <div class="mini-card-label">Cash</div>
-            <div class="mini-card-val" style="color:#16c784">$18,920</div>
+            <div class="mini-card-val" style="color:#f0f0f8">$18,920</div>
           </div>
           <div class="mini-card">
             <div class="mini-card-label">Investments</div>
-            <div class="mini-card-val" style="color:#a78bfa">$265,754</div>
+            <div class="mini-card-val" style="color:#cccccc">$265,754</div>
           </div>
           <div class="mini-card">
             <div class="mini-card-label">Retirement</div>
-            <div class="mini-card-val" style="color:#f5a623">$102,843</div>
+            <div class="mini-card-val" style="color:#cccccc">$102,843</div>
           </div>
           <div class="mini-card">
             <div class="mini-card-label">Debt</div>
-            <div class="mini-card-val" style="color:#f04f54">$4,327</div>
+            <div class="mini-card-val" style="color:#b3b3b3">$4,327</div>
           </div>
         </div>
       </div>
@@ -356,14 +356,14 @@ footer {
         <div class="chat-header">
           <div class="chat-avatar">L</div>
           <div>
-            <div class="chat-name">Ledger AI</div>
+            <div class="chat-name">Persistence AI</div>
             <div class="chat-status">● Online</div>
           </div>
         </div>
         <div class="chat-msgs">
           <div class="chat-msg ai">Your net worth hit <strong style="color:#f0f0f8">$284,674</strong>. CC balance up $219 — at current rate, paid off in <strong style="color:#f0f0f8">21 days</strong> if you apply this month's surplus.</div>
           <div class="chat-msg user">What if I put $500/mo extra toward the CC?</div>
-          <div class="chat-msg ai">Payoff in <strong style="color:#16c784">~7 months</strong>, saving ~$340 in interest. Want me to set up an auto-transfer rule?</div>
+          <div class="chat-msg ai">Payoff in <strong style="color:#f0f0f8">~7 months</strong>, saving ~$340 in interest. Want me to set up an auto-transfer rule?</div>
         </div>
       </div>
     </div>
@@ -374,7 +374,7 @@ footer {
 <section id="features">
   <div class="section-label">Built Different</div>
   <h2>Everything your finances<br>need. <em>Nothing they don't.</em></h2>
-  <p class="section-sub">Ledger is the financial cockpit you've been missing — always visible, always accurate, always one question away from an answer.</p>
+  <p class="section-sub">Persistence is the financial cockpit you've been missing — always visible, always accurate, always one question away from an answer.</p>
 
   <div class="features">
     <div class="feature-card">
@@ -424,7 +424,7 @@ footer {
     <div>
       <div class="step-num">02 — Connect your bank</div>
       <div class="step-title">Link accounts via Plaid</div>
-      <div class="step-body">Securely connect checking, savings, credit cards, and investment accounts. Ledger syncs everything automatically.</div>
+      <div class="step-body">Securely connect checking, savings, credit cards, and investment accounts. Persistence syncs everything automatically.</div>
     </div>
     <div>
       <div class="step-num">03 — Install the HUD</div>
@@ -497,7 +497,7 @@ footer {
 
   <div class="testimonials">
     <div class="testimonial">
-      <div class="testimonial-text">"I glance at my net worth more than I check Slack. Ledger made me actually care about my money."</div>
+      <div class="testimonial-text">"I glance at my net worth more than I check Slack. Persistence made me actually care about my money."</div>
       <div class="testimonial-author">Sarah K.</div>
       <div class="testimonial-role">Software engineer, Bay Area</div>
     </div>
@@ -529,7 +529,7 @@ footer {
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-brand">ledger</div>
+  <div class="footer-brand"><img src="/logo-white.png" alt="Persistence" style="height:22px;width:auto;vertical-align:middle;"></div>
   <div class="footer-links">
     <a href="#">Features</a>
     <a href="#">Pricing</a>
@@ -538,7 +538,7 @@ footer {
     <a href="#">Privacy</a>
     <a href="#">Terms</a>
   </div>
-  <div class="footer-copy">© 2026 Ledger. All rights reserved.</div>
+  <div class="footer-copy">© 2026 Persistence. All rights reserved.</div>
 </footer>
 
 <script>

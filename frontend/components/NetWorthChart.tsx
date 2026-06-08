@@ -30,7 +30,7 @@ export function NetWorthChart({ token }: { token: string }) {
             <button key={d} onClick={() => setRange(d)} style={{
               fontSize: 10, padding: '3px 9px', borderRadius: 5,
               border: '1px solid rgba(255,255,255,0.1)',
-              background: range === d ? '#d4af37' : 'transparent',
+              background: range === d ? '#ffffff' : 'transparent',
               color: range === d ? '#0a0a0f' : 'rgba(255,255,255,0.4)',
               cursor: 'pointer', fontFamily: 'var(--font-syne)', fontWeight: 600,
             }}>
@@ -44,8 +44,8 @@ export function NetWorthChart({ token }: { token: string }) {
           <AreaChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#d4af37" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
+                <stop offset="5%" stopColor="#ffffff" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis dataKey="date" tick={{ fill: '#555570', fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
@@ -55,7 +55,7 @@ export function NetWorthChart({ token }: { token: string }) {
               labelStyle={{ color: '#9999c0' }}
               formatter={(v: any) => [`$${v.toLocaleString()}`, 'Net Worth']}
             />
-            <Area type="monotone" dataKey="value" stroke="#d4af37" strokeWidth={2} fill="url(#goldGrad)" dot={false} />
+            <Area type="monotone" dataKey="value" stroke="#ffffff" strokeWidth={2} fill="url(#goldGrad)" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

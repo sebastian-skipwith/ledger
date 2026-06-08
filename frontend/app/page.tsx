@@ -148,7 +148,7 @@ function AuthScreen() {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--ink)' }}>
       <div style={{ width: 360 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontStyle: 'italic', color: 'var(--gold)', marginBottom: 8 }}>ledger</div>
+          <img src="/logo-white.png" alt="Persistence" style={{ height: 46, width: 'auto', margin: '0 auto 8px', display: 'block' }} />
           <p style={{ color: 'var(--muted)', fontSize: 13 }}>Your financial cockpit</p>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 28 }}>
@@ -169,7 +169,7 @@ function AuthScreen() {
               <button key={m} onClick={() => setMode(m)} style={{
                 flex: 1, padding: '8px 0', fontSize: 13, fontFamily: 'var(--font-syne)',
                 border: 'none', cursor: 'pointer', fontWeight: 500,
-                background: mode === m ? 'rgba(212,175,55,0.15)' : 'transparent',
+                background: mode === m ? 'rgba(255,255,255,0.15)' : 'transparent',
                 color: mode === m ? 'var(--gold)' : 'var(--muted)', transition: 'all 0.15s',
               }}>{m === 'login' ? 'Sign In' : 'Create Account'}</button>
             ))}

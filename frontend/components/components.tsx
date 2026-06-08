@@ -17,10 +17,10 @@ export function Sidebar() {
   ];
 
   const acctTypeColors: Record<string, string> = {
-    depository: '#16c784',
-    investment: '#a78bfa',
-    credit: '#f04f54',
-    loan: '#f04f54',
+    depository: '#f0f0f8',
+    investment: '#cccccc',
+    credit: '#b3b3b3',
+    loan: '#b3b3b3',
   };
 
   return (
@@ -40,8 +40,8 @@ export function Sidebar() {
             display: 'flex', alignItems: 'center', gap: 9,
             width: '100%', padding: '7px 8px', borderRadius: 7,
             border: 'none', cursor: 'pointer',
-            background: activeSection === item.id ? 'rgba(212,175,55,0.1)' : 'transparent',
-            color: activeSection === item.id ? '#d4af37' : 'rgba(180,180,200,0.7)',
+            background: activeSection === item.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+            color: activeSection === item.id ? '#ffffff' : 'rgba(180,180,200,0.7)',
             fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-syne)',
             textAlign: 'left', marginBottom: 2, transition: 'all 0.12s',
           }}>
@@ -73,7 +73,7 @@ export function Sidebar() {
             }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(200,200,220,0.8)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{acct.name}</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: ['credit','loan'].includes(acct.type) ? '#f04f54' : 'rgba(150,150,170,0.7)' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: ['credit','loan'].includes(acct.type) ? '#b3b3b3' : 'rgba(150,150,170,0.7)' }}>
                 {['credit','loan'].includes(acct.type) ? '-' : ''}{formatCurrency(Math.abs(acct.current_balance), true)}
               </div>
             </div>
@@ -112,10 +112,10 @@ export function AccountCards({ accounts, loading }: { accounts: any[]; loading: 
   );
 
   const groups = [
-    { type: 'depository', label: 'Cash & Savings', color: '#16c784' },
-    { type: 'investment', label: 'Investments',    color: '#a78bfa' },
-    { type: 'credit',     label: 'Credit',         color: '#f04f54' },
-    { type: 'loan',       label: 'Loans',          color: '#f04f54' },
+    { type: 'depository', label: 'Cash & Savings', color: '#f0f0f8' },
+    { type: 'investment', label: 'Investments',    color: '#cccccc' },
+    { type: 'credit',     label: 'Credit',         color: '#b3b3b3' },
+    { type: 'loan',       label: 'Loans',          color: '#b3b3b3' },
   ];
 
   return (
@@ -170,7 +170,7 @@ export function BillsList({ token }: { token: string }) {
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}>
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: bill.autopay ? '#16c784' : '#f5a623', flexShrink: 0 }} />
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: bill.autopay ? '#f0f0f8' : '#cccccc', flexShrink: 0 }} />
           <span style={{ flex: 1, fontSize: 12, color: 'rgba(180,180,200,0.85)' }}>{bill.name}</span>
           {bill.next_due_date && (
             <span style={{ fontSize: 10, color: 'rgba(150,150,170,0.6)' }}>
@@ -181,7 +181,7 @@ export function BillsList({ token }: { token: string }) {
           <span style={{
             fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
             background: bill.autopay ? 'rgba(22,199,132,0.1)' : 'rgba(245,166,35,0.1)',
-            color: bill.autopay ? '#16c784' : '#f5a623',
+            color: bill.autopay ? '#f0f0f8' : '#cccccc',
           }}>
             {bill.autopay ? 'AUTO' : 'DUE'}
           </span>
@@ -195,7 +195,7 @@ export function BillsList({ token }: { token: string }) {
 // INSIGHT STRIP
 // ─────────────────────────────────────────────
 export function InsightStrip({ insights, loading }: { insights: any[]; loading: boolean }) {
-  const typeColors: Record<string, string> = { alert: '#f04f54', opportunity: '#16c784', info: '#f5a623' };
+  const typeColors: Record<string, string> = { alert: '#b3b3b3', opportunity: '#f0f0f8', info: '#cccccc' };
   const typeIcons: Record<string, string> = { alert: '⚡', opportunity: '↑', info: '◎' };
 
   if (loading) return (

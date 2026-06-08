@@ -18,7 +18,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${syne.variable} ${dmMono.variable} ${instrumentSerif.variable}`}>
+    <html lang="en" data-theme="light" className={`${syne.variable} ${dmMono.variable} ${instrumentSerif.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: "try{document.documentElement.dataset.theme=localStorage.getItem('persistence-theme')||'light'}catch(e){document.documentElement.dataset.theme='light'}" }} />
+      </head>
       <body>{children}</body>
     </html>
   );

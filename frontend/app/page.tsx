@@ -49,7 +49,7 @@ export default function DashboardPage() {
             <BillsList token={accessToken} />
           </div>
           {accounts.length === 0 && !loading && (
-            <div style={{ padding: 32, textAlign: 'center', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 12 }}>
+            <div style={{ padding: 32, textAlign: 'center', border: '1px dashed rgba(var(--fg),0.15)', borderRadius: 12 }}>
               <p style={{ color: 'var(--muted)', marginBottom: 16, fontSize: 14 }}>No accounts linked yet.</p>
               <PlaidLinkButton token={accessToken} onSuccess={loadData} />
             </div>
@@ -139,7 +139,7 @@ function AuthScreen() {
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '10px 14px',
-    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(var(--fg),0.05)', border: '1px solid rgba(var(--fg),0.1)',
     borderRadius: 8, color: 'var(--white)', fontSize: 14,
     fontFamily: 'var(--font-syne)', outline: 'none', marginBottom: 10,
   };
@@ -148,10 +148,10 @@ function AuthScreen() {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--ink)' }}>
       <div style={{ width: 360 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/logo-white.png" alt="Persistence" style={{ height: 46, width: 'auto', margin: '0 auto 8px', display: 'block' }} />
+          <img className="plogo" src="/logo.png" alt="Persistence" style={{ height: 46, width: 'auto', margin: '0 auto 8px', display: 'block' }} />
           <p style={{ color: 'var(--muted)', fontSize: 13 }}>Your financial cockpit</p>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 28 }}>
+        <div style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: 16, padding: 28 }}>
 
           {/* Google renders its own button here — guaranteed to work */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, minHeight: 44 }}>
@@ -159,18 +159,18 @@ function AuthScreen() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ flex: 1, height: 1, background: 'rgba(var(--fg),0.08)' }} />
             <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500 }}>or</span>
-            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ flex: 1, height: 1, background: 'rgba(var(--fg),0.08)' }} />
           </div>
 
-          <div style={{ display: 'flex', marginBottom: 20, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', marginBottom: 20, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(var(--fg),0.08)' }}>
             {(['login', 'register'] as const).map(m => (
               <button key={m} onClick={() => setMode(m)} style={{
                 flex: 1, padding: '8px 0', fontSize: 13, fontFamily: 'var(--font-syne)',
                 border: 'none', cursor: 'pointer', fontWeight: 500,
-                background: mode === m ? 'rgba(255,255,255,0.15)' : 'transparent',
-                color: mode === m ? 'var(--gold)' : 'var(--muted)', transition: 'all 0.15s',
+                background: mode === m ? 'rgba(var(--fg),0.15)' : 'transparent',
+                color: mode === m ? 'var(--accent)' : 'var(--muted)', transition: 'all 0.15s',
               }}>{m === 'login' ? 'Sign In' : 'Create Account'}</button>
             ))}
           </div>
@@ -181,7 +181,7 @@ function AuthScreen() {
             <input style={inp} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
             {error && <p style={{ color: 'var(--red)', fontSize: 12, marginBottom: 10 }}>{error}</p>}
             <button type="submit" disabled={loading} style={{
-              width: '100%', padding: '11px 0', background: 'var(--gold)', color: '#0a0a0f',
+              width: '100%', padding: '11px 0', background: 'var(--accent)', color: 'var(--accent-fg)',
               border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
               fontFamily: 'var(--font-syne)', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1,
             }}>{loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}</button>

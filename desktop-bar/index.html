@@ -1,223 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Persistence</title>
 <style>
+:root { --fg:17,17,17; --bar-bg:rgba(255,255,255,0.9); --text:#14141f; --border:rgba(0,0,0,0.12); }
+html[data-theme="dark"] { --fg:255,255,255; --bar-bg:rgba(10,10,15,0.92); --text:#f5f5fa; --border:rgba(255,255,255,0.12); }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
-
-body {
-  width: 100vw;
-  height: 52px;
-  background: rgba(0,0,0,0.92);
-  backdrop-filter: blur(24px) saturate(120%);
-  -webkit-backdrop-filter: blur(24px) saturate(120%);
-  border-bottom: 1px solid rgba(255,255,255,0.12);
-  overflow: hidden;
-  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  color: #fff;
-  -webkit-app-region: drag;
-}
-
-.brand {
-  height: 24px;
-  width: auto;
-  margin-right: 22px;
-  flex-shrink: 0;
-  -webkit-app-region: no-drag;
-}
-
-.tiles { display: flex; flex: 1; height: 100%; overflow: hidden; }
-
-.tile {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0 16px;
-  border-right: 1px solid rgba(255,255,255,0.1);
-  cursor: pointer;
-  transition: background 0.15s;
-  -webkit-app-region: no-drag;
-  position: relative;
-  flex-shrink: 0;
-}
-.tile:hover { background: rgba(255,255,255,0.08); }
-.tile:hover .tooltip { opacity: 1; pointer-events: auto; }
-
-.tile-label {
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 2px;
-}
-.tile-value {
-  font-size: 13px;
-  font-weight: 500;
-  color: #fff;
-  letter-spacing: -0.2px;
-}
-.tile-sub {
-  font-size: 8.5px;
-  color: rgba(255,255,255,0.3);
-  margin-top: 1px;
-}
-.dim { color: rgba(255,255,255,0.55); }
-
-.loading { animation: pulse 1.4s ease-in-out infinite; }
+body { width:100vw; height:52px; background:var(--bar-bg); backdrop-filter:blur(24px) saturate(120%); -webkit-backdrop-filter:blur(24px) saturate(120%); border-bottom:1px solid var(--border); overflow:hidden; font-family:'SF Mono','Cascadia Code','Consolas',monospace; display:flex; align-items:center; padding:0 14px; color:var(--text); -webkit-app-region:drag; }
+.brand { height:24px; width:auto; margin-right:22px; flex-shrink:0; -webkit-app-region:no-drag; }
+html[data-theme="dark"] .brand { filter:invert(1); }
+.tiles { display:flex; flex:1; height:100%; overflow:hidden; }
+.tile { display:flex; flex-direction:column; justify-content:center; padding:0 16px; border-right:1px solid rgba(var(--fg),0.1); cursor:pointer; transition:background .15s; -webkit-app-region:no-drag; flex-shrink:0; }
+.tile:hover { background:rgba(var(--fg),0.06); }
+.tile-label { font-size:8px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--fg),0.45); margin-bottom:2px; }
+.tile-value { font-size:13px; font-weight:500; color:var(--text); letter-spacing:-0.2px; }
+.tile-sub { font-size:8.5px; color:rgba(var(--fg),0.35); margin-top:1px; }
+.dim { color:rgba(var(--fg),0.55); }
+.loading { animation:pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:1} }
-
-.tooltip {
-  position: absolute;
-  top: 56px;
-  left: 0;
-  min-width: 200px;
-  background: rgba(0,0,0,0.97);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.85);
-  line-height: 1.7;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s;
-  z-index: 999;
-  white-space: nowrap;
-}
-.tooltip-row { display: flex; justify-content: space-between; gap: 20px; }
-.tooltip-key { color: rgba(255,255,255,0.45); }
-.tooltip-val { font-weight: 600; }
-
-.right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-  -webkit-app-region: no-drag;
-}
-.time { font-size: 12px; color: rgba(255,255,255,0.4); }
-
-.sync-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #fff;
-  flex-shrink: 0;
-}
-.sync-dot.stale { background: rgba(255,255,255,0.4); }
-.sync-dot.error { background: transparent; border: 1px solid rgba(255,255,255,0.6); }
-
-.btn-ask {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.4);
-  color: #fff;
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.12s;
-}
-.btn-ask:hover { background: #fff; color: #000; }
+.right { margin-left:auto; display:flex; align-items:center; gap:11px; flex-shrink:0; -webkit-app-region:no-drag; }
+.time { font-size:12px; color:rgba(var(--fg),0.45); }
+.sync-dot { width:6px; height:6px; border-radius:50%; background:rgba(var(--fg),0.85); flex-shrink:0; }
+.sync-dot.error { background:transparent; border:1px solid rgba(var(--fg),0.6); }
+.icon-btn { background:transparent; border:none; color:var(--text); cursor:pointer; font-size:14px; padding:2px 4px; opacity:0.65; -webkit-app-region:no-drag; }
+.icon-btn:hover { opacity:1; }
+.btn-ask { background:transparent; border:1px solid rgba(var(--fg),0.4); color:var(--text); border-radius:4px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .12s; }
+.btn-ask:hover { background:var(--text); color:var(--bar-bg); }
 </style>
 </head>
 <body data-tauri-drag-region>
-
-<img class="brand" src="logo-white.png" alt="Persistence">
-
+<img class="brand" src="logo.png" alt="Persistence">
 <div class="tiles" id="tiles">
-<div class="tile">
-<div class="tile-label">Loading</div>
-<div class="tile-value loading" style="width:60px;height:13px;background:rgba(255,255,255,0.15);border-radius:3px;"></div>
+<div class="tile"><div class="tile-label">Loading</div><div class="tile-value loading" style="width:60px;height:13px;background:rgba(var(--fg),0.15);border-radius:3px;"></div></div>
 </div>
-</div>
-
 <div class="right">
+<button class="icon-btn" id="theme-btn" title="Toggle light/dark" onclick="toggleTheme()">◐</button>
 <div class="sync-dot" id="sync-dot" title="Data sync status"></div>
 <div class="time" id="clock"></div>
 <button class="btn-ask" onclick="openDashboard()">Open</button>
 </div>
-
 <script src="login.js"></script><script>
 const { invoke } = window.__TAURI__?.core || { invoke: () => Promise.reject('no tauri') };
 let data = null;
-
-function updateClock() {
-  const d = new Date();
-  let h = d.getHours();
-  const m = d.getMinutes();
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  if (h > 12) h -= 12;
-  if (h === 0) h = 12;
-  document.getElementById('clock').textContent = h + ':' + String(m).padStart(2, '0') + ' ' + ampm;
-}
-setInterval(updateClock, 10000);
-updateClock();
-
-async function fetchData() {
-  try {
-    const ctx = await invoke('fetch_summary');
-    const c = ctx || {};
-    data = {
-      netWorth: Math.round(Number(c.net_worth) || 0),
-      cash: Math.round(Number(c.cash) || 0),
-      investments: Math.round(Number(c.investments) || 0),
-      retirement: Math.round(Number(c.retirement) || 0),
-      debt: Math.round(Number(c.total_debt) || 0),
-      monthlyBills: Math.round(Number(c.monthly_bills) || 0)
-    };
-    renderTiles();
-    document.getElementById('sync-dot').className = 'sync-dot';
-  } catch (err) {
-    console.error('fetch_summary error:', err);
-    document.getElementById('sync-dot').className = 'sync-dot error';
-  }
-}
-
-function fmt(n) {
-  if (Math.abs(n) >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
-  if (Math.abs(n) >= 1000) return '$' + Math.round(n / 1000) + 'k';
-  return '$' + Math.round(n);
-}
-
-function tile(label, value, sub, cls) {
-  return '<div class="tile" onclick="openDashboard()">' +
-    '<div class="tile-label">' + label + '</div>' +
-    '<div class="tile-value ' + (cls || '') + '">' + value + '</div>' +
-    '<div class="tile-sub">' + sub + '</div>' +
-    '</div>';
-}
-
-function renderTiles() {
-  if (!data) return;
-  const tiles = document.getElementById('tiles');
-  tiles.innerHTML =
-    tile('Net Worth', fmt(data.netWorth), 'all accounts', '') +
-    tile('Cash', fmt(data.cash), 'checking + savings', '') +
-    tile('Investments', fmt(data.investments), 'brokerage', 'dim') +
-    tile('Retirement', fmt(data.retirement), '401k + IRA', 'dim') +
-    tile('Debt', (data.debt > 0 ? fmt(data.debt) : 'None'), 'credit + loans', '') +
-    tile('Monthly Bills', fmt(data.monthlyBills), 'recurring', 'dim');
-}
-
-function openDashboard() {
-  if (window.__TAURI__ && window.__TAURI__.shell) {
-    window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app');
-  }
-}
-
-(async () => {
-  await window.ensureAuth();
-  await fetchData();
-  setInterval(fetchData, 5 * 60 * 1000);
-})();
+function applyTheme(t){ document.documentElement.dataset.theme=t; try{ localStorage.setItem('persistence-theme',t); }catch(e){} }
+function toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark'?'dark':'light'; applyTheme(cur==='dark'?'light':'dark'); }
+(function(){ let t='light'; try{ t=localStorage.getItem('persistence-theme')||'light'; }catch(e){} document.documentElement.dataset.theme=t; })();
+function updateClock(){ const d=new Date(); let h=d.getHours(); const m=d.getMinutes(); const ampm=h>=12?'PM':'AM'; if(h>12)h-=12; if(h===0)h=12; document.getElementById('clock').textContent=h+':'+String(m).padStart(2,'0')+' '+ampm; }
+setInterval(updateClock,10000); updateClock();
+async function fetchData(){ try{ const ctx=await invoke('fetch_summary'); const c=ctx||{}; data={netWorth:Math.round(Number(c.net_worth)||0),cash:Math.round(Number(c.cash)||0),investments:Math.round(Number(c.investments)||0),retirement:Math.round(Number(c.retirement)||0),debt:Math.round(Number(c.total_debt)||0),monthlyBills:Math.round(Number(c.monthly_bills)||0)}; renderTiles(); document.getElementById('sync-dot').className='sync-dot'; }catch(err){ console.error('fetch_summary error:',err); document.getElementById('sync-dot').className='sync-dot error'; } }
+function fmt(n){ if(Math.abs(n)>=1000000) return '$'+(n/1000000).toFixed(1)+'M'; if(Math.abs(n)>=1000) return '$'+Math.round(n/1000)+'k'; return '$'+Math.round(n); }
+function tile(label,value,sub,cls){ return '<div class="tile" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+(cls||'')+'">'+value+'</div><div class="tile-sub">'+sub+'</div></div>'; }
+function renderTiles(){ if(!data) return; document.getElementById('tiles').innerHTML=tile('Net Worth',fmt(data.netWorth),'all accounts','')+tile('Cash',fmt(data.cash),'checking + savings','')+tile('Investments',fmt(data.investments),'brokerage','dim')+tile('Retirement',fmt(data.retirement),'401k + IRA','dim')+tile('Debt',(data.debt>0?fmt(data.debt):'None'),'credit + loans','')+tile('Monthly Bills',fmt(data.monthlyBills),'recurring','dim'); }
+function openDashboard(){ if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
+(async()=>{ await window.ensureAuth(); await fetchData(); setInterval(fetchData,5*60*1000); })();
 </script>
 </body>
 </html>

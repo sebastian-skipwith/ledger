@@ -4,34 +4,53 @@
 @tailwind utilities;
 
 :root {
+  --fg: 17,17,17;
+  --bg: #ffffff;
+  --text: #14141f;
+  --ink:     #ffffff;
+  --ink2:    #f4f4f7;
+  --ink3:    #ececf2;
+  --surface: #f4f4f6;
+  --border:  rgba(0,0,0,0.10);
+  --muted:   #6b6b80;
+  --subtle:  #3a3a4a;
+  --white:   #14141f;
+  --bar-bg:  rgba(255,255,255,0.90);
+  --accent:  #111111;
+  --accent-fg:#ffffff;
+  --gold:    #111111;
+  --green:   #14141f; --red: #14141f; --amber: #14141f; --purple: #14141f;
+  --blue:    #3b7dff; --teal: #14141f;
+  --font-display: var(--font-serif);
+  --font-body:    var(--font-syne);
+  --font-code:    var(--font-mono);
+}
+html[data-theme="dark"] {
+  --fg: 255,255,255;
+  --bg: #0a0a0f;
+  --text: #f0f0f8;
   --ink:     #0a0a0f;
   --ink2:    #14141f;
   --ink3:    #1e1e2e;
   --surface: #242436;
   --border:  rgba(255,255,255,0.08);
-  --muted:   #6666a0;
-  --subtle:  #9999c0;
+  --muted:   #8a8aa8;
+  --subtle:  #aaaac0;
   --white:   #f0f0f8;
-
-  --green:   #f0f0f8;
-  --red:     #b3b3b3;
-  --amber:   #cccccc;
-  --blue:    #3b7dff;
-  --purple:  #cccccc;
+  --bar-bg:  rgba(10,10,15,0.92);
+  --accent:  #ffffff;
+  --accent-fg:#0a0a0f;
   --gold:    #ffffff;
-  --teal:    #1d9e75;
-
-  --font-display: var(--font-serif);
-  --font-body:    var(--font-syne);
-  --font-code:    var(--font-mono);
+  --green:   #f0f0f8; --red: #f0f0f8; --amber: #cfcfcf; --purple: #cfcfcf;
+  --blue:    #3b7dff; --teal: #cfcfcf;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
   height: 100%;
-  background: var(--ink);
-  color: var(--white);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-syne), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -44,11 +63,11 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 /* Selection */
-::selection { background: rgba(255,255,255,0.3); color: white; }
+::selection { background: rgba(var(--fg),0.18); }
 
 /* Focus ring */
 :focus-visible {
-  outline: 2px solid rgba(255,255,255,0.6);
+  outline: 2px solid rgba(var(--fg),0.5);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -96,3 +115,8 @@ html, body {
   color: var(--gold);
   margin-left: 1px;
 }
+
+/* logo + theme */
+.plogo{display:inline-block}
+html[data-theme="dark"] .plogo{filter:invert(1);}
+body{transition:background .2s,color .2s;}

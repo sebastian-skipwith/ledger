@@ -1,5 +1,4 @@
 // Persistence HUD - login overlay + token bootstrap.
-// Exposes window.ensureAuth(): resolves once a valid session token is stored.
 (() => {
 const core = window.__TAURI__?.core;
 const invoke = core?.invoke || (() => Promise.reject('no tauri'));
@@ -22,24 +21,21 @@ b.style.height = '';
 b.style.minHeight = '';
 b.style.overflow = '';
 }
-
 async function sizeForLogin() {
 try { await invoke('size_for_login'); } catch (e) { console.error('sizeForLogin', e); }
 freeBody();
 }
-
 async function restoreBar() {
 restoreBody();
 try { await invoke('restore_bar'); } catch (e) { console.error('restoreBar', e); }
 }
-
 function showOverlay() {
 return new Promise((resolve) => {
 const wrap = document.createElement('div');
 wrap.id = 'persistence-login';
 wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#ffffff;color:#000;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-app-region:no-drag;font-family:Georgia, serif;';
 wrap.innerHTML = '<div style="width:320px;display:flex;flex-direction:column;gap:13px;padding:28px 0;text-align:center;">' +
-'<img src="logo-black.png" alt="Persistence" style="height:66px;width:auto;display:block;margin:0 auto;" />' +
+'<img src="logo.png" alt="Persistence" style="height:64px;width:auto;display:block;margin:0 auto;" />' +
 '<div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;">Persistence</div>' +
 '<button id="lg-google" style="padding:12px;border:1px solid #000;background:#000;color:#fff;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;">Sign in with Google</button>' +
 '<div style="font-size:11px;color:#555;line-height:1.5;margin-top:2px;">A browser window opens. Sign in, copy the code shown, paste it below.</div>' +
@@ -58,28 +54,17 @@ const v = code.value.trim();
 if (!v) { err.textContent = 'Paste the code first'; return; }
 err.textContent = '';
 cbtn.disabled = true; cbtn.textContent = 'CONNECTING...';
-try {
-await invoke('set_session', { refresh: v });
-wrap.remove();
-resolve();
-} catch (e) {
-err.textContent = (e && e.toString) ? e.toString() : 'Could not connect';
-cbtn.disabled = false; cbtn.textContent = 'Connect';
-}
+try { await invoke('set_session', { refresh: v }); wrap.remove(); resolve(); }
+catch (e) { err.textContent = (e && e.toString) ? e.toString() : 'Could not connect'; cbtn.disabled = false; cbtn.textContent = 'Connect'; }
 }
 cbtn.addEventListener('click', connect);
 code.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') connect(); });
 });
 }
-
 window.ensureAuth = async function ensureAuth() {
 let authed = false;
 try { authed = await invoke('is_authenticated'); } catch (e) { authed = false; }
-if (!authed) {
-await sizeForLogin();
-await showOverlay();
-await restoreBar();
-}
+if (!authed) { await sizeForLogin(); await showOverlay(); await restoreBar(); }
 setInterval(() => { invoke('refresh').catch(() => {}); }, 12 * 60 * 1000);
 };
 })();

@@ -14,26 +14,26 @@ export default function Sidebar() {
   ];
 
   const acctColors: Record<string, string> = {
-    depository: '#f0f0f8', investment: '#cccccc',
-    credit: '#b3b3b3', loan: '#b3b3b3',
+    depository: 'var(--text)', investment: 'rgba(var(--fg),0.5)',
+    credit: 'rgba(var(--fg),0.6)', loan: 'rgba(var(--fg),0.6)',
   };
 
   return (
     <div style={{
       width: 220, flexShrink: 0,
-      borderRight: '1px solid rgba(255,255,255,0.07)',
+      borderRight: '1px solid rgba(var(--fg),0.07)',
       padding: '20px 0', overflowY: 'auto',
-      background: 'rgba(255,255,255,0.015)',
+      background: 'rgba(var(--fg),0.015)',
     }}>
       <div style={{ padding: '0 12px', marginBottom: 20 }}>
-        <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', padding: '0 8px', marginBottom: 6 }}>Overview</div>
+        <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.25)', padding: '0 8px', marginBottom: 6 }}>Overview</div>
         {navItems.map(item => (
           <button key={item.id} onClick={() => setActiveSection(item.id)} style={{
             display: 'flex', alignItems: 'center', gap: 9,
             width: '100%', padding: '7px 8px', borderRadius: 7,
             border: 'none', cursor: 'pointer',
-            background: activeSection === item.id ? 'rgba(255,255,255,0.1)' : 'transparent',
-            color: activeSection === item.id ? '#ffffff' : 'rgba(180,180,200,0.7)',
+            background: activeSection === item.id ? 'rgba(var(--fg),0.1)' : 'transparent',
+            color: activeSection === item.id ? 'var(--text)' : 'rgba(var(--fg),0.7)',
             fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-syne)',
             textAlign: 'left', marginBottom: 2, transition: 'all 0.12s',
           }}>
@@ -43,22 +43,22 @@ export default function Sidebar() {
         ))}
       </div>
 
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '4px 12px 16px' }} />
+      <div style={{ height: 1, background: 'rgba(var(--fg),0.07)', margin: '4px 12px 16px' }} />
 
       <div style={{ padding: '0 12px' }}>
-        <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', padding: '0 8px', marginBottom: 6 }}>Accounts</div>
+        <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.25)', padding: '0 8px', marginBottom: 6 }}>Accounts</div>
         {accounts.map(acct => (
           <div key={acct.id} style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '8px 8px', borderRadius: 7, cursor: 'pointer', marginBottom: 2,
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: acctColors[acct.type] || '#666' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(200,200,220,0.8)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{acct.name}</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: ['credit','loan'].includes(acct.type) ? '#b3b3b3' : 'rgba(150,150,170,0.7)' }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(var(--fg),0.8)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{acct.name}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: ['credit','loan'].includes(acct.type) ? 'rgba(var(--fg),0.6)' : 'rgba(var(--fg),0.7)' }}>
                 {formatCurrency(Math.abs(acct.current_balance), true)}
               </div>
             </div>

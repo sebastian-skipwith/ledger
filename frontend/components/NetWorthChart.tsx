@@ -29,9 +29,9 @@ export function NetWorthChart({ token }: { token: string }) {
           {[30, 90, 180, 365].map(d => (
             <button key={d} onClick={() => setRange(d)} style={{
               fontSize: 10, padding: '3px 9px', borderRadius: 5,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: range === d ? '#ffffff' : 'transparent',
-              color: range === d ? '#0a0a0f' : 'rgba(255,255,255,0.4)',
+              border: '1px solid rgba(var(--fg),0.1)',
+              background: range === d ? 'var(--text)' : 'transparent',
+              color: range === d ? 'var(--accent-fg)' : 'rgba(var(--fg),0.4)',
               cursor: 'pointer', fontFamily: 'var(--font-syne)', fontWeight: 600,
             }}>
               {d === 365 ? '1Y' : `${d}D`}
@@ -44,18 +44,18 @@ export function NetWorthChart({ token }: { token: string }) {
           <AreaChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ffffff" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
+                <stop offset="5%" stopColor="var(--text)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="var(--text)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="date" tick={{ fill: '#555570', fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-            <YAxis tickFormatter={fmt} tick={{ fill: '#555570', fontSize: 9 }} tickLine={false} axisLine={false} width={42} />
+            <XAxis dataKey="date" tick={{ fill: 'var(--muted)', fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+            <YAxis tickFormatter={fmt} tick={{ fill: 'var(--muted)', fontSize: 9 }} tickLine={false} axisLine={false} width={42} />
             <Tooltip
-              contentStyle={{ background: '#14141f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: '#9999c0' }}
+              contentStyle={{ background: 'var(--surface)', border: '1px solid rgba(var(--fg),0.1)', borderRadius: 8, fontSize: 12 }}
+              labelStyle={{ color: 'var(--muted)' }}
               formatter={(v: any) => [`$${v.toLocaleString()}`, 'Net Worth']}
             />
-            <Area type="monotone" dataKey="value" stroke="#ffffff" strokeWidth={2} fill="url(#goldGrad)" dot={false} />
+            <Area type="monotone" dataKey="value" stroke="var(--text)" strokeWidth={2} fill="url(#goldGrad)" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

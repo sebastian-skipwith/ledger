@@ -1,6 +1,6 @@
 'use client';
 
-const typeColors: Record<string, string> = { alert: '#b3b3b3', opportunity: '#f0f0f8', info: '#cccccc' };
+const typeColors: Record<string, string> = { alert: 'rgba(var(--fg),0.6)', opportunity: 'var(--text)', info: 'rgba(var(--fg),0.5)' };
 const typeIcons: Record<string, string> = { alert: '⚡', opportunity: '↑', info: '◎' };
 
 export default function InsightStrip({ insights, loading }: { insights: any[]; loading: boolean }) {
@@ -16,9 +16,9 @@ export default function InsightStrip({ insights, loading }: { insights: any[]; l
         <div key={i} className="card" style={{ padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <span style={{ fontSize: 13 }}>{typeIcons[ins.type] || '◎'}</span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: typeColors[ins.type] || '#f0f0f8' }}>{ins.title}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: typeColors[ins.type] || 'var(--text)' }}>{ins.title}</span>
           </div>
-          <p style={{ fontSize: 11, color: 'rgba(160,160,180,0.85)', lineHeight: 1.5 }}>{ins.body}</p>
+          <p style={{ fontSize: 11, color: 'rgba(var(--fg),0.85)', lineHeight: 1.5 }}>{ins.body}</p>
         </div>
       ))}
     </div>

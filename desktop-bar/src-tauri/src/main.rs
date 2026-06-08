@@ -1,5 +1,5 @@
-// Ledger Desktop Bar — Tauri v2
-// Creates a persistent, always-on-top transparent overlay at the top of the screen
+// Persistence Desktop Bar - Tauri v2
+// Persistent, always-on-top transparent overlay at the top of the screen
 // showing live financial metrics.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
@@ -25,40 +25,34 @@ fn main() {
         .setup(|app| {
             let _handle = app.handle().clone();
 
-            // Launch automatically on login (makes the HUD persistent across reboots)
             let _ = app.autolaunch().enable();
 
-            // Get primary monitor dimensions
             let monitor = app.primary_monitor()?.unwrap();
             let screen_w = monitor.size().width as f64 / monitor.scale_factor();
 
-            // Build the always-on-top overlay window
             let win = WebviewWindowBuilder::new(
                 app,
                 "main",
                 WebviewUrl::App("index.html".into()),
             )
-            .title("Ledger")
+            .title("Persistence")
             .inner_size(screen_w, 52.0)
             .position(0.0, 0.0)
-            .decorations(false)              // No title bar
-            .transparent(true)               // See-through background
-            .always_on_top(true)             // Always visible
-            .visible_on_all_workspaces(true) // Show on every virtual desktop / space
-            .skip_taskbar(true)              // Don't show in taskbar
-            .resizable(true)                 // Allow resizing
-            .min_inner_size(220.0, 40.0)     // Don't let it collapse to nothing
+            .decorations(false)
+            .transparent(true)
+            .always_on_top(true)
+            .visible_on_all_workspaces(true)
+            .skip_taskbar(true)
+            .resizable(true)
+            .min_inner_size(220.0, 40.0)
             .shadow(false)
             .build()?;
 
-            // Edge snapping: when the window is moved within SNAP px of a monitor
-            // edge, pull it flush to that edge. Loop-safe because snapping an
-            // already-snapped position yields the same coordinates.
             {
                 let snap_win = win.clone();
                 win.on_window_event(move |event| {
                     if let tauri::WindowEvent::Moved(pos) = event {
-                        const SNAP: i32 = 24; // px "magnet" distance
+                        const SNAP: i32 = 24;
                         if let (Ok(Some(mon)), Ok(size)) =
                             (snap_win.current_monitor(), snap_win.outer_size())
                         {
@@ -83,15 +77,14 @@ fn main() {
                 });
             }
 
-            // System tray
-            let quit = MenuItemBuilder::with_id("quit", "Quit Ledger").build(app)?;
+            let quit = MenuItemBuilder::with_id("quit", "Quit Persistence").build(app)?;
             let show = MenuItemBuilder::with_id("show", "Open Dashboard").build(app)?;
             let settings = MenuItemBuilder::with_id("settings", "Settings").build(app)?;
             let menu = MenuBuilder::new(app).items(&[&show, &settings, &quit]).build()?;
 
             let _tray = TrayIconBuilder::new()
                 .menu(&menu)
-                .tooltip("Ledger — Personal Finance HUD")
+                .tooltip("Persistence")
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click { .. } = event {
                         let app = tray.app_handle();
@@ -103,8 +96,7 @@ fn main() {
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "quit" => app.exit(0),
                     "show" => {
-                        // Open full web dashboard in the default browser
-                        let _ = app.shell().open("http://localhost:3000".to_string(), None);
+                        let _ = app.shell().open("https://ledger-theta-puce.vercel.app".to_string(), None);
                     }
                     _ => {}
                 })
@@ -119,17 +111,16 @@ fn main() {
             refresh,
             is_authenticated,
             logout,
+            set_session,
         ])
         .run(tauri::generate_context!())
-        .expect("error running Ledger desktop bar");
+        .expect("error running Persistence desktop bar");
 }
 
-// ── Keychain helpers ────────────────────────────────────────────────
 fn kc(key: &str) -> Result<keyring::Entry, String> {
     keyring::Entry::new("ledger", key).map_err(|e| e.to_string())
 }
 
-/// Store auth token securely in system keychain
 #[tauri::command]
 fn set_token(token: String) -> Result<(), String> {
     kc("auth_token")?.set_password(&token).map_err(|e| e.to_string())
@@ -155,7 +146,6 @@ fn logout() -> Result<(), String> {
     Ok(())
 }
 
-/// Log in against the Ledger backend and store both tokens in the keychain.
 #[tauri::command]
 async fn login(email: String, password: String) -> Result<Value, String> {
     let client = reqwest::Client::new();
@@ -181,7 +171,6 @@ async fn login(email: String, password: String) -> Result<Value, String> {
     Ok(body.get("user").cloned().unwrap_or(Value::Null))
 }
 
-/// Exchange the stored refresh token for a fresh access token.
 #[tauri::command]
 async fn refresh() -> Result<String, String> {
     let refresh_tok = kc("refresh_token")?
@@ -208,4 +197,29 @@ async fn refresh() -> Result<String, String> {
         let _ = kc("refresh_token")?.set_password(r);
     }
     Ok(access)
+}
+
+#[tauri::command]
+async fn set_session(refresh: String) -> Result<(), String> {
+    let r = refresh.trim().to_string();
+    if r.is_empty() { return Err("Empty code".into()); }
+    kc("refresh_token")?.set_password(&r).map_err(|e| e.to_string())?;
+    let client = reqwest::Client::new();
+    let res = client
+        .post(format!("{API_BASE}/api/auth/refresh"))
+        .json(&json!({ "refresh": r }))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !res.status().is_success() {
+        return Err("Invalid or expired code".into());
+    }
+    let body: Value = res.json().await.map_err(|e| e.to_string())?;
+    if let Some(a) = body.get("access").and_then(|v| v.as_str()) {
+        let _ = kc("auth_token")?.set_password(a);
+    }
+    if let Some(rr) = body.get("refresh").and_then(|v| v.as_str()) {
+        let _ = kc("refresh_token")?.set_password(rr);
+    }
+    Ok(())
 }

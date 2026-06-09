@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { formatCurrency } from '@/lib/store';
 
 interface TopBarProps {
@@ -84,7 +84,7 @@ export default function TopBar({ summary, loading, deltas, period = 'day', onPer
             }}>{pk === 'day' ? '1D' : pk === 'week' ? '1W' : '1M'}</button>
           ))}
         </div>
-        <button onClick={() => { const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }} title="Toggle light/dark" style={{ background:'transparent', border:'none', color:'var(--text)', cursor:'pointer', fontSize:15, opacity:0.65, padding:'2px 4px' }}>â—</button>
+        <button onClick={() => { const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }} title="Toggle light/dark" style={{ background:'transparent', border:'none', color:'var(--text)', cursor:'pointer', fontSize:15, opacity:0.65, padding:'2px 4px' }}>{'\u25D0'}</button>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(var(--fg),0.3)' }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
         </div>
@@ -96,7 +96,7 @@ export default function TopBar({ summary, loading, deltas, period = 'day', onPer
           fontWeight: 600, fontFamily: 'var(--font-syne)',
           cursor: 'pointer',
         }}>
-          Ask AI â†—
+          Ask AI {'\u2197'}
         </button>
       </div>
     </div>

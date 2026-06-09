@@ -28,6 +28,11 @@ html[data-theme="dark"] .brand { filter:invert(1); }
 .icon-btn:hover { opacity:1; }
 .btn-ask { background:transparent; border:1px solid rgba(var(--fg),0.4); color:var(--text); border-radius:4px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .12s; }
 .btn-ask:hover { background:var(--text); color:var(--bar-bg); }
+.up { color:#16a34a !important; }
+.down { color:#dc2626 !important; }
+.period { display:flex; gap:1px; background:rgba(var(--fg),0.08); border-radius:5px; padding:1px; -webkit-app-region:no-drag; }
+.period button { border:none; background:transparent; color:rgba(var(--fg),0.5); font-family:inherit; font-size:9px; font-weight:700; letter-spacing:.5px; padding:2px 5px; border-radius:4px; cursor:pointer; }
+.period button.active { background:var(--text); color:var(--bar-bg); }
 </style>
 </head>
 <body data-tauri-drag-region>
@@ -36,6 +41,7 @@ html[data-theme="dark"] .brand { filter:invert(1); }
 <div class="tile"><div class="tile-label">Loading</div><div class="tile-value loading" style="width:60px;height:13px;background:rgba(var(--fg),0.15);border-radius:3px;"></div></div>
 </div>
 <div class="right">
+<div class="period" id="period"><button data-p="day" class="active" onclick="setPeriod('day')">1D</button><button data-p="week" onclick="setPeriod('week')">1W</button><button data-p="month" onclick="setPeriod('month')">1M</button></div>
 <button class="icon-btn" id="theme-btn" title="Toggle light/dark" onclick="toggleTheme()">◐</button>
 <div class="sync-dot" id="sync-dot" title="Data sync status"></div>
 <div class="time" id="clock"></div>
@@ -44,15 +50,52 @@ html[data-theme="dark"] .brand { filter:invert(1); }
 <script src="login.js"></script><script>
 const { invoke } = window.__TAURI__?.core || { invoke: () => Promise.reject('no tauri') };
 let data = null;
+let history = [];
+let period = 'day';
 function applyTheme(t){ document.documentElement.dataset.theme=t; try{ localStorage.setItem('persistence-theme',t); }catch(e){} }
 function toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark'?'dark':'light'; applyTheme(cur==='dark'?'light':'dark'); }
 (function(){ let t='light'; try{ t=localStorage.getItem('persistence-theme')||'light'; }catch(e){} document.documentElement.dataset.theme=t; })();
 function updateClock(){ const d=new Date(); let h=d.getHours(); const m=d.getMinutes(); const ampm=h>=12?'PM':'AM'; if(h>12)h-=12; if(h===0)h=12; document.getElementById('clock').textContent=h+':'+String(m).padStart(2,'0')+' '+ampm; }
 setInterval(updateClock,10000); updateClock();
-async function fetchData(){ try{ const ctx=await invoke('fetch_summary'); const c=ctx||{}; data={netWorth:Math.round(Number(c.net_worth)||0),cash:Math.round(Number(c.cash)||0),investments:Math.round(Number(c.investments)||0),retirement:Math.round(Number(c.retirement)||0),debt:Math.round(Number(c.total_debt)||0),monthlyBills:Math.round(Number(c.monthly_bills)||0)}; renderTiles(); document.getElementById('sync-dot').className='sync-dot'; }catch(err){ console.error('fetch_summary error:',err); document.getElementById('sync-dot').className='sync-dot error'; } }
+async function fetchData(){ try{ const ctx=await invoke('fetch_summary'); const c=ctx||{}; data={netWorth:Math.round(Number(c.net_worth)||0),cash:Math.round(Number(c.cash)||0),investments:Math.round(Number(c.investments)||0),retirement:Math.round(Number(c.retirement)||0),debt:Math.round(Number(c.total_debt)||0),monthlyBills:Math.round(Number(c.monthly_bills)||0)}; try{ const h=await invoke('fetch_history'); history=Array.isArray(h)?h:[]; }catch(he){ console.error('fetch_history error:',he); } renderTiles(); document.getElementById('sync-dot').className='sync-dot'; }catch(err){ console.error('fetch_summary error:',err); document.getElementById('sync-dot').className='sync-dot error'; } }
 function fmt(n){ if(Math.abs(n)>=1000000) return '$'+(n/1000000).toFixed(1)+'M'; if(Math.abs(n)>=1000) return '$'+Math.round(n/1000)+'k'; return '$'+Math.round(n); }
-function tile(label,value,sub,cls){ return '<div class="tile" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+(cls||'')+'">'+value+'</div><div class="tile-sub">'+sub+'</div></div>'; }
-function renderTiles(){ if(!data) return; document.getElementById('tiles').innerHTML=tile('Net Worth',fmt(data.netWorth),'all accounts','')+tile('Cash',fmt(data.cash),'checking + savings','')+tile('Investments',fmt(data.investments),'brokerage','dim')+tile('Retirement',fmt(data.retirement),'401k + IRA','dim')+tile('Debt',(data.debt>0?fmt(data.debt):'None'),'credit + loans','')+tile('Monthly Bills',fmt(data.monthlyBills),'recurring','dim'); }
+function computeDeltas(){
+  if(!data||!history.length) return {};
+  const daysBack=period==='day'?1:period==='week'?7:30;
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-daysBack);
+  const sorted=[...history].sort((a,b)=>new Date(a.snapshot_date)-new Date(b.snapshot_date));
+  let past=sorted[0];
+  for(const r of sorted){ if(new Date(r.snapshot_date)<=cutoff) past=r; }
+  const b=(past&&past.breakdown)?past.breakdown:{};
+  const prev={netWorth:Number(past&&past.net_worth),cash:Number(b.cash),investments:Number(b.investments),retirement:Number(b.retirement),debt:Number(b.debt)};
+  const out={};
+  for(const k of ['netWorth','cash','investments','retirement','debt']){
+    const now=Number(data[k]); const was=prev[k];
+    if(was===undefined||isNaN(was)||isNaN(now)){ out[k]=null; continue; }
+    const diff=now-was; const pct=was!==0?(diff/Math.abs(was))*100:null;
+    out[k]={diff,pct};
+  }
+  return out;
+}
+function setPeriod(p){ period=p; document.querySelectorAll('#period button').forEach(b=>b.classList.toggle('active',b.dataset.p===p)); renderTiles(); }
+function tile(label,value,sub,cls,delta,goodUp){
+  let vcls=cls||''; let subHtml='<div class="tile-sub">'+sub+'</div>';
+  if(delta&&delta.diff!==0&&!isNaN(delta.diff)){
+    const up=delta.diff>0; const positive=goodUp?up:!up; const dir=positive?'up':'down';
+    const arrow=up?'\u25b2':'\u25bc';
+    const pct=(delta.pct===null||!isFinite(delta.pct))?'':' '+Math.abs(delta.pct).toFixed(1)+'%';
+    vcls=(cls?cls+' ':'')+dir;
+    subHtml='<div class="tile-sub '+dir+'">'+arrow+pct+'</div>';
+  }
+  return '<div class="tile" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+vcls+'">'+value+'</div>'+subHtml+'</div>'; }
+function renderTiles(){ if(!data) return; const d=computeDeltas();
+  document.getElementById('tiles').innerHTML=
+    tile('Net Worth',fmt(data.netWorth),'all accounts','',d.netWorth,true)+
+    tile('Cash',fmt(data.cash),'checking + savings','',d.cash,true)+
+    tile('Investments',fmt(data.investments),'brokerage','dim',d.investments,true)+
+    tile('Retirement',fmt(data.retirement),'401k + IRA','dim',d.retirement,true)+
+    tile('Debt',(data.debt>0?fmt(data.debt):'None'),'credit + loans','',d.debt,false)+
+    tile('Monthly Bills',fmt(data.monthlyBills),'recurring','dim',null,true); }
 function openDashboard(){ if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
 (async()=>{ await window.ensureAuth(); await fetchData(); setInterval(fetchData,5*60*1000); })();
 </script>

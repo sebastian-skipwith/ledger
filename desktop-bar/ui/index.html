@@ -8,47 +8,75 @@
 :root { --fg:17,17,17; --bar-bg:rgba(255,255,255,0.9); --text:#14141f; --border:rgba(0,0,0,0.12); }
 html[data-theme="dark"] { --fg:255,255,255; --bar-bg:rgba(10,10,15,0.92); --text:#f5f5fa; --border:rgba(255,255,255,0.12); }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; }
-body { width:100vw; height:52px; background:var(--bar-bg); backdrop-filter:blur(24px) saturate(120%); -webkit-backdrop-filter:blur(24px) saturate(120%); border-bottom:1px solid var(--border); overflow:hidden; font-family:'SF Mono','Cascadia Code','Consolas',monospace; display:flex; align-items:center; padding:0 14px; color:var(--text); -webkit-app-region:drag; }
-.brand { height:24px; width:auto; margin-right:22px; flex-shrink:0; -webkit-app-region:no-drag; }
+html, body { width:100vw; height:100vh; overflow:hidden; }
+body { background:var(--bar-bg); backdrop-filter:blur(24px) saturate(120%); -webkit-backdrop-filter:blur(24px) saturate(120%); border:1px solid var(--border); border-radius:10px; font-family:'SF Mono','Cascadia Code','Consolas',monospace; color:var(--text); position:relative; }
+#stage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+#content { display:flex; align-items:center; transform-origin:center center; white-space:nowrap; }
+body.vertical #content { flex-direction:column; align-items:stretch; }
+.brand { height:24px; width:auto; flex-shrink:0; margin-right:18px; }
+body.vertical .brand { margin:0 auto 8px auto; height:30px; }
 html[data-theme="dark"] .brand { filter:invert(1); }
-.tiles { display:flex; flex:1; height:100%; overflow:hidden; }
-.tile { display:flex; flex-direction:column; justify-content:center; padding:0 16px; border-right:1px solid rgba(var(--fg),0.1); cursor:pointer; transition:background .15s; -webkit-app-region:no-drag; flex-shrink:0; }
-.tile:hover { background:rgba(var(--fg),0.06); }
+.tiles { display:flex; }
+body.vertical .tiles { display:grid; grid-template-columns:1fr 1fr; }
+.tile { display:flex; flex-direction:column; justify-content:center; padding:0 14px; border-right:1px solid rgba(var(--fg),0.1); cursor:pointer; }
+body.vertical .tile { border-right:none; border-bottom:1px solid rgba(var(--fg),0.08); padding:7px 14px; }
 .tile-label { font-size:8px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--fg),0.45); margin-bottom:2px; }
 .tile-value { font-size:13px; font-weight:500; color:var(--text); letter-spacing:-0.2px; }
 .tile-sub { font-size:8.5px; color:rgba(var(--fg),0.35); margin-top:1px; }
+.up { color:#16a34a !important; }
+.down { color:#dc2626 !important; }
 .dim { color:rgba(var(--fg),0.55); }
 .loading { animation:pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:1} }
-.right { margin-left:auto; display:flex; align-items:center; gap:11px; flex-shrink:0; -webkit-app-region:no-drag; }
+.right { display:flex; align-items:center; gap:11px; margin-left:18px; }
+body.vertical .right { margin:10px auto 0 auto; justify-content:center; flex-wrap:wrap; }
+.period { display:flex; gap:1px; background:rgba(var(--fg),0.08); border-radius:5px; padding:1px; }
+.period button { border:none; background:transparent; color:rgba(var(--fg),0.5); font-family:inherit; font-size:9px; font-weight:700; letter-spacing:.5px; padding:2px 5px; border-radius:4px; cursor:pointer; }
+.period button.active { background:var(--text); color:var(--bar-bg); }
 .time { font-size:12px; color:rgba(var(--fg),0.45); }
 .sync-dot { width:6px; height:6px; border-radius:50%; background:rgba(var(--fg),0.85); flex-shrink:0; }
 .sync-dot.error { background:transparent; border:1px solid rgba(var(--fg),0.6); }
-.icon-btn { background:transparent; border:none; color:var(--text); cursor:pointer; font-size:14px; padding:2px 4px; opacity:0.65; -webkit-app-region:no-drag; }
+.icon-btn { background:transparent; border:none; color:var(--text); cursor:pointer; font-size:14px; padding:2px 4px; opacity:0.65; }
 .icon-btn:hover { opacity:1; }
-.btn-ask { background:transparent; border:1px solid rgba(var(--fg),0.4); color:var(--text); border-radius:4px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .12s; }
+.btn-ask { background:transparent; border:1px solid rgba(var(--fg),0.4); color:var(--text); border-radius:4px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; }
 .btn-ask:hover { background:var(--text); color:var(--bar-bg); }
-.up { color:#16a34a !important; }
-.down { color:#dc2626 !important; }
-.period { display:flex; gap:1px; background:rgba(var(--fg),0.08); border-radius:5px; padding:1px; -webkit-app-region:no-drag; }
-.period button { border:none; background:transparent; color:rgba(var(--fg),0.5); font-family:inherit; font-size:9px; font-weight:700; letter-spacing:.5px; padding:2px 5px; border-radius:4px; cursor:pointer; }
-.period button.active { background:var(--text); color:var(--bar-bg); }
+.rsz { position:absolute; z-index:50; }
+.rsz-n { top:0; left:8px; right:8px; height:5px; cursor:ns-resize; }
+.rsz-s { bottom:0; left:8px; right:8px; height:5px; cursor:ns-resize; }
+.rsz-e { top:8px; bottom:8px; right:0; width:5px; cursor:ew-resize; }
+.rsz-w { top:8px; bottom:8px; left:0; width:5px; cursor:ew-resize; }
+.rsz-ne { top:0; right:0; width:11px; height:11px; cursor:nesw-resize; }
+.rsz-nw { top:0; left:0; width:11px; height:11px; cursor:nwse-resize; }
+.rsz-se { bottom:0; right:0; width:11px; height:11px; cursor:nwse-resize; }
+.rsz-sw { bottom:0; left:0; width:11px; height:11px; cursor:nesw-resize; }
 </style>
 </head>
 <body data-tauri-drag-region>
-<img class="brand" src="logo.png" alt="Persistence">
+<div id="stage" data-tauri-drag-region>
+<div id="content">
+<img class="brand" src="logo.png" alt="Persistence" data-tauri-drag-region>
 <div class="tiles" id="tiles">
 <div class="tile"><div class="tile-label">Loading</div><div class="tile-value loading" style="width:60px;height:13px;background:rgba(var(--fg),0.15);border-radius:3px;"></div></div>
 </div>
 <div class="right">
-<div class="period" id="period"><button data-p="day" class="active" onclick="setPeriod('day')">1D</button><button data-p="week" onclick="setPeriod('week')">1W</button><button data-p="month" onclick="setPeriod('month')">1M</button></div>
-<button class="icon-btn" id="theme-btn" title="Toggle light/dark" onclick="toggleTheme()">◐</button>
+<div class="period" id="period">
+<button data-p="day" class="active" onclick="setPeriod('day')">1D</button>
+<button data-p="week" onclick="setPeriod('week')">1W</button>
+<button data-p="month" onclick="setPeriod('month')">1M</button>
+</div>
+<button class="icon-btn" id="theme-btn" title="Toggle light/dark" onclick="toggleTheme()">&#9680;</button>
 <div class="sync-dot" id="sync-dot" title="Data sync status"></div>
 <div class="time" id="clock"></div>
 <button class="btn-ask" onclick="openDashboard()">Open</button>
 </div>
+</div>
+</div>
+<div class="rsz rsz-n"></div><div class="rsz rsz-s"></div><div class="rsz rsz-e"></div><div class="rsz rsz-w"></div>
+<div class="rsz rsz-ne"></div><div class="rsz rsz-nw"></div><div class="rsz rsz-se"></div><div class="rsz rsz-sw"></div>
 <script src="login.js"></script><script>
 const { invoke } = window.__TAURI__?.core || { invoke: () => Promise.reject('no tauri') };
+const winApi = window.__TAURI__?.window;
+function appWin(){ try { return winApi && winApi.getCurrentWindow ? winApi.getCurrentWindow() : (winApi && winApi.appWindow) || null; } catch(e){ return null; } }
 let data = null;
 let history = [];
 let period = 'day';
@@ -57,6 +85,21 @@ function toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark
 (function(){ let t='light'; try{ t=localStorage.getItem('persistence-theme')||'light'; }catch(e){} document.documentElement.dataset.theme=t; })();
 function updateClock(){ const d=new Date(); let h=d.getHours(); const m=d.getMinutes(); const ampm=h>=12?'PM':'AM'; if(h>12)h-=12; if(h===0)h=12; document.getElementById('clock').textContent=h+':'+String(m).padStart(2,'0')+' '+ampm; }
 setInterval(updateClock,10000); updateClock();
+// Scale the whole HUD to fit the window at any size/shape, never clipping.
+let fitRAF=null;
+function fit(){
+  const c=document.getElementById('content'); if(!c) return;
+  const W=window.innerWidth, H=window.innerHeight;
+  document.body.classList.toggle('vertical', (W/H) < 1.15);
+  c.style.transform='none';
+  const cw=c.offsetWidth||1, ch=c.offsetHeight||1;
+  let s=Math.min(W/cw, H/ch)*0.94;
+  if(!isFinite(s)||s<=0) s=1;
+  s=Math.max(0.12, Math.min(s, 8));
+  c.style.transform='scale('+s+')';
+}
+function scheduleFit(){ if(fitRAF) cancelAnimationFrame(fitRAF); fitRAF=requestAnimationFrame(fit); }
+window.addEventListener('resize', scheduleFit);
 async function fetchData(){ try{ const ctx=await invoke('fetch_summary'); const c=ctx||{}; data={netWorth:Math.round(Number(c.net_worth)||0),cash:Math.round(Number(c.cash)||0),investments:Math.round(Number(c.investments)||0),retirement:Math.round(Number(c.retirement)||0),debt:Math.round(Number(c.total_debt)||0),monthlyBills:Math.round(Number(c.monthly_bills)||0)}; try{ const h=await invoke('fetch_history'); history=Array.isArray(h)?h:[]; }catch(he){ console.error('fetch_history error:',he); } renderTiles(); document.getElementById('sync-dot').className='sync-dot'; }catch(err){ console.error('fetch_summary error:',err); document.getElementById('sync-dot').className='sync-dot error'; } }
 function fmt(n){ if(Math.abs(n)>=1000000) return '$'+(n/1000000).toFixed(1)+'M'; if(Math.abs(n)>=1000) return '$'+Math.round(n/1000)+'k'; return '$'+Math.round(n); }
 function computeDeltas(){
@@ -87,7 +130,8 @@ function tile(label,value,sub,cls,delta,goodUp){
     vcls=(cls?cls+' ':'')+dir;
     subHtml='<div class="tile-sub '+dir+'">'+arrow+pct+'</div>';
   }
-  return '<div class="tile" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+vcls+'">'+value+'</div>'+subHtml+'</div>'; }
+  return '<div class="tile" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+vcls+'">'+value+'</div>'+subHtml+'</div>';
+}
 function renderTiles(){ if(!data) return; const d=computeDeltas();
   document.getElementById('tiles').innerHTML=
     tile('Net Worth',fmt(data.netWorth),'all accounts','',d.netWorth,true)+
@@ -95,9 +139,18 @@ function renderTiles(){ if(!data) return; const d=computeDeltas();
     tile('Investments',fmt(data.investments),'brokerage','dim',d.investments,true)+
     tile('Retirement',fmt(data.retirement),'401k + IRA','dim',d.retirement,true)+
     tile('Debt',(data.debt>0?fmt(data.debt):'None'),'credit + loans','',d.debt,false)+
-    tile('Monthly Bills',fmt(data.monthlyBills),'recurring','dim',null,true); }
+    tile('Monthly Bills',fmt(data.monthlyBills),'recurring','dim',null,true);
+  scheduleFit();
+}
 function openDashboard(){ if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
-(async()=>{ await window.ensureAuth(); await fetchData(); setInterval(fetchData,5*60*1000); })();
+function initResize(){
+  const dirs={'rsz-n':'North','rsz-s':'South','rsz-e':'East','rsz-w':'West','rsz-ne':'NorthEast','rsz-nw':'NorthWest','rsz-se':'SouthEast','rsz-sw':'SouthWest'};
+  document.querySelectorAll('.rsz').forEach(h=>{
+    const key=Object.keys(dirs).find(k=>h.classList.contains(k));
+    h.addEventListener('mousedown', async (e)=>{ e.preventDefault(); const w=appWin(); try{ if(w&&w.startResizeDragging) await w.startResizeDragging(dirs[key]); }catch(err){ console.error('resize',err); } });
+  });
+}
+(async()=>{ initResize(); fit(); await window.ensureAuth(); await fetchData(); fit(); setInterval(fetchData,5*60*1000); })();
 </script>
 </body>
 </html>

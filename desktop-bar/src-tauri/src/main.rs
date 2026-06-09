@@ -11,6 +11,10 @@ use tauri::{
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_shell::ShellExt;
 use serde_json::{json, Value};
+use std::sync::Mutex;
+
+// Remembers window bounds (logical x,y,w,h) before the login resize, so we can restore them after.
+static PRELOGIN_BOUNDS: Mutex<Option<(f64, f64, f64, f64)>> = Mutex::new(None);
 
 const API_BASE: &str = "https://ledger-production-5649.up.railway.app";
 
@@ -38,34 +42,10 @@ fn main() {
                 .visible_on_all_workspaces(true)
                 .skip_taskbar(true)
                 .resizable(true)
-                .min_inner_size(220.0, 40.0)
+                .min_inner_size(120.0, 44.0)
                 .shadow(false)
                 .build()?;
 
-            {
-                let snap_win = win.clone();
-                win.on_window_event(move |event| {
-                    if let tauri::WindowEvent::Moved(pos) = event {
-                        const SNAP: i32 = 24;
-                        if let (Ok(Some(mon)), Ok(size)) = (snap_win.current_monitor(), snap_win.outer_size()) {
-                            let (mp, ms) = (mon.position(), mon.size());
-                            let (w, h) = (size.width as i32, size.height as i32);
-                            let (left, top) = (mp.x, mp.y);
-                            let right = mp.x + ms.width as i32;
-                            let bottom = mp.y + ms.height as i32;
-                            let mut x = pos.x;
-                            let mut y = pos.y;
-                            if (x - left).abs() <= SNAP { x = left; }
-                            if (x + w - right).abs() <= SNAP { x = right - w; }
-                            if (y - top).abs() <= SNAP { y = top; }
-                            if (y + h - bottom).abs() <= SNAP { y = bottom - h; }
-                            if x != pos.x || y != pos.y {
-                                let _ = snap_win.set_position(tauri::PhysicalPosition::new(x, y));
-                            }
-                        }
-                    }
-                });
-            }
 
             let quit = MenuItemBuilder::with_id("quit", "Quit Persistence").build(app)?;
             let show = MenuItemBuilder::with_id("show", "Open Dashboard").build(app)?;
@@ -142,6 +122,12 @@ fn logout() -> Result<(), String> {
 
 #[tauri::command]
 fn size_for_login(window: tauri::WebviewWindow) -> Result<(), String> {
+    {
+        let sf = window.scale_factor().unwrap_or(1.0);
+        if let (Ok(pos), Ok(sz)) = (window.outer_position(), window.inner_size()) {
+            *PRELOGIN_BOUNDS.lock().unwrap() = Some((pos.x as f64 / sf, pos.y as f64 / sf, sz.width as f64 / sf, sz.height as f64 / sf));
+        }
+    }
     let _ = window.set_resizable(true);
     window.set_size(tauri::LogicalSize::new(400.0, 540.0)).map_err(|e| e.to_string())?;
     if let Ok(Some(mon)) = window.current_monitor() {
@@ -156,11 +142,17 @@ fn size_for_login(window: tauri::WebviewWindow) -> Result<(), String> {
 
 #[tauri::command]
 fn restore_bar(window: tauri::WebviewWindow) -> Result<(), String> {
-    let w = window.current_monitor().ok().flatten()
-        .map(|m| m.size().width as f64 / m.scale_factor())
-        .unwrap_or(1280.0);
-    window.set_size(tauri::LogicalSize::new(w, 52.0)).map_err(|e| e.to_string())?;
-    window.set_position(tauri::LogicalPosition::new(0.0, 0.0)).map_err(|e| e.to_string())?;
+    let saved = *PRELOGIN_BOUNDS.lock().unwrap();
+    if let Some((x, y, w, h)) = saved {
+        window.set_size(tauri::LogicalSize::new(w, h)).map_err(|e| e.to_string())?;
+        window.set_position(tauri::LogicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+    } else {
+        let w = window.current_monitor().ok().flatten()
+            .map(|m| m.size().width as f64 / m.scale_factor())
+            .unwrap_or(1280.0);
+        window.set_size(tauri::LogicalSize::new(w, 52.0)).map_err(|e| e.to_string())?;
+        window.set_position(tauri::LogicalPosition::new(0.0, 0.0)).map_err(|e| e.to_string())?;
+    }
     Ok(())
 }
 

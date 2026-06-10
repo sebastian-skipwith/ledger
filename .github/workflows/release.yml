@@ -1,9 +1,9 @@
 name: Release Desktop HUD
 
+# Manual-only: releases are built locally because updater signing requires the
+# private key at C:\Users\sebas\.tauri\persistence-updater.key (never in CI).
+# Running this workflow without that key fails at the signing step.
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:

@@ -69,6 +69,10 @@ docs/
   Renaming the Vercel/Railway projects changes these URLs and breaks the desktop app's
   hardcoded `API_BASE` + OAuth handoff. Leave them unless doing a coordinated migration.
 - **Theme localStorage key = `persistence-theme`** (this one is correct as-is; don't "fix" it to ledger).
+- **Updater signing keypair** — the pubkey in `desktop-bar/src-tauri/tauri.conf.json` pairs with the
+  private key at `C:\Users\sebas\.tauri\persistence-updater.key` (empty password). NEVER commit the
+  private key, never regenerate the pair: shipped apps only accept updates signed by this exact key.
+  If it's lost, every installed copy needs a manual reinstall.
 
 Everything *user-facing* should say **Persistence**. Everything in the list above stays "ledger".
 
@@ -122,8 +126,29 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
   `desktop-bar/src-tauri/target/release/bundle/{nsis,msi}/`.
 - Internal names: Cargo package + `[[bin]]` = `persistence`; productName "Persistence";
   identifier `com.persistence.desktop`. (Keyring service still "ledger" per above.)
-- Installers are **unsigned** → Windows SmartScreen warning is expected (More info → Run anyway).
-  Code signing (~$100–400/yr) is deferred.
+- Installers are **unsigned** (no Authenticode) → Windows SmartScreen warning is expected
+  (More info → Run anyway). Code signing (~$100–400/yr) is deferred. This is separate from
+  updater signing (minisign), which IS in place.
+
+### Auto-updater + release process (added 2026-06-10, v1.1.0)
+- `tauri-plugin-updater`: HUD checks `https://github.com/sebastian-skipwith/ledger/releases/latest/download/latest.json`
+  on boot + every 4h. If newer, a pulsing "Update to vX.Y.Z - restarts app" button appears on the
+  bar; one click = download, verify signature, install (NSIS passive mode), restart. Rust commands:
+  `check_update`, `install_update`.
+- v1.0.0 installs predate the updater and can NOT auto-update — those users reinstall manually once.
+- **Shipping a release (all local — CI release.yml is manual-only because it lacks the signing key):**
+  1. Bump `version` in `desktop-bar/src-tauri/tauri.conf.json` AND `Cargo.toml`.
+  2. Build with signing env (use bash; PowerShell drops empty env strings). NOTE: the bundler
+     only reads `TAURI_SIGNING_PRIVATE_KEY` (content, not path — the `_PATH` variant is ignored):
+     `export TAURI_SIGNING_PRIVATE_KEY="$(cat /c/Users/sebas/.tauri/persistence-updater.key)"`
+     `export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""`
+     `cd desktop-bar && npm run tauri build`
+  3. Write `latest.json`: `{ "version": "X.Y.Z", "pub_date": "<ISO8601>", "notes": "...",
+     "platforms": { "windows-x86_64": { "signature": "<contents of the .sig file>",
+     "url": "https://github.com/sebastian-skipwith/ledger/releases/download/vX.Y.Z/Persistence_X.Y.Z_x64-setup.exe" } } }`
+  4. `gh release create vX.Y.Z <setup.exe> <setup.exe.sig> latest.json --title "Persistence X.Y.Z" --notes "..."`
+     — must be a PUBLISHED release (drafts are invisible to `releases/latest/download`).
+  5. Update the download link in `frontend/public/landing.html` to the new asset URL.
 
 ---
 

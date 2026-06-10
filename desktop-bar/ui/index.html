@@ -41,6 +41,9 @@ body.vertical .right { margin:10px auto 0 auto; justify-content:center; flex-wra
 .icon-btn.close-btn:hover { color:#dc2626; opacity:1; }
 .btn-ask { background:transparent; border:1px solid rgba(var(--fg),0.4); color:var(--text); border-radius:4px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; }
 .btn-ask:hover { background:var(--text); color:var(--bg-solid); }
+.btn-update { background:var(--text); color:var(--bg-solid); border-color:var(--text); animation:pulse 2.5s ease-in-out infinite; }
+.btn-update:hover { animation:none; }
+.btn-update:disabled { animation:none; opacity:0.6; cursor:wait; }
 .winctl { display:flex; align-items:center; gap:2px; border-left:1px solid rgba(var(--fg),0.15); padding-left:8px; }
 #pt-badge { display:none; font-size:8px; font-weight:700; letter-spacing:1px; border:1px solid rgba(var(--fg),0.5); border-radius:3px; padding:1px 4px; color:rgba(var(--fg),0.7); }
 body.passthrough #pt-badge { display:block; }
@@ -92,6 +95,7 @@ body.passthrough #content { opacity:0.8; }
 <div class="sync-dot" id="sync-dot" title="Data sync status"></div>
 <div class="time" id="clock"></div>
 <button class="btn-ask" onclick="openDashboard()">Open</button>
+<button class="btn-ask btn-update" id="update-btn" style="display:none" onclick="installUpdate()" title="A new version is ready. One click downloads, installs, and restarts the app for you."></button>
 <div class="winctl">
 <button class="icon-btn" title="Hide bar (Ctrl+Shift+H or tray icon to bring back)" onclick="minimizeBar()">&#8722;</button>
 <button class="icon-btn close-btn" title="Quit Persistence" onclick="quitApp()">&#215;</button>
@@ -238,6 +242,26 @@ function openDashboard(){ if(window.__TAURI__&&window.__TAURI__.shell){ window._
 function minimizeBar(){ invoke('hide_bar').catch(e=>console.error('hide_bar',e)); }
 function quitApp(){ invoke('quit_app').catch(e=>console.error('quit_app',e)); }
 
+// ---- Auto-update ----
+async function checkForUpdate(){
+  try{
+    const u=await invoke('check_update');
+    if(u&&u.version){
+      const b=document.getElementById('update-btn');
+      b.textContent='Update to v'+u.version+' - restarts app';
+      b.style.display=''; scheduleFit();
+    }
+  }catch(e){ console.error('check_update',e); }
+}
+function installUpdate(){
+  const b=document.getElementById('update-btn');
+  b.disabled=true; b.textContent='Updating... app will restart';
+  invoke('install_update').catch(err=>{
+    console.error('install_update',err);
+    b.disabled=false; b.textContent='Update failed - click to retry';
+  });
+}
+
 // ---- Settings panel ----
 const METRIC_LABELS={ netWorth:'Net Worth', cash:'Cash', investments:'Investments', retirement:'Retirement',
   debt:'Debt', monthlyBills:'Monthly Bills', safeToSpend:'Safe to Spend', creditCards:'Credit Cards',
@@ -319,6 +343,8 @@ function initEvents(){
   invoke('get_passthrough').then(p=>document.body.classList.toggle('passthrough',!!p)).catch(()=>{});
   await fetchData(); fit();
   scheduleRefresh();
+  checkForUpdate();
+  setInterval(checkForUpdate, 4*60*60*1000);
 })();
 </script>
 </body>

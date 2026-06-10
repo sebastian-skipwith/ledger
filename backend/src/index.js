@@ -13,6 +13,7 @@ const netWorthRouter = require('./routes/networth');
 const billsRouter = require('./routes/bills');
 const aiRouter = require('./routes/ai');
 const goalsRouter = require('./routes/goals');
+const summaryRouter = require('./routes/summary');
 const webhooksRouter = require('./routes/webhooks');
 const { authenticate } = require('./middleware/auth');
 
@@ -57,6 +58,7 @@ app.use('/api/transactions', authenticate, transactionsRouter);
 app.use('/api/net-worth',    authenticate, netWorthRouter);
 app.use('/api/bills',        authenticate, billsRouter);
 app.use('/api/goals',        authenticate, goalsRouter);
+app.use('/api/summary',      authenticate, summaryRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 
 // Error handler

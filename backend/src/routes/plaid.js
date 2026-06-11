@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { PlaidApi, PlaidEnvironments, Configuration, Products, CountryCode } = require('plaid');
 const { query, getClient } = require('../db');
+const { encryptSecret, decryptSecret } = require('../lib/crypto');
 
 // Initialize Plaid client
 const plaidConfig = new Configuration({
@@ -49,7 +50,7 @@ router.post('/exchange-token', async (req, res, next) => {
        VALUES ($1,$2,$3,$4,$5)
        ON CONFLICT (item_id) DO UPDATE SET access_token=$3
        RETURNING id`,
-      [req.user.id, item_id, access_token, institution?.institution_id, institution?.name]
+      [req.user.id, item_id, encryptSecret(access_token), institution?.institution_id, institution?.name]
     );
     const plaidItemId = itemResult.rows[0].id;
 
@@ -96,7 +97,7 @@ router.post('/sync', async (req, res, next) => {
       'SELECT * FROM plaid_items WHERE user_id = $1', [req.user.id]
     );
     for (const item of items) {
-      syncTransactions(req.user.id, item.id, item.access_token).catch(console.error);
+      syncTransactions(req.user.id, item.id, decryptSecret(item.access_token)).catch(console.error);
     }
     res.json({ message: `Syncing ${items.length} institution(s) in background` });
   } catch (err) {
@@ -125,7 +126,7 @@ router.delete('/items/:id', async (req, res, next) => {
       [req.params.id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Item not found' });
-    await plaid.itemRemove({ access_token: rows[0].access_token });
+    await plaid.itemRemove({ access_token: decryptSecret(rows[0].access_token) });
     await query('DELETE FROM plaid_items WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
@@ -199,7 +200,7 @@ async function syncTransactions(userId, plaidItemId, accessToken) {
   // Refresh account balances
   const { rows: items } = await query('SELECT access_token FROM plaid_items WHERE id=$1', [plaidItemId]);
   if (items.length) {
-    const balResp = await plaid.accountsGet({ access_token: items[0].access_token });
+    const balResp = await plaid.accountsGet({ access_token: decryptSecret(items[0].access_token) });
     for (const acct of balResp.data.accounts) {
       await query(
         `UPDATE accounts SET current_balance=$1, available_balance=$2, updated_at=NOW()

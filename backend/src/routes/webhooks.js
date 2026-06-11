@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { query } = require('../db');
 const { syncTransactions } = require('./plaid');
+const { decryptSecret } = require('../lib/crypto');
 
 // POST /api/webhooks/plaid
 // Plaid fires these when account data changes
@@ -20,7 +21,7 @@ router.post('/plaid', async (req, res) => {
       const item = rows[0];
 
       if (['SYNC_UPDATES_AVAILABLE', 'INITIAL_UPDATE', 'DEFAULT_UPDATE'].includes(webhook_code)) {
-        await syncTransactions(item.user_id, item.id, item.access_token);
+        await syncTransactions(item.user_id, item.id, decryptSecret(item.access_token));
         console.log(`Webhook: synced transactions for item ${item_id}`);
       }
     }

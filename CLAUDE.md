@@ -174,6 +174,25 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
 
 ---
 
+## 6b. Security posture (hardened 2026-06-10)
+
+- **Plaid access tokens are encrypted at the application level** (AES-256-GCM,
+  `backend/src/lib/crypto.js`, stored as `enc:v1:...`). Requires `DATA_ENCRYPTION_KEY`
+  (64 hex chars) in Railway; without it the code stores plaintext and warns at boot.
+  Existing plaintext rows are auto-encrypted at boot once the key appears.
+  NEVER change/lose that key once set — rows become undecryptable (re-link banks to recover).
+- Repo scan 2026-06-10: **no real secrets in git history** (only placeholders in
+  `*.example` / `docs/env-examples.txt`) and none in the OneDrive apply scripts. The
+  earlier "exposed credentials" note referred to keys pasted into past chat sessions —
+  rotation (owner) is the only fix; checklist in `docs/incident-response.md`.
+- GitHub **secret scanning + push protection: enabled** (done via API).
+- `.gitignore` blocks all env files and key material; examples whitelisted.
+- Secrets policy: production secrets live ONLY in Railway/Vercel env vars. Never put real
+  values in the repo, CLAUDE.md, or chat. Staged new secrets: `C:\Users\sebas\.persistence-secrets\`.
+- Breach runbook: `docs/incident-response.md` (kill switches, rotation checklist, user
+  notification template, Railway DB lockdown steps).
+- Rotating `JWT_SECRET` = global logout kill switch.
+
 ## 7. Feature state (as of 2026-06-10)
 
 **Added 2026-06-10 (round 3 — business + customization):**

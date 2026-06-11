@@ -2,5 +2,16 @@ desktop-bar/src-tauri/target/
 node_modules/
 frontend/.next/
 frontend/node_modules/
+
+# Secrets — never commit env files or key material, anywhere in the tree.
+# Real values live only in Railway/Vercel env vars (see docs/incident-response.md).
 .env
-.env.local
+.env.*
+*.env
+!.env.example
+!.env.local.example
+!*.env.example
+*.pem
+*.key
+*.p12
+*.pfx

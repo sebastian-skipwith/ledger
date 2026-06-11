@@ -14,8 +14,12 @@ const billsRouter = require('./routes/bills');
 const aiRouter = require('./routes/ai');
 const goalsRouter = require('./routes/goals');
 const summaryRouter = require('./routes/summary');
+const adminRouter = require('./routes/admin');
+const billingRouter = require('./routes/billing');
+const stripeWebhookRouter = require('./routes/webhooks-stripe');
 const webhooksRouter = require('./routes/webhooks');
 const { authenticate } = require('./middleware/auth');
+const { query } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +43,10 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300, validate: { xFor
 const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, validate: { xForwardedForHeader: false } });
 app.use(limiter);
 
+// Stripe webhook needs the raw request body for signature verification, so it
+// is mounted before express.json().
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookRouter);
+
 app.use(express.json());
 
 // Health check
@@ -59,6 +67,8 @@ app.use('/api/net-worth',    authenticate, netWorthRouter);
 app.use('/api/bills',        authenticate, billsRouter);
 app.use('/api/goals',        authenticate, goalsRouter);
 app.use('/api/summary',      authenticate, summaryRouter);
+app.use('/api/billing',      authenticate, billingRouter);
+app.use('/api/admin',        authenticate, adminRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 
 // Error handler
@@ -68,6 +78,16 @@ app.use((err, req, res, next) => {
     error: err.message || 'Internal server error',
   });
 });
+
+// Idempotent schema additions (there is no migration runner; schema.sql is
+// applied manually, so additive columns are ensured here at boot).
+(async () => {
+  try {
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT');
+  } catch (err) {
+    console.error('Schema ensure failed:', err.message);
+  }
+})();
 
 app.listen(PORT, () => {
   console.log(`Ledger API running on :${PORT}`);

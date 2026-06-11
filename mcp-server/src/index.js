@@ -1,17 +1,25 @@
 /**
- * Ledger MCP Server
+ * Persistence MCP Server
  *
- * Exposes your personal finances as MCP tools so Claude, ChatGPT, or any
+ * Exposes your personal finances as MCP tools so Claude (Desktop/Code) or any
  * MCP-compatible AI assistant can read balances, analyze spending, set goals,
  * and (with confirmation) propose transfers.
  *
- * Add to Claude Desktop claude_desktop_config.json:
+ * Auth: set PERSISTENCE_REFRESH_TOKEN to the connect code from
+ * https://ledger-theta-puce.vercel.app/desktop (it's a 30-day refresh token).
+ * The server exchanges it for short-lived access tokens automatically.
+ *
+ * Add to Claude Desktop claude_desktop_config.json (or `claude mcp add` for
+ * Claude Code):
  * {
  *   "mcpServers": {
- *     "ledger": {
+ *     "persistence": {
  *       "command": "node",
  *       "args": ["/path/to/ledger/mcp-server/src/index.js"],
- *       "env": { "LEDGER_API_URL": "http://localhost:3001", "LEDGER_USER_TOKEN": "..." }
+ *       "env": {
+ *         "LEDGER_API_URL": "https://ledger-production-5649.up.railway.app",
+ *         "PERSISTENCE_REFRESH_TOKEN": "<code from /desktop page>"
+ *       }
  *     }
  *   }
  * }
@@ -22,24 +30,47 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
-const API = process.env.LEDGER_API_URL || 'http://localhost:3001';
-const TOKEN = process.env.LEDGER_USER_TOKEN;
+const API = process.env.LEDGER_API_URL || 'https://ledger-production-5649.up.railway.app';
+let refreshToken = process.env.PERSISTENCE_REFRESH_TOKEN || process.env.LEDGER_REFRESH_TOKEN;
+let accessToken = process.env.LEDGER_USER_TOKEN || null; // legacy: static access token
 
-if (!TOKEN) {
-  console.error('LEDGER_USER_TOKEN is required. Get it from your Ledger profile settings.');
+if (!refreshToken && !accessToken) {
+  console.error('PERSISTENCE_REFRESH_TOKEN is required. Get the connect code from https://ledger-theta-puce.vercel.app/desktop');
   process.exit(1);
 }
 
+// Access tokens expire after 15 minutes; exchange the refresh token for a new
+// one whenever we have none or the API answers 401.
+async function refreshAccess() {
+  if (!refreshToken) throw new Error('Access token expired and no PERSISTENCE_REFRESH_TOKEN set');
+  const res = await fetch(`${API}/api/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh: refreshToken }),
+  });
+  if (!res.ok) throw new Error(`Refresh failed (${res.status}) — get a new code from the /desktop page`);
+  const data = await res.json();
+  accessToken = data.access;
+  if (data.refresh) refreshToken = data.refresh;
+  return accessToken;
+}
+
 async function api(path, options = {}) {
-  const res = await fetch(`${API}${path}`, {
+  if (!accessToken) await refreshAccess();
+  const send = () => fetch(`${API}${path}`, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${TOKEN}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
       ...(options.headers || {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
+  let res = await send();
+  if (res.status === 401) {
+    await refreshAccess();
+    res = await send();
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(`API error ${res.status}: ${err.error || res.statusText}`);
@@ -48,8 +79,8 @@ async function api(path, options = {}) {
 }
 
 const server = new McpServer({
-  name: 'ledger',
-  version: '1.0.0',
+  name: 'persistence',
+  version: '1.1.0',
 });
 
 // ─────────────────────────────────────────────

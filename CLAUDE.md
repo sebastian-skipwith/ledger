@@ -176,6 +176,28 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
 
 ## 7. Feature state (as of 2026-06-10)
 
+**Added 2026-06-10 (round 3 — business + customization):**
+- **HUD drag-and-drop tile reordering** (desktop v1.2.0): HTML5 DnD in `ui/index.html`,
+  order persisted in `persistence-hud-settings.order`.
+- **Security & Privacy page**: `frontend/public/security.html`, linked from landing nav + footer.
+  Keep its claims honest — it describes only measures that actually exist.
+- **Admin metrics**: `GET /api/admin/metrics` (backend `routes/admin.js`) + web page at `/admin`.
+  Gated by `ADMIN_EMAILS` env var on Railway (comma-separated email allowlist) — MUST be set or
+  everyone gets 403.
+- **Stripe subscriptions (scaffolded, dormant)**: `routes/billing.js` (checkout/portal/status),
+  `routes/webhooks-stripe.js` (raw-body mount in index.js BEFORE express.json — keep that order).
+  Inert until Railway env vars set: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+  `STRIPE_PRICE_PRO`, `STRIPE_PRICE_WEALTH`, `APP_URL`. `users.stripe_customer_id` column is
+  ensured idempotently at boot. Sidebar shows Upgrade button (alerts "coming soon" while dormant).
+- **MCP server fixed for real use**: now exchanges a 30-day refresh token
+  (`PERSISTENCE_REFRESH_TOKEN`, get the code from the `/desktop` page) for 15-min access tokens
+  automatically. Defaults to the production API URL. Works with Claude Desktop / Claude Code via
+  stdio; not hosted remotely.
+- **Domain status (checked 2026-06-10)**: persistence.app TAKEN; persistence.finance,
+  usepersistence.com, trypersistence.app AVAILABLE. Purchase is an owner action.
+- Owner actions pending: buy domain; Authenticode code signing (Azure Trusted Signing ~$10/mo
+  recommended); Plaid production access application; Stripe account + env vars; set ADMIN_EMAILS.
+
 **Added 2026-06-10 (round 2 — web parity):**
 - Web TopBar now shows the four new metrics (Safe to Spend, Credit Cards week, Bills 7 Days,
   Goal pacing) from `/api/summary/hud`, plus a gear dropdown to show/hide any metric

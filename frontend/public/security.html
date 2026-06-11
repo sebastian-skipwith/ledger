@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security &amp; Privacy — Persistence</title>
+<meta name="description" content="How Persistence protects your financial data: bank-grade connectivity through Plaid, encryption in transit and at rest, and a strict no-selling-data policy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+.plogo{display:inline-block}
+html[data-theme="dark"] .plogo{filter:invert(1);}
+body{transition:background .2s,color .2s;}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --fg: 17,17,17; --bgtrip: 255,255,255;
+  --ink: #ffffff; --ink2: #f4f4f7; --gold: #111111; --gold2: #333333;
+  --muted: rgba(17,17,17,0.5); --subtle: rgba(17,17,17,0.72);
+  --border: rgba(0,0,0,0.1); --text: #14141f;
+}
+html[data-theme="dark"] {
+  --fg: 255,255,255; --bgtrip: 8,8,16;
+  --ink: #080810; --ink2: #0e0e1a; --gold: #ffffff; --gold2: #e6e6e6;
+  --muted: rgba(var(--fg),0.5); --subtle: rgba(var(--fg),0.7);
+  --border: rgba(var(--fg),0.1); --text: #f5f5fa;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--text); font-family: 'Syne', sans-serif; -webkit-font-smoothing: antialiased; }
+::selection { background: rgba(var(--fg),0.3); }
+a { text-decoration: none; color: inherit; }
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 60px; display: flex; align-items: center; padding: 0 40px;
+  background: rgba(var(--bgtrip),0.8); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: var(--gold); }
+.nav-links { display: flex; gap: 28px; margin-left: 48px; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--muted); transition: color .15s; }
+.nav-links a:hover { color: var(--text); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+main { max-width: 780px; margin: 0 auto; padding: 130px 28px 80px; }
+h1 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 44px; margin-bottom: 10px; }
+h1 em { font-style: italic; color: var(--gold); }
+.lede { color: var(--subtle); font-size: 16px; line-height: 1.6; margin-bottom: 44px; }
+h2 { font-size: 13px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--gold); margin: 42px 0 16px; }
+.card { border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 14px; background: rgba(var(--fg),0.02); }
+.card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.card p { font-size: 13.5px; line-height: 1.65; color: var(--subtle); }
+.card p + p { margin-top: 8px; }
+ul.plain { list-style: none; }
+ul.plain li { font-size: 13.5px; line-height: 1.7; color: var(--subtle); padding-left: 18px; position: relative; margin-bottom: 6px; }
+ul.plain li::before { content: '—'; position: absolute; left: 0; color: var(--gold); }
+.note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 18px; }
+footer { display: flex; align-items: center; justify-content: space-between; padding: 26px 40px; border-top: 1px solid var(--border); }
+.footer-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: var(--gold); }
+.footer-copy { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand"><a href="/landing.html"><img class="plogo" src="/logo.png" alt="Persistence" style="height:26px;width:auto;vertical-align:middle;"></a></div>
+  <div class="nav-links">
+    <a href="/landing.html#features">Features</a>
+    <a href="/landing.html#pricing">Pricing</a>
+    <a href="/security.html" style="color:var(--text);">Security</a>
+  </div>
+  <div class="nav-right">
+    <button onclick="pToggleTheme()" title="Toggle light/dark" style="background:transparent;border:none;color:var(--text);cursor:pointer;font-size:17px;opacity:.65;">&#9680;</button>
+  </div>
+</nav>
+
+<main>
+  <h1>Security &amp; <em>privacy.</em></h1>
+  <p class="lede">Persistence exists to show you your money — not to take liberties with it. Here is exactly how your financial data is protected, in plain language.</p>
+
+  <h2>Connecting your bank</h2>
+  <div class="card">
+    <h3>Your bank credentials never touch Persistence</h3>
+    <p>Account linking is handled by <strong>Plaid</strong>, the same connectivity service used by apps like Venmo and American Express. You sign in to your bank inside Plaid's secure window; Persistence never sees, receives, or stores your banking username or password.</p>
+    <p>What we receive instead is a revocable access token tied only to the data you approved. You can unlink an institution at any time, which invalidates that token.</p>
+  </div>
+  <div class="card">
+    <h3>Read-only by design</h3>
+    <p>Persistence reads balances, transactions, and account metadata to build your dashboard. It cannot move money, make payments, or place trades. Automation features only ever <em>propose</em> actions for you to review.</p>
+  </div>
+
+  <h2>How your data is stored &amp; moved</h2>
+  <ul class="plain">
+    <li><strong>Encrypted in transit</strong> — every connection to Persistence (web, desktop, and API) uses TLS/HTTPS. There are no unencrypted endpoints.</li>
+    <li><strong>Encrypted at rest</strong> — your data lives in a managed PostgreSQL database hosted on infrastructure with disk-level encryption at rest.</li>
+    <li><strong>Hashed passwords</strong> — if you use email sign-in, your password is stored only as a bcrypt hash. Sign in with Google and we never handle a password at all.</li>
+    <li><strong>Short-lived sessions</strong> — access tokens expire after 15 minutes and are renewed via rotating refresh tokens, limiting the value of any intercepted token.</li>
+    <li><strong>OS-level key storage</strong> — the desktop app stores your session in the Windows Credential Manager (the operating system's keychain), not in a file.</li>
+    <li><strong>Signed updates</strong> — desktop app updates are cryptographically signed and verified before they install, so an attacker can't impersonate an update.</li>
+    <li><strong>Hardened API</strong> — every request is authenticated, rate-limited, and served with hardened security headers.</li>
+  </ul>
+
+  <h2>AI features</h2>
+  <div class="card">
+    <h3>What the AI sees</h3>
+    <p>When you use AI insights or chat, relevant parts of your financial picture (balances, recent transactions, bills, goals) are sent to <strong>Anthropic's Claude API</strong> solely to generate your answer. Under Anthropic's commercial API terms, that data is not used to train their models.</p>
+    <p>AI features are optional — the dashboard and HUD work without them.</p>
+  </div>
+
+  <h2>Privacy practices</h2>
+  <ul class="plain">
+    <li><strong>We do not sell your data.</strong> No advertisers, no data brokers, no "anonymized" data sales. The business model is subscriptions, full stop.</li>
+    <li><strong>Minimal third parties</strong> — your data is shared only with the services that make the product work: Plaid (bank connectivity), Anthropic (AI features), and our hosting providers (Railway for the API and database, Vercel for the web app). Google is involved only if you choose Google sign-in.</li>
+    <li><strong>Your data is yours</strong> — you can unlink institutions in-app at any time, and you can request full deletion of your account and all associated data.</li>
+  </ul>
+
+  <h2>Reporting a security issue</h2>
+  <div class="card">
+    <h3>Responsible disclosure</h3>
+    <p>Found a vulnerability? Please report it privately via <a href="https://github.com/sebastian-skipwith/ledger/security/advisories/new" style="text-decoration:underline;">GitHub private vulnerability reporting</a> and we will respond as quickly as possible. Please don't test against accounts that aren't yours.</p>
+  </div>
+
+  <p class="note">This page describes the measures in place today and is updated as the product evolves. Persistence is in active development; features like subscriptions and additional regions may introduce new processors, and this page will be updated before they do. Last updated: June 10, 2026.</p>
+</main>
+
+<footer>
+  <div class="footer-brand"><img class="plogo" src="/logo.png" alt="Persistence" style="height:22px;width:auto;vertical-align:middle;"></div>
+  <div class="footer-copy">&copy; 2026 Persistence. All rights reserved.</div>
+</footer>
+
+<script>
+function pToggleTheme(){ const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }
+(function(){ try{ const t=localStorage.getItem('persistence-theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){} })();
+</script>
+</body>
+</html>

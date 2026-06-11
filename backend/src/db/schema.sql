@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash   TEXT NOT NULL,
   full_name       TEXT,
   tier            TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free','pro','wealth')),
+  stripe_customer_id TEXT,
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   updated_at      TIMESTAMPTZ DEFAULT NOW()
 );

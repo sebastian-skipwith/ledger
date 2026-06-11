@@ -18,7 +18,12 @@ body.vertical .brand { margin:0 auto 8px auto; height:30px; }
 html[data-theme="dark"] .brand { filter:invert(1); }
 .tiles { display:flex; }
 body.vertical .tiles { display:grid; grid-template-columns:1fr 1fr; }
-.tile { display:flex; flex-direction:column; justify-content:center; padding:0 14px; border-right:1px solid rgba(var(--fg),0.1); cursor:pointer; }
+.tile { display:flex; flex-direction:column; justify-content:center; padding:0 14px; border-right:1px solid rgba(var(--fg),0.1); cursor:grab; }
+.tile.dragging { opacity:0.35; }
+.tile.drop-before { box-shadow:inset 3px 0 0 0 var(--text); }
+.tile.drop-after { box-shadow:inset -3px 0 0 0 var(--text); }
+body.vertical .tile.drop-before { box-shadow:inset 0 3px 0 0 var(--text); }
+body.vertical .tile.drop-after { box-shadow:inset 0 -3px 0 0 var(--text); }
 body.vertical .tile { border-right:none; border-bottom:1px solid rgba(var(--fg),0.08); padding:7px 14px; }
 .tile-label { font-size:8px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--fg),0.45); margin-bottom:2px; }
 .tile-value { font-size:13px; font-weight:500; color:var(--text); letter-spacing:-0.2px; }
@@ -123,6 +128,7 @@ const DEFAULT_SETTINGS = {
   opacity: 90,            // bar background opacity, percent
   refreshMin: 5,          // data refresh interval, minutes
   autostart: true,        // launch on login
+  order: ['netWorth','cash','investments','retirement','debt','monthlyBills','safeToSpend','creditCards','bills7d','goals'],
   metrics: { netWorth:true, cash:true, investments:true, retirement:true, debt:true,
              monthlyBills:true, safeToSpend:true, creditCards:true, bills7d:true, goals:true }
 };
@@ -132,6 +138,9 @@ function loadSettings(){
   try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) {}
   const out = Object.assign({}, DEFAULT_SETTINGS, s);
   out.metrics = Object.assign({}, DEFAULT_SETTINGS.metrics, s.metrics || {});
+  // Saved order, scrubbed of unknown keys, with any new metrics appended at the end.
+  const saved = Array.isArray(s.order) ? s.order.filter(k => DEFAULT_SETTINGS.order.includes(k)) : [];
+  out.order = saved.concat(DEFAULT_SETTINGS.order.filter(k => !saved.includes(k)));
   return out;
 }
 function saveSettings(){ try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch(e) {} }
@@ -200,7 +209,7 @@ function computeDeltas(){
   return out;
 }
 function setPeriod(p){ period=p; document.querySelectorAll('#period button').forEach(b=>b.classList.toggle('active',b.dataset.p===p)); renderTiles(); }
-function tile(label,value,sub,cls,delta,goodUp){
+function tile(key,label,value,sub,cls,delta,goodUp){
   let vcls=cls||''; let subHtml='<div class="tile-sub">'+sub+'</div>';
   if(delta&&delta.diff!==0&&!isNaN(delta.diff)){
     const up=delta.diff>0; const positive=goodUp?up:!up; const dir=positive?'up':'down';
@@ -209,36 +218,83 @@ function tile(label,value,sub,cls,delta,goodUp){
     vcls=(cls?cls+' ':'')+dir;
     subHtml='<div class="tile-sub '+dir+'">'+arrow+pct+'</div>';
   }
-  return '<div class="tile" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+vcls+'">'+value+'</div>'+subHtml+'</div>';
+  return '<div class="tile" draggable="true" data-key="'+key+'" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+vcls+'">'+value+'</div>'+subHtml+'</div>';
 }
 function weekdayShort(iso){ try{ return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{weekday:'short'}); }catch(e){ return ''; } }
-function renderTiles(){ if(!data) return; const d=computeDeltas(); const m=settings.metrics; let html='';
-  if(m.netWorth)     html+=tile('Net Worth',fmt(data.netWorth),'all accounts','',d.netWorth,true);
-  if(m.cash)         html+=tile('Cash',fmt(data.cash),'checking + savings','',d.cash,true);
-  if(m.investments)  html+=tile('Investments',fmt(data.investments),'brokerage','dim',d.investments,true);
-  if(m.retirement)   html+=tile('Retirement',fmt(data.retirement),'401k + IRA','dim',d.retirement,true);
-  if(m.debt)         html+=tile('Debt',(data.debt>0?fmt(data.debt):'None'),'credit + loans','',d.debt,false);
-  if(m.monthlyBills) html+=tile('Monthly Bills',fmt(data.monthlyBills),'recurring','dim',null,true);
-  if(m.safeToSpend&&data.safeToSpend){
+// One builder per metric; returns the tile HTML or '' when hidden / no data.
+const TILE_BUILDERS={
+  netWorth:    (d)=>tile('netWorth','Net Worth',fmt(data.netWorth),'all accounts','',d.netWorth,true),
+  cash:        (d)=>tile('cash','Cash',fmt(data.cash),'checking + savings','',d.cash,true),
+  investments: (d)=>tile('investments','Investments',fmt(data.investments),'brokerage','dim',d.investments,true),
+  retirement:  (d)=>tile('retirement','Retirement',fmt(data.retirement),'401k + IRA','dim',d.retirement,true),
+  debt:        (d)=>tile('debt','Debt',(data.debt>0?fmt(data.debt):'None'),'credit + loans','',d.debt,false),
+  monthlyBills:(d)=>tile('monthlyBills','Monthly Bills',fmt(data.monthlyBills),'recurring','dim',null,true),
+  safeToSpend: (d)=>{ if(!data.safeToSpend) return '';
     const a=Math.round(Number(data.safeToSpend.amount)||0);
-    html+=tile('Safe to Spend',fmt(a),'until '+weekdayShort(data.safeToSpend.until),a<0?'down':'up',null,true);
-  }
-  if(m.creditCards&&data.creditWeek!==null){
+    return tile('safeToSpend','Safe to Spend',fmt(a),'until '+weekdayShort(data.safeToSpend.until),a<0?'down':'up',null,true); },
+  creditCards: (d)=>{ if(data.creditWeek===null) return '';
     const v=data.creditWeek;
-    html+=tile('Credit Cards',(v>0?'+':'')+fmt(v),'this week',v>0?'down':(v<0?'up':''),null,false);
-  }
-  if(m.bills7d&&data.bills7d){
-    html+=tile('Bills 7 Days',fmt(Math.round(Number(data.bills7d.total)||0)),(data.bills7d.count||0)+' due','',null,true);
-  }
-  if(m.goals&&data.goalProgress&&data.goalProgress.status!=='none'){
+    return tile('creditCards','Credit Cards',(v>0?'+':'')+fmt(v),'this week',v>0?'down':(v<0?'up':''),null,false); },
+  bills7d:     (d)=>{ if(!data.bills7d) return '';
+    return tile('bills7d','Bills 7 Days',fmt(Math.round(Number(data.bills7d.total)||0)),(data.bills7d.count||0)+' due','',null,true); },
+  goals:       (d)=>{ if(!data.goalProgress||data.goalProgress.status==='none') return '';
     const g=data.goalProgress;
     const val=g.status==='behind'?('Behind '+fmt(Math.abs(g.diff))):(g.status==='ahead'?('Ahead '+fmt(g.diff)):'On track');
-    html+=tile('Goals',val,g.goals_count+' tracked',g.status==='behind'?'down':'up',null,true);
-  }
+    return tile('goals','Goals',val,g.goals_count+' tracked',g.status==='behind'?'down':'up',null,true); },
+};
+function renderTiles(){ if(!data) return; const d=computeDeltas(); const m=settings.metrics; let html='';
+  for(const k of settings.order){ if(m[k]&&TILE_BUILDERS[k]) html+=TILE_BUILDERS[k](d); }
   document.getElementById('tiles').innerHTML=html;
   scheduleFit();
 }
-function openDashboard(){ if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
+// ---- Drag-and-drop tile reordering ----
+let dragKey=null;
+let didDrag=false;
+function initTileDrag(){
+  const c=document.getElementById('tiles');
+  c.addEventListener('dragstart',(e)=>{
+    const t=e.target.closest('.tile'); if(!t) return;
+    dragKey=t.dataset.key; didDrag=true;
+    t.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+    try{ e.dataTransfer.setData('text/plain',dragKey); }catch(err){}
+  });
+  c.addEventListener('dragover',(e)=>{
+    if(!dragKey) return;
+    e.preventDefault(); e.dataTransfer.dropEffect='move';
+    const t=e.target.closest('.tile');
+    c.querySelectorAll('.tile').forEach(x=>x.classList.remove('drop-before','drop-after'));
+    if(!t||t.dataset.key===dragKey) return;
+    const r=t.getBoundingClientRect();
+    const vertical=document.body.classList.contains('vertical');
+    const before=vertical ? (e.clientY < r.top+r.height/2) : (e.clientX < r.left+r.width/2);
+    t.classList.add(before?'drop-before':'drop-after');
+  });
+  c.addEventListener('drop',(e)=>{
+    if(!dragKey) return;
+    e.preventDefault();
+    const t=e.target.closest('.tile');
+    if(t&&t.dataset.key!==dragKey){
+      const r=t.getBoundingClientRect();
+      const vertical=document.body.classList.contains('vertical');
+      const before=vertical ? (e.clientY < r.top+r.height/2) : (e.clientX < r.left+r.width/2);
+      const ord=settings.order.filter(k=>k!==dragKey);
+      let idx=ord.indexOf(t.dataset.key);
+      if(!before) idx++;
+      ord.splice(idx,0,dragKey);
+      settings.order=ord; saveSettings();
+    }
+    endTileDrag();
+    renderTiles();
+  });
+  c.addEventListener('dragend',endTileDrag);
+}
+function endTileDrag(){
+  dragKey=null;
+  document.querySelectorAll('#tiles .tile').forEach(x=>x.classList.remove('dragging','drop-before','drop-after'));
+  setTimeout(()=>{ didDrag=false; },250);
+}
+function openDashboard(){ if(didDrag) return; if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
 function minimizeBar(){ invoke('hide_bar').catch(e=>console.error('hide_bar',e)); }
 function quitApp(){ invoke('quit_app').catch(e=>console.error('quit_app',e)); }
 
@@ -337,7 +393,7 @@ function initEvents(){
   eventApi.listen('open-settings',()=>{ openSettings(); }).catch(()=>{});
 }
 (async()=>{
-  initResize(); initEvents(); applyOpacity(); fit();
+  initResize(); initEvents(); initTileDrag(); applyOpacity(); fit();
   await window.ensureAuth();
   invoke('set_autostart',{enabled:settings.autostart}).catch(()=>{});
   invoke('get_passthrough').then(p=>document.body.classList.toggle('passthrough',!!p)).catch(()=>{});

@@ -1,8 +1,26 @@
 'use client';
-import { useStore, formatCurrency } from '@/lib/store';
+import { useStore, formatCurrency, apiCall } from '@/lib/store';
 
 export default function Sidebar() {
-  const { accounts, activeSection, setActiveSection } = useStore();
+  const { accounts, activeSection, setActiveSection, user, accessToken } = useStore();
+
+  async function upgrade(tier: 'pro' | 'wealth') {
+    try {
+      const { url } = await apiCall('/api/billing/checkout', {
+        method: 'POST', token: accessToken!, body: JSON.stringify({ tier }),
+      });
+      window.location.href = url;
+    } catch (e: any) {
+      alert(e.message.includes('configured') ? 'Subscriptions are coming soon.' : e.message);
+    }
+  }
+
+  async function manageBilling() {
+    try {
+      const { url } = await apiCall('/api/billing/portal', { method: 'POST', token: accessToken! });
+      window.location.href = url;
+    } catch (e: any) { alert(e.message); }
+  }
 
   const navItems = [
     { id: 'dashboard',    label: 'Dashboard',    icon: '⊞' },
@@ -71,6 +89,28 @@ export default function Sidebar() {
           textAlign: 'center', fontSize: 11, fontWeight: 600, cursor: 'pointer',
           fontFamily: 'var(--font-syne)', letterSpacing: '0.3px',
         }}>+ Link Account</button>
+      </div>
+
+      <div style={{ height: 1, background: 'rgba(var(--fg),0.07)', margin: '16px 12px' }} />
+
+      <div style={{ padding: '0 12px' }}>
+        {user?.tier === 'free' ? (
+          <button onClick={() => upgrade('pro')} style={{
+            display: 'block', width: '100%',
+            background: 'var(--text)', border: 'none',
+            color: 'var(--ink)', borderRadius: 7, padding: 10,
+            textAlign: 'center', fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
+            fontFamily: 'var(--font-syne)', letterSpacing: '0.4px',
+          }}>Upgrade to Pro — $9/mo</button>
+        ) : (
+          <button onClick={manageBilling} style={{
+            display: 'block', width: '100%',
+            background: 'transparent', border: '1px solid rgba(var(--fg),0.2)',
+            color: 'rgba(var(--fg),0.7)', borderRadius: 7, padding: 9,
+            textAlign: 'center', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+            fontFamily: 'var(--font-syne)', letterSpacing: '0.3px',
+          }}>Manage subscription ({user?.tier})</button>
+        )}
       </div>
     </div>
   );

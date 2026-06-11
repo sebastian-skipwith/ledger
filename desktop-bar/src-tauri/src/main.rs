@@ -55,11 +55,12 @@ fn show_settings_window(app: &tauri::AppHandle) {
         let _ = w.set_focus();
         return;
     }
+    // Opaque on purpose: a transparent runtime window renders as a blank white
+    // box on Windows/WebView2. This panel has its own solid background.
     let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
         .title("Persistence Settings")
         .inner_size(380.0, 640.0)
-        .decorations(false)
-        .transparent(true)
+        .decorations(true)
         .resizable(true)
         .center()
         .build();

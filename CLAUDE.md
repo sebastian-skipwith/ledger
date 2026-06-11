@@ -212,11 +212,16 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
 - Landing: differentiators section (only persistent HUD / any MCP client / works alongside
   Monarch & Rocket Money / security), sharpened hero, real-screenshot section
   (`#hud-in-action`, auto-hidden until `frontend/public/hud-in-action.png` exists).
-- Desktop v1.3.0: settings in its OWN window (`ui/settings.html`, `open_settings`/`close_settings`
-  commands; syncs to the bar via `settings-changed`/`theme-changed`/`signed-out` events —
-  capabilities `windows` now includes "settings"); taskbar icon + Alt-Tab (`skip_taskbar(false)`);
-  boot shows centered pulsing P logo (`body.booting`); always-on-top re-asserted every 20s
-  (fixes other topmost apps like Claude Desktop covering the bar).
+- Desktop v1.3.x: taskbar icon + Alt-Tab (`skip_taskbar(false)`); boot shows centered pulsing
+  P logo (`body.booting`); always-on-top re-asserted every 20s (fixes other topmost apps like
+  Claude Desktop covering the bar).
+- **Settings panel (v1.3.2): the window GROWS DOWNWARD** (`size_for_settings` /
+  `restore_after_settings` commands + `body.settings-open` + `#spanel` in index.html) so the
+  bar stays live in the top 52px. **DO NOT create a second webview window at runtime** — on
+  this machine/app it renders permanently blank white (tried: opaque, decorated,
+  main-thread dispatch via run_on_main_thread, resize nudge, even loading index.html —
+  all blank). v1.3.0/1.3.1 shipped that way and were broken; the grow-downward panel is
+  the working pattern. Verified live on-screen 2026-06-11.
 
 ### Earlier (2026-06-10)
 

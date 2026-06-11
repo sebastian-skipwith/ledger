@@ -17,6 +17,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 // Remembers window bounds (logical x,y,w,h) before the login resize, so we can restore them after.
 static PRELOGIN_BOUNDS: Mutex<Option<(f64, f64, f64, f64)>> = Mutex::new(None);
+// Same idea for the in-window settings panel.
+static PRESETTINGS_BOUNDS: Mutex<Option<(f64, f64, f64, f64)>> = Mutex::new(None);
 // Click-through ("ghost") mode: HUD stays visible but mouse events pass to whatever is under it.
 static PASSTHROUGH: AtomicBool = AtomicBool::new(false);
 
@@ -48,22 +50,14 @@ fn toggle_passthrough(app: &tauri::AppHandle) {
     apply_passthrough(app, !PASSTHROUGH.load(Ordering::SeqCst));
 }
 
-// Settings lives in its own window so the bar stays visible while it's open.
+// Settings renders inside the main window: the bar stays visible at the top
+// and the window grows downward to fit the panel. (A second webview window
+// reliably renders blank on Windows/WebView2, so everything stays in one.)
 fn show_settings_window(app: &tauri::AppHandle) {
-    if let Some(w) = app.get_webview_window("settings") {
-        let _ = w.show();
-        let _ = w.set_focus();
-        return;
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.show();
+        let _ = win.emit("open-settings", ());
     }
-    // Opaque on purpose: a transparent runtime window renders as a blank white
-    // box on Windows/WebView2. This panel has its own solid background.
-    let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
-        .title("Persistence Settings")
-        .inner_size(380.0, 640.0)
-        .decorations(true)
-        .resizable(true)
-        .center()
-        .build();
 }
 
 fn main() {
@@ -177,8 +171,8 @@ fn main() {
             get_autostart,
             check_update,
             install_update,
-            open_settings,
-            close_settings,
+            size_for_settings,
+            restore_after_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error running Persistence desktop bar");
@@ -222,14 +216,38 @@ fn hide_bar(window: tauri::WebviewWindow) -> Result<(), String> {
     window.hide().map_err(|e| e.to_string())
 }
 
+/// Grow the window downward so the settings panel fits below the bar; the bar
+/// itself stays where it is. Shifts up if the panel would run off-screen.
 #[tauri::command]
-fn open_settings(app: tauri::AppHandle) {
-    show_settings_window(&app);
+fn size_for_settings(window: tauri::WebviewWindow) -> Result<(), String> {
+    const PANEL_H: f64 = 500.0;
+    let sf = window.scale_factor().unwrap_or(1.0);
+    let (Ok(pos), Ok(sz)) = (window.outer_position(), window.inner_size()) else {
+        return Err("could not read window bounds".into());
+    };
+    let (x, y, w, h) = (pos.x as f64 / sf, pos.y as f64 / sf, sz.width as f64 / sf, sz.height as f64 / sf);
+    *PRESETTINGS_BOUNDS.lock().unwrap() = Some((x, y, w, h));
+
+    let mut new_y = y;
+    if let Ok(Some(mon)) = window.current_monitor() {
+        let mon_bottom = (mon.position().y as f64 + mon.size().height as f64) / mon.scale_factor();
+        if y + PANEL_H > mon_bottom { new_y = (mon_bottom - PANEL_H).max(0.0); }
+    }
+    let width = w.max(420.0);
+    window.set_size(tauri::LogicalSize::new(width, PANEL_H)).map_err(|e| e.to_string())?;
+    if (new_y - y).abs() > 1.0 {
+        window.set_position(tauri::LogicalPosition::new(x, new_y)).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 #[tauri::command]
-fn close_settings(app: tauri::AppHandle) {
-    if let Some(w) = app.get_webview_window("settings") { let _ = w.close(); }
+fn restore_after_settings(window: tauri::WebviewWindow) -> Result<(), String> {
+    if let Some((x, y, w, h)) = *PRESETTINGS_BOUNDS.lock().unwrap() {
+        window.set_size(tauri::LogicalSize::new(w, h)).map_err(|e| e.to_string())?;
+        window.set_position(tauri::LogicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 // ── Auto-updater (signed releases from GitHub) ─────────────────────

@@ -62,6 +62,22 @@ body.passthrough #content { opacity:0.8; }
 .rsz-nw { top:0; left:0; width:11px; height:11px; cursor:nwse-resize; }
 .rsz-se { bottom:0; right:0; width:11px; height:11px; cursor:nwse-resize; }
 .rsz-sw { bottom:0; left:0; width:11px; height:11px; cursor:nesw-resize; }
+/* Settings panel: window grows downward, bar stays live in the top 52px */
+body.settings-open #stage { bottom:auto; height:52px; }
+#spanel { display:none; position:absolute; top:52px; left:0; right:0; bottom:0; overflow-y:auto; background:var(--bg-solid); border-top:1px solid rgba(var(--fg),0.15); padding:14px; -webkit-app-region:no-drag; }
+body.settings-open #spanel { display:flex; flex-direction:column; gap:12px; }
+#spanel .sec { border:1px solid rgba(var(--fg),0.16); border-radius:8px; padding:12px; flex-shrink:0; }
+#spanel .sec-title { font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:rgba(var(--fg),0.5); margin-bottom:10px; }
+#spanel label.row { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:11px; padding:4px 0; cursor:pointer; }
+#spanel .metrics-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+#spanel input[type="range"] { width:130px; accent-color:var(--text); }
+#spanel input[type="checkbox"] { accent-color:var(--text); }
+#spanel select { font-family:inherit; font-size:11px; background:var(--bg-solid); color:var(--text); border:1px solid rgba(var(--fg),0.3); border-radius:4px; padding:2px 6px; }
+#spanel .hk { display:flex; justify-content:space-between; font-size:10.5px; padding:3px 0; color:rgba(var(--fg),0.75); }
+#spanel .hk kbd { font-family:inherit; border:1px solid rgba(var(--fg),0.3); border-radius:3px; padding:0 5px; font-size:9.5px; }
+#spanel .btns { display:flex; gap:10px; flex-shrink:0; }
+#spanel button.sbtn { flex:1; padding:10px; border:1px solid var(--text); background:var(--bg-solid); color:var(--text); font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:inherit; border-radius:4px; }
+#spanel button.sbtn.primary { background:var(--text); color:var(--bg-solid); }
 /* Boot state: just the P logo, centered, until first data render */
 #boot { display:none; position:absolute; inset:0; align-items:center; justify-content:center; z-index:40; }
 body.booting #boot { display:flex; }
@@ -83,7 +99,7 @@ html[data-theme="dark"] #boot img { filter:invert(1); }
 <button data-p="month" onclick="setPeriod('month')">1M</button>
 </div>
 <button class="icon-btn" id="theme-btn" title="Toggle light/dark" onclick="toggleTheme()">&#9680;</button>
-<button class="icon-btn" id="settings-btn" title="Settings" onclick="openSettingsWin()">&#9881;</button>
+<button class="icon-btn" id="settings-btn" title="Settings" onclick="toggleSettingsPanel()">&#9881;</button>
 <div id="pt-badge" title="Click-through is ON (Ctrl+Shift+P to turn off)">GHOST</div>
 <div class="sync-dot" id="sync-dot" title="Data sync status"></div>
 <div class="time" id="clock"></div>
@@ -98,6 +114,7 @@ html[data-theme="dark"] #boot img { filter:invert(1); }
 </div>
 <div class="rsz rsz-n"></div><div class="rsz rsz-s"></div><div class="rsz rsz-e"></div><div class="rsz rsz-w"></div>
 <div class="rsz rsz-ne"></div><div class="rsz rsz-nw"></div><div class="rsz rsz-se"></div><div class="rsz rsz-sw"></div>
+<div id="spanel"></div>
 <script src="login.js"></script><script>
 const { invoke } = window.__TAURI__?.core || { invoke: () => Promise.reject('no tauri') };
 const winApi = window.__TAURI__?.window;
@@ -146,7 +163,8 @@ setInterval(updateClock,10000); updateClock();
 let fitRAF=null;
 function fit(){
   const c=document.getElementById('content'); if(!c) return;
-  const W=window.innerWidth, H=window.innerHeight;
+  const W=window.innerWidth;
+  const H=document.body.classList.contains('settings-open') ? 52 : window.innerHeight;
   document.body.classList.toggle('vertical', (W/H) < 1.15);
   c.style.transform='none';
   const cw=c.offsetWidth||1, ch=c.offsetHeight||1;
@@ -319,8 +337,73 @@ function installUpdate(){
   });
 }
 
-// ---- Settings (separate window; bar stays visible) ----
-function openSettingsWin(){ invoke('open_settings').catch(e=>console.error('open_settings',e)); }
+// ---- Settings panel (window grows downward; bar stays live on top) ----
+const METRIC_LABELS={ netWorth:'Net Worth', cash:'Cash', investments:'Investments', retirement:'Retirement',
+  debt:'Debt', monthlyBills:'Monthly Bills', safeToSpend:'Safe to Spend', creditCards:'Credit Cards',
+  bills7d:'Bills Next 7 Days', goals:'Goal Progress' };
+let settingsOpen=false;
+function toggleSettingsPanel(){ if(settingsOpen){ closeSettingsPanel(); } else { openSettingsPanel(); } }
+async function openSettingsPanel(){
+  if(settingsOpen) return; settingsOpen=true;
+  try{ await invoke('size_for_settings'); }catch(e){ console.error('size_for_settings',e); }
+  const el=document.getElementById('spanel');
+  let metricRows='';
+  for(const k of Object.keys(METRIC_LABELS)){
+    metricRows+='<label class="row"><span>'+METRIC_LABELS[k]+'</span><input type="checkbox" data-metric="'+k+'"'+(settings.metrics[k]?' checked':'')+'></label>';
+  }
+  el.innerHTML=
+    '<div class="sec"><div class="sec-title">Appearance</div>'+
+      '<label class="row"><span>Bar opacity</span><span><input type="range" id="set-opacity" min="20" max="100" value="'+settings.opacity+'"> <span id="opacity-val">'+settings.opacity+'%</span></span></label>'+
+      '<label class="row"><span>Dark theme</span><input type="checkbox" id="set-dark"'+(document.documentElement.dataset.theme==='dark'?' checked':'')+'></label>'+
+    '</div>'+
+    '<div class="sec"><div class="sec-title">Metrics shown</div><div class="metrics-grid">'+metricRows+'</div>'+
+      '<div style="font-size:9.5px;color:rgba(var(--fg),0.45);margin-top:6px;">Tip: drag tiles on the bar to reorder them.</div></div>'+
+    '<div class="sec"><div class="sec-title">Behavior</div>'+
+      '<label class="row"><span>Refresh data every</span><select id="set-refresh">'+
+        [1,5,15,30].map(n=>'<option value="'+n+'"'+(settings.refreshMin===n?' selected':'')+'>'+n+' min</option>').join('')+
+      '</select></label>'+
+      '<label class="row"><span>Launch at startup</span><input type="checkbox" id="set-autostart"'+(settings.autostart?' checked':'')+'></label>'+
+    '</div>'+
+    '<div class="sec"><div class="sec-title">Hotkeys</div>'+
+      '<div class="hk"><span>Show / hide HUD</span><kbd>Ctrl+Shift+H</kbd></div>'+
+      '<div class="hk"><span>Click-through (ghost) mode</span><kbd>Ctrl+Shift+P</kbd></div>'+
+    '</div>'+
+    '<div class="sec"><div class="sec-title">Support</div>'+
+      '<div class="hk"><span>Questions or problems?</span><span style="text-decoration:underline;cursor:pointer;" onclick="openSupport()">support@persistence.finance</span></div>'+
+    '</div>'+
+    '<div class="btns"><button class="sbtn" id="set-signout">Sign Out</button><button class="sbtn primary" id="set-done">Done</button></div>';
+  document.body.classList.add('settings-open');
+  el.querySelector('#set-opacity').addEventListener('input',(e)=>{
+    settings.opacity=parseInt(e.target.value,10); el.querySelector('#opacity-val').textContent=settings.opacity+'%';
+    applyOpacity(); saveSettings();
+  });
+  el.querySelector('#set-dark').addEventListener('change',(e)=>{ applyTheme(e.target.checked?'dark':'light'); });
+  el.querySelectorAll('input[data-metric]').forEach(cb=>{
+    cb.addEventListener('change',()=>{ settings.metrics[cb.dataset.metric]=cb.checked; saveSettings(); renderTiles(); });
+  });
+  el.querySelector('#set-refresh').addEventListener('change',(e)=>{
+    settings.refreshMin=parseInt(e.target.value,10); saveSettings(); scheduleRefresh();
+  });
+  el.querySelector('#set-autostart').addEventListener('change',(e)=>{
+    settings.autostart=e.target.checked; saveSettings();
+    invoke('set_autostart',{enabled:settings.autostart}).catch(err=>console.error('set_autostart',err));
+  });
+  el.querySelector('#set-signout').addEventListener('click',async()=>{
+    try{ await invoke('logout'); }catch(e){}
+    await closeSettingsPanel();
+    location.reload();
+  });
+  el.querySelector('#set-done').addEventListener('click',closeSettingsPanel);
+  scheduleFit();
+}
+async function closeSettingsPanel(){
+  if(!settingsOpen) return; settingsOpen=false;
+  document.body.classList.remove('settings-open');
+  document.getElementById('spanel').innerHTML='';
+  try{ await invoke('restore_after_settings'); }catch(e){ console.error('restore_after_settings',e); }
+  scheduleFit();
+}
+function openSupport(){ if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('mailto:support@persistence.finance'); } }
 
 function initResize(){
   const dirs={'rsz-n':'North','rsz-s':'South','rsz-e':'East','rsz-w':'West','rsz-ne':'NorthEast','rsz-nw':'NorthWest','rsz-se':'SouthEast','rsz-sw':'SouthWest'};
@@ -332,13 +415,7 @@ function initResize(){
 function initEvents(){
   if(!eventApi||!eventApi.listen) return;
   eventApi.listen('passthrough-changed',(e)=>{ document.body.classList.toggle('passthrough', !!e.payload); }).catch(()=>{});
-  eventApi.listen('settings-changed',(e)=>{
-    if(!e.payload) return;
-    settings=mergeSettings(e.payload); saveSettings();
-    applyOpacity(); renderTiles(); scheduleRefresh();
-  }).catch(()=>{});
-  eventApi.listen('theme-changed',(e)=>{ if(e.payload) document.documentElement.dataset.theme=e.payload; }).catch(()=>{});
-  eventApi.listen('signed-out',()=>{ location.reload(); }).catch(()=>{});
+  eventApi.listen('open-settings',()=>{ openSettingsPanel(); }).catch(()=>{});
 }
 (async()=>{
   initResize(); initEvents(); initTileDrag(); applyOpacity(); fit();

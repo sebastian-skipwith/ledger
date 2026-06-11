@@ -8,12 +8,24 @@ const crypto = require('crypto');
 // are migrated at boot (see src/index.js).
 const PREFIX = 'enc:v1:';
 
+let warnedBadKey = false;
 function getKey() {
-  const hex = process.env.DATA_ENCRYPTION_KEY;
+  let hex = process.env.DATA_ENCRYPTION_KEY;
   if (!hex) return null;
-  const key = Buffer.from(hex.trim(), 'hex');
-  if (key.length !== 32) throw new Error('DATA_ENCRYPTION_KEY must be 64 hex characters (32 bytes)');
-  return key;
+  // Forgive common paste accidents: surrounding quotes and whitespace.
+  hex = hex.trim().replace(/^["']|["']$/g, '');
+  const valid = /^[0-9a-fA-F]{64}$/.test(hex);
+  if (!valid) {
+    // Never crash the app over a malformed key — run as "not configured" and
+    // say loudly what to fix. (Already-encrypted rows will error per-request
+    // until the key is corrected, which is the safe failure mode.)
+    if (!warnedBadKey) {
+      console.error(`DATA_ENCRYPTION_KEY is set but invalid (length ${hex.length}, expected exactly 64 hex characters 0-9a-f). Fix the value in Railway -> ledger -> Variables. Running WITHOUT application-level token encryption until then.`);
+      warnedBadKey = true;
+    }
+    return null;
+  }
+  return Buffer.from(hex, 'hex');
 }
 
 function isConfigured() {

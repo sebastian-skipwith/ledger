@@ -89,21 +89,22 @@ app.use((err, req, res, next) => {
   }
 
   // Encrypt any plaintext Plaid tokens once DATA_ENCRYPTION_KEY is set.
-  const { isConfigured, encryptSecret, PREFIX } = require('./lib/crypto');
-  if (isConfigured()) {
-    try {
+  // Nothing in this block may crash the app — it degrades to warnings.
+  try {
+    const { isConfigured, encryptSecret, PREFIX } = require('./lib/crypto');
+    if (isConfigured()) {
       const { rows } = await query(
         `SELECT id, access_token FROM plaid_items WHERE access_token NOT LIKE $1`, [`${PREFIX}%`]
       );
       for (const r of rows) {
         await query('UPDATE plaid_items SET access_token=$1 WHERE id=$2', [encryptSecret(r.access_token), r.id]);
       }
-      if (rows.length) console.log(`Encrypted ${rows.length} Plaid token(s) at rest`);
-    } catch (err) {
-      console.error('Token encryption migration failed:', err.message);
+      console.log(`Token encryption active${rows.length ? ` — encrypted ${rows.length} existing Plaid token(s)` : ''}`);
+    } else {
+      console.warn('DATA_ENCRYPTION_KEY not set — Plaid access tokens are NOT application-encrypted at rest');
     }
-  } else {
-    console.warn('DATA_ENCRYPTION_KEY not set — Plaid access tokens are NOT application-encrypted at rest');
+  } catch (err) {
+    console.error('Token encryption migration failed (continuing without it):', err.message);
   }
 })();
 

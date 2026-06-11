@@ -177,10 +177,12 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
 ## 6b. Security posture (hardened 2026-06-10)
 
 - **Plaid access tokens are encrypted at the application level** (AES-256-GCM,
-  `backend/src/lib/crypto.js`, stored as `enc:v1:...`). Requires `DATA_ENCRYPTION_KEY`
-  (64 hex chars) in Railway; without it the code stores plaintext and warns at boot.
-  Existing plaintext rows are auto-encrypted at boot once the key appears.
-  NEVER change/lose that key once set — rows become undecryptable (re-link banks to recover).
+  `backend/src/lib/crypto.js`, stored as `enc:v1:...`). `DATA_ENCRYPTION_KEY` is **set and
+  LIVE in prod since 2026-06-11** (boot log: "Token encryption active"); malformed/missing
+  keys degrade to a loud warning, never a crash. Existing plaintext rows auto-encrypt at boot.
+  NEVER change/lose that key — rows become undecryptable (re-link banks to recover).
+- Rotations completed 2026-06-11: Plaid secret rotated, stale `ledger-deploy` GitHub PAT
+  deleted (authorized OAuth apps verified clean: only Git Credential Manager + GitHub CLI).
 - Repo scan 2026-06-10: **no real secrets in git history** (only placeholders in
   `*.example` / `docs/env-examples.txt`) and none in the OneDrive apply scripts. The
   earlier "exposed credentials" note referred to keys pasted into past chat sessions —

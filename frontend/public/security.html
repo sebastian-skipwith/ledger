@@ -89,6 +89,7 @@ footer { display: flex; align-items: center; justify-content: space-between; pad
   <ul class="plain">
     <li><strong>Encrypted in transit</strong> — every connection to Persistence (web, desktop, and API) uses TLS/HTTPS. There are no unencrypted endpoints.</li>
     <li><strong>Encrypted at rest</strong> — your data lives in a managed PostgreSQL database hosted on infrastructure with disk-level encryption at rest.</li>
+    <li><strong>Bank tokens are double-encrypted</strong> — the Plaid access tokens that link your accounts are additionally encrypted at the application level (AES&#8209;256&#8209;GCM) before being stored, so even direct access to the database does not expose a usable token.</li>
     <li><strong>Hashed passwords</strong> — if you use email sign-in, your password is stored only as a bcrypt hash. Sign in with Google and we never handle a password at all.</li>
     <li><strong>Short-lived sessions</strong> — access tokens expire after 15 minutes and are renewed via rotating refresh tokens, limiting the value of any intercepted token.</li>
     <li><strong>OS-level key storage</strong> — the desktop app stores your session in the Windows Credential Manager (the operating system's keychain), not in a file.</li>
@@ -116,7 +117,7 @@ footer { display: flex; align-items: center; justify-content: space-between; pad
     <p>Found a vulnerability? Please report it privately via <a href="https://github.com/sebastian-skipwith/ledger/security/advisories/new" style="text-decoration:underline;">GitHub private vulnerability reporting</a> and we will respond as quickly as possible. Please don't test against accounts that aren't yours.</p>
   </div>
 
-  <p class="note">This page describes the measures in place today and is updated as the product evolves. Persistence is in active development; features like subscriptions and additional regions may introduce new processors, and this page will be updated before they do. Last updated: June 10, 2026.</p>
+  <p class="note">This page describes the measures in place today and is updated as the product evolves. Persistence is in active development; features like subscriptions and additional regions may introduce new processors, and this page will be updated before they do. Last updated: June 11, 2026.</p>
 </main>
 
 <footer>

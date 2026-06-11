@@ -187,7 +187,18 @@ async function fetchData(){
     try{ const h=await invoke('fetch_history'); history=Array.isArray(h)?h:[]; }catch(he){ console.error('fetch_history error:',he); }
     renderTiles();
     document.getElementById('sync-dot').className='sync-dot';
-  }catch(err){ console.error('fetch_summary error:',err); document.getElementById('sync-dot').className='sync-dot error'; }
+  }catch(err){
+    console.error('fetch_summary error:',err);
+    document.getElementById('sync-dot').className='sync-dot error';
+    // Dead session (expired/rotated tokens): clear them and reload, which
+    // sends the user to the sign-in screen instead of loading forever.
+    const s=String(err);
+    if(!window.__reauthing && (s.indexOf('Session expired')>=0 || s.indexOf('Not logged in')>=0)){
+      window.__reauthing=true;
+      try{ await invoke('logout'); }catch(e){}
+      location.reload();
+    }
+  }
 }
 function fmt(n){ if(Math.abs(n)>=1000000) return '$'+(n/1000000).toFixed(1)+'M'; if(Math.abs(n)>=1000) return '$'+Math.round(n/1000)+'k'; return '$'+Math.round(n); }
 function computeDeltas(){

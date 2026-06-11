@@ -15,18 +15,21 @@ export default function DashboardPage() {
           setAccounts, setSummary, setInsights, insights } = useStore();
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<any[]>([]);
+  const [hud, setHud] = useState<any>(null);
   const [period, setPeriod] = useState<'day'|'week'|'month'>('day');
   useEffect(() => { if (!accessToken) return; loadData(); }, [accessToken]);
   async function loadData() {
     setLoading(true);
     try {
-      const [accts, insightsData] = await Promise.all([
+      const [accts, insightsData, hudData] = await Promise.all([
         apiCall('/api/accounts', { token: accessToken! }),
         apiCall('/api/ai/insights', { token: accessToken! }),
+        apiCall('/api/summary/hud', { token: accessToken! }).catch(() => null),
       ]);
       setAccounts(accts);
       setSummary({ ...computeSummary(accts), monthly_bills: insightsData?.context?.monthly_bills || 0 });
       setInsights(insightsData?.insights || []);
+      setHud(hudData);
       try {
         const hist = await apiCall('/api/net-worth?days=120', { token: accessToken! });
         setHistory(Array.isArray(hist) ? hist : []);
@@ -58,7 +61,7 @@ export default function DashboardPage() {
   const deltas = computeDeltas();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <TopBar summary={summary} loading={loading} deltas={deltas} period={period} onPeriodChange={setPeriod} />
+      <TopBar summary={summary} hud={hud} loading={loading} deltas={deltas} period={period} onPeriodChange={setPeriod} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', marginTop: 52 }}>
         <Sidebar />
         <main style={{ flex: 1, overflow: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -176,7 +176,13 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
 
 ## 7. Feature state (as of 2026-06-10)
 
-**Added 2026-06-10 (needs build verification + backend deploy):**
+**Added 2026-06-10 (round 2 — web parity):**
+- Web TopBar now shows the four new metrics (Safe to Spend, Credit Cards week, Bills 7 Days,
+  Goal pacing) from `/api/summary/hud`, plus a gear dropdown to show/hide any metric
+  (persisted in localStorage `persistence-web-metrics`).
+- Auto-updater shipped in desktop v1.1.0 (see section 5); release process documented there.
+
+**Added 2026-06-10 (round 1):**
 - Backend `/api/summary/hud` endpoint; HUD switched off the slow AI-insights endpoint.
 - HUD: settings panel (opacity, metric visibility, refresh interval, autostart, theme, sign out),
   minimize/close buttons, global hotkeys (Ctrl+Shift+H hide/show, Ctrl+Shift+P click-through),

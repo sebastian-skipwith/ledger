@@ -251,7 +251,7 @@ footer {
   <div class="eyebrow">Personal Finance, Reimagined</div>
   <h1 class="fade-up">Your money, always<br><em>in plain sight.</em></h1>
   <p class="hero-sub fade-up delay-1">
-    A persistent financial HUD for your desktop. AI that actually knows your accounts. Connect once, stay informed forever.
+    The only finance app with a truly <strong>persistent desktop HUD</strong> — your net worth, safe-to-spend, and upcoming bills floating above every window, all day. Plus an AI that actually knows your accounts.
   </p>
   <div class="hero-cta fade-up delay-2">
     <button class="btn-hero btn-hero-primary">Start for free →</button>
@@ -383,6 +383,43 @@ footer {
   </div>
 </div>
 
+<!-- HUD IN ACTION (real screenshot) -->
+<section id="hud-in-action" style="padding-top:40px;">
+  <div class="section-label">Always On Top. Literally.</div>
+  <h2>It stays on screen while<br><em>you do everything else.</em></h2>
+  <p class="section-sub">A real screenshot, not a mockup. Email, spreadsheets, code, games — the HUD floats above all of it. Drag it anywhere, resize it to anything, reorder the tiles, or hit Ctrl+Shift+P to make it click-through so it never gets in your way.</p>
+  <img src="/hud-in-action.png" alt="The Persistence HUD floating above everyday work" style="display:block;max-width:1100px;width:100%;margin:0 auto;border:1px solid var(--border);border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,0.45);" onerror="document.getElementById('hud-in-action').style.display='none'">
+</section>
+
+<!-- WHY PERSISTENCE -->
+<section id="why" style="padding-top:0;">
+  <div class="section-label">Why Persistence</div>
+  <h2>No other money app<br><em>does this.</em></h2>
+  <p class="section-sub">Every finance app is a tab you forget to open. Persistence is the only one that's simply&nbsp;&mdash; there.</p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">▲</div>
+      <div class="feature-title">The Only Persistent HUD</div>
+      <div class="feature-body">Budgeting apps live in a browser tab you visit once a month. Persistence lives on your screen: an always-on-top bar over every window, with global hotkeys and a click-through ghost mode. Constant awareness, zero effort.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✦</div>
+      <div class="feature-title">Bring Any AI You Want</div>
+      <div class="feature-body">Our MCP server plugs your finances into Claude Desktop, Claude Code, Cursor — any MCP-compatible client you already use. Ask your own AI about your actual money. Read-only, revocable, yours.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◇</div>
+      <div class="feature-title">Keep Your Current Apps</div>
+      <div class="feature-body">Already on Monarch, Rocket Money, or YNAB? Keep them. Persistence connects to the same banks and works alongside whatever you use — zero migration, no switching cost. It's the always-visible layer they're missing.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title">Security You Can Actually Read</div>
+      <div class="feature-body">Your bank login never touches us (Plaid handles it), tokens are double-encrypted at rest, sessions are short-lived, and app updates are cryptographically signed. <a href="/security.html" style="text-decoration:underline;">Read exactly how your data is protected →</a></div>
+    </div>
+  </div>
+</section>
+
 <!-- FEATURES -->
 <section id="features">
   <div class="section-label">Built Different</div>
@@ -403,7 +440,7 @@ footer {
     <div class="feature-card">
       <div class="feature-icon">🔗</div>
       <div class="feature-title">MCP Server</div>
-      <div class="feature-body">Connect your finances to Claude Desktop, ChatGPT, or any MCP-compatible AI. Your money becomes a tool every AI can use — safely.</div>
+      <div class="feature-body">Connect your finances to Claude Desktop, Claude Code, Cursor — any MCP-compatible AI client. Your money becomes a tool your AI can use, safely and read-only.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">⚡</div>
@@ -549,6 +586,7 @@ footer {
     <a href="#">MCP</a>
     <a href="#">API Docs</a>
     <a href="/security.html">Security &amp; Privacy</a>
+    <a href="mailto:support@persistence.finance">Support</a>
     <a href="#">Terms</a>
   </div>
   <div class="footer-copy">© 2026 Persistence. All rights reserved.</div>
@@ -576,7 +614,7 @@ function pToggleTheme(){var el=document.documentElement;var n=el.dataset.theme==
 document.addEventListener('DOMContentLoaded',function(){
   document.querySelectorAll('button').forEach(function(b){
     var t=(b.textContent||'').trim().toLowerCase();
-    if(t==='download desktop app'){ b.addEventListener('click',function(){location.href='https://github.com/sebastian-skipwith/ledger/releases/download/v1.2.1/Persistence_1.2.1_x64-setup.exe';}); } else if(t==='sign in'||t==='get started free'){ b.addEventListener('click',function(){location.href='/';}); }
+    if(t==='download desktop app'){ b.addEventListener('click',function(){location.href='https://github.com/sebastian-skipwith/ledger/releases/download/v1.3.0/Persistence_1.3.0_x64-setup.exe';}); } else if(t==='sign in'||t==='get started free'){ b.addEventListener('click',function(){location.href='/';}); }
   });
 });
 </script>

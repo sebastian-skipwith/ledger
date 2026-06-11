@@ -195,7 +195,30 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
   notification template, Railway DB lockdown steps).
 - Rotating `JWT_SECRET` = global logout kill switch.
 
-## 7. Feature state (as of 2026-06-10)
+## 7. Feature state (as of 2026-06-11)
+
+**Added 2026-06-11 (ops + landing + desktop v1.3.0):**
+- Account self-service: `GET /api/account/export` (full JSON download) and `DELETE /api/account`
+  (revokes Plaid items first, then CASCADE delete). UI in web Sidebar -> Account.
+- Welcome emails on signup (both email + Google paths) via Resend — dormant until
+  `RESEND_API_KEY` set in Railway. Sender stays `onboarding@resend.dev` until the
+  persistence.finance domain is verified in Resend; reply-to is support@persistence.finance.
+- Error monitoring via Sentry (`@sentry/node`) — dormant until `SENTRY_DSN` set.
+- **SECURITY FIX**: Google sign-in now cryptographically verifies the ID token with
+  google-auth-library (was an unverified decode — anyone could forge a login for any email).
+- Support email everywhere: support@persistence.finance (landing footer, security page,
+  web sidebar, HUD settings, welcome email reply-to). NOTE: address only works once the
+  domain is bought + email routing set up.
+- Landing: differentiators section (only persistent HUD / any MCP client / works alongside
+  Monarch & Rocket Money / security), sharpened hero, real-screenshot section
+  (`#hud-in-action`, auto-hidden until `frontend/public/hud-in-action.png` exists).
+- Desktop v1.3.0: settings in its OWN window (`ui/settings.html`, `open_settings`/`close_settings`
+  commands; syncs to the bar via `settings-changed`/`theme-changed`/`signed-out` events —
+  capabilities `windows` now includes "settings"); taskbar icon + Alt-Tab (`skip_taskbar(false)`);
+  boot shows centered pulsing P logo (`body.booting`); always-on-top re-asserted every 20s
+  (fixes other topmost apps like Claude Desktop covering the bar).
+
+### Earlier (2026-06-10)
 
 **Added 2026-06-10 (round 3 — business + customization):**
 - **HUD drag-and-drop tile reordering** (desktop v1.2.0): HTML5 DnD in `ui/index.html`,

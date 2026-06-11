@@ -2,7 +2,30 @@
 import { useStore, formatCurrency, apiCall } from '@/lib/store';
 
 export default function Sidebar() {
-  const { accounts, activeSection, setActiveSection, user, accessToken } = useStore();
+  const { accounts, activeSection, setActiveSection, user, accessToken, logout } = useStore();
+
+  async function exportData() {
+    try {
+      const data = await apiCall('/api/account/export', { token: accessToken! });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'persistence-export.json'; a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) { alert('Export failed: ' + e.message); }
+  }
+
+  async function deleteAccount() {
+    const phrase = prompt(
+      'This permanently deletes your account, revokes your bank connections, and erases all your data. This cannot be undone.\n\nType DELETE to confirm.'
+    );
+    if (phrase !== 'DELETE') return;
+    try {
+      await apiCall('/api/account', { method: 'DELETE', token: accessToken! });
+      logout();
+      location.reload();
+    } catch (e: any) { alert('Deletion failed: ' + e.message); }
+  }
 
   async function upgrade(tier: 'pro' | 'wealth') {
     try {
@@ -111,6 +134,31 @@ export default function Sidebar() {
             fontFamily: 'var(--font-syne)', letterSpacing: '0.3px',
           }}>Manage subscription ({user?.tier})</button>
         )}
+      </div>
+
+      <div style={{ padding: '14px 12px 4px' }}>
+        <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.25)', padding: '0 8px', marginBottom: 4 }}>Account</div>
+        {[
+          { label: 'Export my data', fn: exportData },
+          { label: 'Contact support', fn: () => { window.location.href = 'mailto:support@persistence.finance'; } },
+        ].map(item => (
+          <button key={item.label} onClick={item.fn} style={{
+            display: 'block', width: '100%', padding: '6px 8px', borderRadius: 6,
+            border: 'none', cursor: 'pointer', background: 'transparent', textAlign: 'left',
+            color: 'rgba(var(--fg),0.55)', fontSize: 11.5, fontFamily: 'var(--font-syne)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.05)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >{item.label}</button>
+        ))}
+        <button onClick={deleteAccount} style={{
+          display: 'block', width: '100%', padding: '6px 8px', borderRadius: 6,
+          border: 'none', cursor: 'pointer', background: 'transparent', textAlign: 'left',
+          color: 'rgba(220,38,38,0.65)', fontSize: 11.5, fontFamily: 'var(--font-syne)',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(220,38,38,0.08)')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >Delete account…</button>
       </div>
     </div>
   );

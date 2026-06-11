@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { z } = require('zod');
 const { query } = require('../db');
+const { sendWelcomeEmail } = require('../lib/email');
 
 const RegisterSchema = z.object({
   email: z.string().email(),
@@ -37,6 +38,7 @@ router.post('/register', async (req, res, next) => {
     const user = rows[0];
     const tokens = signTokens(user.id);
     res.status(201).json({ user, ...tokens });
+    sendWelcomeEmail(user.email, user.full_name).catch(e => console.error('welcome email:', e.message));
   } catch (err) {
     if (err.name === 'ZodError') return res.status(400).json({ error: err.errors });
     next(err);

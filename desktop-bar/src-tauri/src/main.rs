@@ -48,6 +48,23 @@ fn toggle_passthrough(app: &tauri::AppHandle) {
     apply_passthrough(app, !PASSTHROUGH.load(Ordering::SeqCst));
 }
 
+// Settings lives in its own window so the bar stays visible while it's open.
+fn show_settings_window(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("settings") {
+        let _ = w.show();
+        let _ = w.set_focus();
+        return;
+    }
+    let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
+        .title("Persistence Settings")
+        .inner_size(380.0, 640.0)
+        .decorations(false)
+        .transparent(true)
+        .resizable(true)
+        .center()
+        .build();
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -90,11 +107,25 @@ fn main() {
                 .transparent(true)
                 .always_on_top(true)
                 .visible_on_all_workspaces(true)
-                .skip_taskbar(true)
+                .skip_taskbar(false) // show in taskbar + Alt-Tab
                 .resizable(true)
                 .min_inner_size(120.0, 44.0)
                 .shadow(false)
                 .build()?;
+
+            // Other apps (e.g. Claude Desktop) can end up above us in the
+            // topmost band; periodically re-assert so the HUD stays on top.
+            {
+                let handle = app.handle().clone();
+                std::thread::spawn(move || loop {
+                    std::thread::sleep(std::time::Duration::from_secs(20));
+                    if let Some(w) = handle.get_webview_window("main") {
+                        if w.is_visible().unwrap_or(false) {
+                            let _ = w.set_always_on_top(true);
+                        }
+                    }
+                });
+            }
 
 
             let quit = MenuItemBuilder::with_id("quit", "Quit Persistence").build(app)?;
@@ -118,12 +149,7 @@ fn main() {
                     "show" => { let _ = app.shell().open("https://ledger-theta-puce.vercel.app".to_string(), None); }
                     "hud" => toggle_visibility(app),
                     "ghost" => toggle_passthrough(app),
-                    "settings" => {
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.show();
-                            let _ = win.emit("open-settings", ());
-                        }
-                    }
+                    "settings" => show_settings_window(app),
                     _ => {}
                 })
                 .build(app)?;
@@ -150,6 +176,8 @@ fn main() {
             get_autostart,
             check_update,
             install_update,
+            open_settings,
+            close_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error running Persistence desktop bar");
@@ -191,6 +219,16 @@ fn logout() -> Result<(), String> {
 #[tauri::command]
 fn hide_bar(window: tauri::WebviewWindow) -> Result<(), String> {
     window.hide().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn open_settings(app: tauri::AppHandle) {
+    show_settings_window(&app);
+}
+
+#[tauri::command]
+fn close_settings(app: tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("settings") { let _ = w.close(); }
 }
 
 // ── Auto-updater (signed releases from GitHub) ─────────────────────

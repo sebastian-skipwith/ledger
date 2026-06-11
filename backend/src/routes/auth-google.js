@@ -1,6 +1,10 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const { query } = require('../db');
+const { sendWelcomeEmail } = require('../lib/email');
+
+const googleClient = new OAuth2Client();
 
 function signTokens(userId) {
   const access = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
@@ -8,40 +12,22 @@ function signTokens(userId) {
   return { access, refresh };
 }
 
-// Decode Google's JWT without verifying signature.
-// Security: The token is sent directly from Google's SDK running on our
-// frontend — it cannot be forged by the user. We validate aud + exp manually.
-function decodeGoogleToken(idToken) {
-  const parts = idToken.split('.');
-  if (parts.length !== 3) throw new Error('Invalid token format');
-  // base64url decode the payload
-  const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-  const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
-  return payload;
-}
-
 router.post('/google', async (req, res) => {
   try {
     const { credential } = req.body;
     if (!credential) return res.status(400).json({ error: 'Google credential required' });
 
+    // Cryptographically verify the token against Google's public keys.
+    // (An unverified decode would let anyone forge a token for any email.)
     let payload;
     try {
-      payload = decodeGoogleToken(credential);
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
     } catch (e) {
-      return res.status(400).json({ error: 'Could not decode Google token: ' + e.message });
-    }
-
-    // Validate audience matches our client ID
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    if (clientId && payload.aud !== clientId) {
-      return res.status(401).json({ error: 'Token audience mismatch' });
-    }
-
-    // Validate token is not expired
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < now) {
-      return res.status(401).json({ error: 'Google token expired' });
+      return res.status(401).json({ error: 'Invalid Google token' });
     }
 
     const { email, name, sub: googleId } = payload;
@@ -57,6 +43,7 @@ router.post('/google', async (req, res) => {
         [email, 'GOOGLE_OAUTH_' + googleId, name || email.split('@')[0]]
       );
       user = result.rows[0];
+      sendWelcomeEmail(user.email, user.full_name).catch(e => console.error('welcome email:', e.message));
     }
 
     const tokens = signTokens(user.id);

@@ -62,32 +62,20 @@ body.passthrough #content { opacity:0.8; }
 .rsz-nw { top:0; left:0; width:11px; height:11px; cursor:nwse-resize; }
 .rsz-se { bottom:0; right:0; width:11px; height:11px; cursor:nwse-resize; }
 .rsz-sw { bottom:0; left:0; width:11px; height:11px; cursor:nesw-resize; }
-/* Settings panel */
-#settings { position:fixed; inset:0; z-index:9999; background:var(--bg-solid); color:var(--text); overflow:auto; -webkit-app-region:no-drag; display:none; }
-#settings.open { display:block; }
-#settings .inner { max-width:340px; margin:0 auto; padding:22px 18px 28px 18px; display:flex; flex-direction:column; gap:16px; }
-#settings h2 { font-size:13px; letter-spacing:3px; text-transform:uppercase; font-weight:600; text-align:center; }
-#settings .sec { border:1px solid rgba(var(--fg),0.18); border-radius:6px; padding:12px; }
-#settings .sec-title { font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:rgba(var(--fg),0.5); margin-bottom:10px; }
-#settings label.row { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:11px; padding:4px 0; cursor:pointer; }
-#settings .metrics-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
-#settings input[type="range"] { width:150px; accent-color:var(--text); }
-#settings input[type="checkbox"] { accent-color:var(--text); }
-#settings select { font-family:inherit; font-size:11px; background:var(--bg-solid); color:var(--text); border:1px solid rgba(var(--fg),0.3); border-radius:4px; padding:2px 6px; }
-#settings .hk { display:flex; justify-content:space-between; font-size:10.5px; padding:3px 0; color:rgba(var(--fg),0.75); }
-#settings .hk kbd { font-family:inherit; border:1px solid rgba(var(--fg),0.3); border-radius:3px; padding:0 5px; font-size:9.5px; }
-#settings .btns { display:flex; justify-content:space-between; gap:10px; }
-#settings button.sbtn { flex:1; padding:10px; border:1px solid var(--text); background:var(--bg-solid); color:var(--text); font-size:10px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:inherit; border-radius:4px; }
-#settings button.sbtn.primary { background:var(--text); color:var(--bg-solid); }
+/* Boot state: just the P logo, centered, until first data render */
+#boot { display:none; position:absolute; inset:0; align-items:center; justify-content:center; z-index:40; }
+body.booting #boot { display:flex; }
+body.booting #content { visibility:hidden; }
+#boot img { height:26px; width:auto; animation:pulse 1.4s ease-in-out infinite; }
+html[data-theme="dark"] #boot img { filter:invert(1); }
 </style>
 </head>
-<body data-tauri-drag-region>
+<body class="booting" data-tauri-drag-region>
+<div id="boot" data-tauri-drag-region><img src="logo.png" alt="Persistence"></div>
 <div id="stage" data-tauri-drag-region>
 <div id="content">
 <img class="brand" src="logo.png" alt="Persistence" data-tauri-drag-region>
-<div class="tiles" id="tiles">
-<div class="tile"><div class="tile-label">Loading</div><div class="tile-value loading" style="width:60px;height:13px;background:rgba(var(--fg),0.15);border-radius:3px;"></div></div>
-</div>
+<div class="tiles" id="tiles"></div>
 <div class="right">
 <div class="period" id="period">
 <button data-p="day" class="active" onclick="setPeriod('day')">1D</button>
@@ -95,7 +83,7 @@ body.passthrough #content { opacity:0.8; }
 <button data-p="month" onclick="setPeriod('month')">1M</button>
 </div>
 <button class="icon-btn" id="theme-btn" title="Toggle light/dark" onclick="toggleTheme()">&#9680;</button>
-<button class="icon-btn" id="settings-btn" title="Settings" onclick="openSettings()">&#9881;</button>
+<button class="icon-btn" id="settings-btn" title="Settings" onclick="openSettingsWin()">&#9881;</button>
 <div id="pt-badge" title="Click-through is ON (Ctrl+Shift+P to turn off)">GHOST</div>
 <div class="sync-dot" id="sync-dot" title="Data sync status"></div>
 <div class="time" id="clock"></div>
@@ -110,7 +98,6 @@ body.passthrough #content { opacity:0.8; }
 </div>
 <div class="rsz rsz-n"></div><div class="rsz rsz-s"></div><div class="rsz rsz-e"></div><div class="rsz rsz-w"></div>
 <div class="rsz rsz-ne"></div><div class="rsz rsz-nw"></div><div class="rsz rsz-se"></div><div class="rsz rsz-sw"></div>
-<div id="settings"></div>
 <script src="login.js"></script><script>
 const { invoke } = window.__TAURI__?.core || { invoke: () => Promise.reject('no tauri') };
 const winApi = window.__TAURI__?.window;
@@ -120,7 +107,6 @@ let data = null;
 let history = [];
 let period = 'day';
 let refreshTimer = null;
-let settingsOpen = false;
 
 // ---- Settings (persisted) ----
 const SETTINGS_KEY = 'persistence-hud-settings';
@@ -133,15 +119,18 @@ const DEFAULT_SETTINGS = {
              monthlyBills:true, safeToSpend:true, creditCards:true, bills7d:true, goals:true }
 };
 let settings = loadSettings();
+function mergeSettings(s){
+  const out = Object.assign({}, DEFAULT_SETTINGS, s || {});
+  out.metrics = Object.assign({}, DEFAULT_SETTINGS.metrics, (s && s.metrics) || {});
+  // Saved order, scrubbed of unknown keys, with any new metrics appended at the end.
+  const saved = (s && Array.isArray(s.order)) ? s.order.filter(k => DEFAULT_SETTINGS.order.includes(k)) : [];
+  out.order = saved.concat(DEFAULT_SETTINGS.order.filter(k => !saved.includes(k)));
+  return out;
+}
 function loadSettings(){
   let s = {};
   try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) {}
-  const out = Object.assign({}, DEFAULT_SETTINGS, s);
-  out.metrics = Object.assign({}, DEFAULT_SETTINGS.metrics, s.metrics || {});
-  // Saved order, scrubbed of unknown keys, with any new metrics appended at the end.
-  const saved = Array.isArray(s.order) ? s.order.filter(k => DEFAULT_SETTINGS.order.includes(k)) : [];
-  out.order = saved.concat(DEFAULT_SETTINGS.order.filter(k => !saved.includes(k)));
-  return out;
+  return mergeSettings(s);
 }
 function saveSettings(){ try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch(e) {} }
 function applyOpacity(){ document.documentElement.style.setProperty('--bar-alpha', String(Math.min(100, Math.max(20, settings.opacity)) / 100)); }
@@ -256,6 +245,7 @@ const TILE_BUILDERS={
 function renderTiles(){ if(!data) return; const d=computeDeltas(); const m=settings.metrics; let html='';
   for(const k of settings.order){ if(m[k]&&TILE_BUILDERS[k]) html+=TILE_BUILDERS[k](d); }
   document.getElementById('tiles').innerHTML=html;
+  document.body.classList.remove('booting');
   scheduleFit();
 }
 // ---- Drag-and-drop tile reordering ----
@@ -329,67 +319,8 @@ function installUpdate(){
   });
 }
 
-// ---- Settings panel ----
-const METRIC_LABELS={ netWorth:'Net Worth', cash:'Cash', investments:'Investments', retirement:'Retirement',
-  debt:'Debt', monthlyBills:'Monthly Bills', safeToSpend:'Safe to Spend', creditCards:'Credit Cards',
-  bills7d:'Bills Next 7 Days', goals:'Goal Progress' };
-async function openSettings(){
-  if(settingsOpen) return; settingsOpen=true;
-  try{ await invoke('size_for_login'); }catch(e){}
-  const el=document.getElementById('settings');
-  let metricRows='';
-  for(const k of Object.keys(METRIC_LABELS)){
-    metricRows+='<label class="row"><span>'+METRIC_LABELS[k]+'</span><input type="checkbox" data-metric="'+k+'"'+(settings.metrics[k]?' checked':'')+'></label>';
-  }
-  el.innerHTML='<div class="inner">'+
-    '<h2>Settings</h2>'+
-    '<div class="sec"><div class="sec-title">Appearance</div>'+
-      '<label class="row"><span>Bar opacity</span><span><input type="range" id="set-opacity" min="20" max="100" value="'+settings.opacity+'"> <span id="opacity-val">'+settings.opacity+'%</span></span></label>'+
-      '<label class="row"><span>Dark theme</span><input type="checkbox" id="set-dark"'+(document.documentElement.dataset.theme==='dark'?' checked':'')+'></label>'+
-    '</div>'+
-    '<div class="sec"><div class="sec-title">Metrics shown</div><div class="metrics-grid">'+metricRows+'</div></div>'+
-    '<div class="sec"><div class="sec-title">Behavior</div>'+
-      '<label class="row"><span>Refresh data every</span><select id="set-refresh">'+
-        [1,5,15,30].map(n=>'<option value="'+n+'"'+(settings.refreshMin===n?' selected':'')+'>'+n+' min</option>').join('')+
-      '</select></label>'+
-      '<label class="row"><span>Launch at startup</span><input type="checkbox" id="set-autostart"'+(settings.autostart?' checked':'')+'></label>'+
-    '</div>'+
-    '<div class="sec"><div class="sec-title">Hotkeys</div>'+
-      '<div class="hk"><span>Show / hide HUD</span><kbd>Ctrl+Shift+H</kbd></div>'+
-      '<div class="hk"><span>Click-through (ghost) mode</span><kbd>Ctrl+Shift+P</kbd></div>'+
-    '</div>'+
-    '<div class="btns"><button class="sbtn" id="set-signout">Sign Out</button><button class="sbtn primary" id="set-done">Done</button></div>'+
-  '</div>';
-  el.classList.add('open');
-  el.querySelector('#set-opacity').addEventListener('input',(e)=>{
-    settings.opacity=parseInt(e.target.value,10); el.querySelector('#opacity-val').textContent=settings.opacity+'%';
-    applyOpacity(); saveSettings();
-  });
-  el.querySelector('#set-dark').addEventListener('change',(e)=>{ applyTheme(e.target.checked?'dark':'light'); });
-  el.querySelectorAll('input[data-metric]').forEach(cb=>{
-    cb.addEventListener('change',()=>{ settings.metrics[cb.dataset.metric]=cb.checked; saveSettings(); renderTiles(); });
-  });
-  el.querySelector('#set-refresh').addEventListener('change',(e)=>{
-    settings.refreshMin=parseInt(e.target.value,10); saveSettings(); scheduleRefresh();
-  });
-  el.querySelector('#set-autostart').addEventListener('change',(e)=>{
-    settings.autostart=e.target.checked; saveSettings();
-    invoke('set_autostart',{enabled:settings.autostart}).catch(err=>console.error('set_autostart',err));
-  });
-  el.querySelector('#set-signout').addEventListener('click',async()=>{
-    try{ await invoke('logout'); }catch(e){}
-    await closeSettings();
-    location.reload();
-  });
-  el.querySelector('#set-done').addEventListener('click',closeSettings);
-}
-async function closeSettings(){
-  if(!settingsOpen) return; settingsOpen=false;
-  const el=document.getElementById('settings');
-  el.classList.remove('open'); el.innerHTML='';
-  try{ await invoke('restore_bar'); }catch(e){}
-  scheduleFit();
-}
+// ---- Settings (separate window; bar stays visible) ----
+function openSettingsWin(){ invoke('open_settings').catch(e=>console.error('open_settings',e)); }
 
 function initResize(){
   const dirs={'rsz-n':'North','rsz-s':'South','rsz-e':'East','rsz-w':'West','rsz-ne':'NorthEast','rsz-nw':'NorthWest','rsz-se':'SouthEast','rsz-sw':'SouthWest'};
@@ -401,7 +332,13 @@ function initResize(){
 function initEvents(){
   if(!eventApi||!eventApi.listen) return;
   eventApi.listen('passthrough-changed',(e)=>{ document.body.classList.toggle('passthrough', !!e.payload); }).catch(()=>{});
-  eventApi.listen('open-settings',()=>{ openSettings(); }).catch(()=>{});
+  eventApi.listen('settings-changed',(e)=>{
+    if(!e.payload) return;
+    settings=mergeSettings(e.payload); saveSettings();
+    applyOpacity(); renderTiles(); scheduleRefresh();
+  }).catch(()=>{});
+  eventApi.listen('theme-changed',(e)=>{ if(e.payload) document.documentElement.dataset.theme=e.payload; }).catch(()=>{});
+  eventApi.listen('signed-out',()=>{ location.reload(); }).catch(()=>{});
 }
 (async()=>{
   initResize(); initEvents(); initTileDrag(); applyOpacity(); fit();

@@ -1,4 +1,12 @@
 require('dotenv').config();
+
+// Error monitoring — dormant until SENTRY_DSN is set in Railway.
+let Sentry = null;
+if (process.env.SENTRY_DSN) {
+  Sentry = require('@sentry/node');
+  Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -15,6 +23,7 @@ const aiRouter = require('./routes/ai');
 const goalsRouter = require('./routes/goals');
 const summaryRouter = require('./routes/summary');
 const adminRouter = require('./routes/admin');
+const accountRouter = require('./routes/account');
 const billingRouter = require('./routes/billing');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
 const webhooksRouter = require('./routes/webhooks');
@@ -69,11 +78,15 @@ app.use('/api/goals',        authenticate, goalsRouter);
 app.use('/api/summary',      authenticate, summaryRouter);
 app.use('/api/billing',      authenticate, billingRouter);
 app.use('/api/admin',        authenticate, adminRouter);
+app.use('/api/account',      authenticate, accountRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  if (Sentry && (!err.status || err.status >= 500)) {
+    Sentry.captureException(err, { user: req.user ? { id: req.user.id } : undefined });
+  }
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
   });

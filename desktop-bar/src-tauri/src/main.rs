@@ -62,6 +62,15 @@ fn show_settings_window(app: &tauri::AppHandle) {
 
 fn main() {
     tauri::Builder::default()
+        // Launching the app while it's already running focuses the existing
+        // bar instead of spawning a duplicate.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.unminimize();
+                let _ = win.show();
+                let _ = win.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -163,7 +172,7 @@ fn main() {
             fetch_history,
             size_for_login,
             restore_bar,
-            hide_bar,
+            minimize_bar,
             quit_app,
             set_passthrough,
             get_passthrough,
@@ -211,9 +220,12 @@ fn logout() -> Result<(), String> {
     Ok(())
 }
 
+/// True minimize: the bar collapses to its taskbar button and one click
+/// brings it back. (Hiding instead removes the taskbar button entirely,
+/// which reads as "the app closed".) Ctrl+Shift+H remains the full-hide.
 #[tauri::command]
-fn hide_bar(window: tauri::WebviewWindow) -> Result<(), String> {
-    window.hide().map_err(|e| e.to_string())
+fn minimize_bar(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.minimize().map_err(|e| e.to_string())
 }
 
 /// Grow the window downward so the settings panel fits below the bar; the bar

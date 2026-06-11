@@ -106,7 +106,7 @@ html[data-theme="dark"] #boot img { filter:invert(1); }
 <button class="btn-ask" onclick="openDashboard()">Open</button>
 <button class="btn-ask btn-update" id="update-btn" style="display:none" onclick="installUpdate()" title="A new version is ready. One click downloads, installs, and restarts the app for you."></button>
 <div class="winctl">
-<button class="icon-btn" title="Hide bar (Ctrl+Shift+H or tray icon to bring back)" onclick="minimizeBar()">&#8722;</button>
+<button class="icon-btn" title="Minimize to taskbar" onclick="minimizeBar()">&#8722;</button>
 <button class="icon-btn close-btn" title="Quit Persistence" onclick="quitApp()">&#215;</button>
 </div>
 </div>
@@ -314,7 +314,7 @@ function endTileDrag(){
   setTimeout(()=>{ didDrag=false; },250);
 }
 function openDashboard(){ if(didDrag) return; if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
-function minimizeBar(){ invoke('hide_bar').catch(e=>console.error('hide_bar',e)); }
+function minimizeBar(){ invoke('minimize_bar').catch(e=>console.error('minimize_bar',e)); }
 function quitApp(){ invoke('quit_app').catch(e=>console.error('quit_app',e)); }
 
 // ---- Auto-update ----

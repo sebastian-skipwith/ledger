@@ -53,6 +53,21 @@ nav {
 .btn-cta { padding: 8px 20px; border-radius: 7px; font-size: 13px; font-weight: 700; color: var(--ink); background: var(--gold); border: none; cursor: pointer; letter-spacing: .2px; transition: opacity .15s; }
 .btn-cta:hover { opacity: .87; }
 
+/* MCP clients showcase */
+.mcp-logos { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 760px; margin: 0 auto 40px; }
+.mcp-chip { display: inline-flex; align-items: center; gap: 9px; padding: 10px 18px; border: 1px solid var(--border); border-radius: 12px; background: rgba(var(--fg),0.03); font-size: 14px; font-weight: 600; color: var(--subtle); }
+.mcp-chip svg { flex-shrink: 0; }
+.mcp-chip.any { border-style: dashed; color: var(--muted); font-weight: 500; }
+.mcp-demo { max-width: 560px; margin: 0 auto 36px; border: 1px solid var(--border); border-radius: 16px; background: rgba(var(--fg),0.02); padding: 18px; text-align: left; }
+.mcp-demo .hdr { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 14px; letter-spacing: .5px; }
+.mcp-demo .dot { width: 7px; height: 7px; border-radius: 50%; background: #16a34a; }
+.mcp-msg { font-size: 13.5px; line-height: 1.65; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px; }
+.mcp-msg.user { background: rgba(var(--fg),0.08); margin-left: 56px; }
+.mcp-msg.ai { background: rgba(var(--fg),0.03); border: 1px solid var(--border); margin-right: 32px; }
+.mcp-tool { display: inline-flex; align-items: center; gap: 7px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; margin: 2px 0 10px; }
+.btn-claude { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 12px; background: var(--gold); color: var(--ink); font-size: 15px; font-weight: 700; letter-spacing: .2px; transition: all .15s; border: none; cursor: pointer; }
+.btn-claude:hover { opacity: .88; transform: translateY(-1px); }
+
 /* HERO */
 .hero {
   padding: 140px 40px 80px;
@@ -428,6 +443,44 @@ footer {
       <div class="feature-body">Your bank login never touches us (Plaid handles it), tokens are double-encrypted at rest, sessions are short-lived, and app updates are cryptographically signed. <a href="/security.html" style="text-decoration:underline;">Read exactly how your data is protected →</a></div>
     </div>
   </div>
+</section>
+
+<!-- CONNECT YOUR AI (MCP) -->
+<section id="connect-ai" style="padding-top:0;">
+  <div class="section-label">MCP Built In</div>
+  <h2>Your money, in <em>every AI you use.</em></h2>
+  <p class="section-sub">Persistence ships a hosted MCP server. Connect the assistants you already work with — read-only, with a key you can revoke anytime.</p>
+
+  <div class="mcp-logos">
+    <span class="mcp-chip"><svg width="17" height="17" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="17.5" y2="4.5"/><line x1="12" y1="12" x2="21" y2="9"/><line x1="12" y1="12" x2="20" y2="15.5"/><line x1="12" y1="12" x2="16" y2="20.5"/><line x1="12" y1="12" x2="10" y2="21"/><line x1="12" y1="12" x2="5.5" y2="18.5"/><line x1="12" y1="12" x2="3" y2="13"/><line x1="12" y1="12" x2="4.5" y2="7"/><line x1="12" y1="12" x2="8.5" y2="3.5"/></g></svg>Claude</span>
+    <span class="mcp-chip"><svg width="17" height="17" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="17.5" y2="4.5"/><line x1="12" y1="12" x2="21" y2="9"/><line x1="12" y1="12" x2="20" y2="15.5"/><line x1="12" y1="12" x2="16" y2="20.5"/><line x1="12" y1="12" x2="10" y2="21"/><line x1="12" y1="12" x2="5.5" y2="18.5"/><line x1="12" y1="12" x2="3" y2="13"/><line x1="12" y1="12" x2="4.5" y2="7"/><line x1="12" y1="12" x2="8.5" y2="3.5"/></g></svg>Claude Code</span>
+    <span class="mcp-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z"/><path d="M3 7 L12 12 L21 7 M12 12 V22"/></svg>Cursor</span>
+    <span class="mcp-chip">ChatGPT</span>
+    <span class="mcp-chip">Windsurf</span>
+    <span class="mcp-chip">Zed</span>
+    <span class="mcp-chip">VS Code</span>
+    <span class="mcp-chip any">+ anything that speaks MCP</span>
+  </div>
+
+  <div class="mcp-demo">
+    <div class="hdr"><span class="dot"></span> PERSISTENCE CONNECTED · 5 TOOLS AVAILABLE</div>
+    <div class="mcp-msg user">Can I afford the $400 flight to Denver this month?</div>
+    <div class="mcp-tool"><svg width="12" height="12" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="4"/><line x1="12" y1="12" x2="19" y2="7"/><line x1="12" y1="12" x2="19" y2="17"/><line x1="12" y1="12" x2="12" y2="20"/><line x1="12" y1="12" x2="5" y2="17"/><line x1="12" y1="12" x2="5" y2="7"/></g></svg> persistence · get_financial_summary</div>
+    <div class="mcp-msg ai">Yes — comfortably. You have <strong>$1,240 safe to spend</strong> before Friday and $18,920 in cash. Booking the $400 flight still leaves every bill this month covered, with about $840 of cushion. Want me to log it as a planned expense?</div>
+  </div>
+
+  <div style="text-align:center;">
+    <a class="btn-claude" href="/developers"><svg width="20" height="20" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="17.5" y2="4.5"/><line x1="12" y1="12" x2="21" y2="9"/><line x1="12" y1="12" x2="20" y2="15.5"/><line x1="12" y1="12" x2="16" y2="20.5"/><line x1="12" y1="12" x2="10" y2="21"/><line x1="12" y1="12" x2="5.5" y2="18.5"/><line x1="12" y1="12" x2="3" y2="13"/><line x1="12" y1="12" x2="4.5" y2="7"/><line x1="12" y1="12" x2="8.5" y2="3.5"/></g></svg>Connect to Claude</a>
+    <div style="font-size:12px;color:var(--muted);margin-top:12px;">Two minutes: create a key, paste the config, ask your first question.</div>
+  </div>
+</section>
+
+<!-- ON YOUR WRIST -->
+<section id="watch" style="padding-top:0;">
+  <div class="section-label">On Your Wrist</div>
+  <h2>Glanceable from <em>anywhere.</em></h2>
+  <p class="section-sub">The Persistence widget for Pixel Watch keeps your net worth and safe-to-spend one wrist-flick away. Design preview — shipping with the mobile apps.</p>
+  <img src="/watch-mockup.svg" alt="Design preview of the Persistence widget on a Google Pixel Watch" style="display:block;max-width:720px;width:100%;margin:0 auto;border:1px solid var(--border);border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,0.45);">
 </section>
 
 <!-- FEATURES -->

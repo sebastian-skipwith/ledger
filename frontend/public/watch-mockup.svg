@@ -1,0 +1,102 @@
+<svg viewBox="0 0 900 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Persistence widget on a Google Pixel Watch">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#16161f"/>
+      <stop offset="60%" stop-color="#0d0d14"/>
+      <stop offset="100%" stop-color="#08080d"/>
+    </radialGradient>
+    <linearGradient id="arm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8a6a52"/>
+      <stop offset="100%" stop-color="#6e5340"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a2a32"/>
+      <stop offset="100%" stop-color="#1a1a21"/>
+    </linearGradient>
+    <radialGradient id="bezel" cx="38%" cy="32%" r="80%">
+      <stop offset="0%" stop-color="#3a3a44"/>
+      <stop offset="55%" stop-color="#23232b"/>
+      <stop offset="100%" stop-color="#101016"/>
+    </radialGradient>
+    <radialGradient id="face" cx="42%" cy="36%" r="85%">
+      <stop offset="0%" stop-color="#101017"/>
+      <stop offset="100%" stop-color="#050508"/>
+    </radialGradient>
+    <linearGradient id="glassEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2bd576" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#2bd576" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- backdrop -->
+  <rect width="900" height="640" fill="url(#bg)"/>
+  <circle cx="470" cy="295" r="300" fill="url(#glow)"/>
+
+  <!-- forearm sweeping in from bottom-left, hand softly curled at upper right -->
+  <g>
+    <path d="M 60 690 C 140 540 220 470 330 420 C 430 375 540 350 610 330 C 680 310 730 280 735 235 C 740 192 700 160 650 165 C 610 169 595 195 600 215"
+          fill="none" stroke="url(#arm)" stroke-width="150" stroke-linecap="round"/>
+    <!-- thumb hint -->
+    <path d="M 640 250 C 668 238 690 240 702 252" fill="none" stroke="#7c5f49" stroke-width="34" stroke-linecap="round"/>
+    <!-- shirt cuff -->
+    <path d="M 95 660 C 150 565 200 515 265 470" fill="none" stroke="#e9e9ef" stroke-width="170" stroke-linecap="round"/>
+    <path d="M 120 640 C 170 558 215 512 272 472" fill="none" stroke="#cfcfd8" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <!-- watch band wrapping the wrist (aligned with the arm's diagonal) -->
+  <g fill="url(#band)">
+    <rect x="540" y="160" width="110" height="92" rx="26" transform="rotate(-33 595 206)"/>
+    <rect x="262" y="372" width="110" height="92" rx="26" transform="rotate(-33 317 418)"/>
+  </g>
+  <g fill="none" stroke="#3a3a44" stroke-width="3" opacity="0.5">
+    <path d="M 568 196 L 640 150" transform="rotate(2 595 206)"/>
+    <path d="M 292 408 L 360 366" transform="rotate(2 317 418)"/>
+  </g>
+
+  <!-- pixel watch: domed circular body -->
+  <g>
+    <circle cx="470" cy="310" r="152" fill="url(#bezel)"/>
+    <circle cx="470" cy="310" r="143" fill="#0a0a10"/>
+    <!-- crown -->
+    <rect x="618" y="288" width="22" height="34" rx="10" fill="#2e2e38"/>
+    <rect x="622" y="296" width="14" height="18" rx="6" fill="#444450"/>
+    <!-- face -->
+    <circle cx="470" cy="310" r="136" fill="url(#face)"/>
+
+    <!-- watch UI -->
+    <g font-family="'Cascadia Code','Consolas',monospace" text-anchor="middle">
+      <text x="470" y="218" font-size="17" fill="#8e8e9a" letter-spacing="2">7:21</text>
+      <!-- P monogram -->
+      <text x="470" y="252" font-size="26" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="bold" fill="#f5f5fa">P</text>
+      <!-- net worth -->
+      <text x="470" y="280" font-size="11" fill="#75757f" letter-spacing="3">NET WORTH</text>
+      <text x="470" y="318" font-size="34" font-weight="bold" fill="#f5f5fa">$284,674</text>
+      <text x="470" y="342" font-size="14" fill="#2bd576">&#9650; $1,287 today</text>
+      <!-- divider -->
+      <line x1="395" y1="358" x2="545" y2="358" stroke="#26262e" stroke-width="1"/>
+      <!-- safe to spend -->
+      <text x="470" y="380" font-size="10" fill="#75757f" letter-spacing="2">SAFE TO SPEND</text>
+      <text x="470" y="402" font-size="20" font-weight="bold" fill="#2bd576">$1,240</text>
+      <text x="470" y="420" font-size="10" fill="#5c5c66">until Friday</text>
+    </g>
+
+    <!-- progress ring: month budget -->
+    <circle cx="470" cy="310" r="128" fill="none" stroke="#1d1d25" stroke-width="5"/>
+    <path d="M 470 182 A 128 128 0 1 1 357 374" fill="none" stroke="#2bd576" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+
+    <!-- domed glass highlight -->
+    <ellipse cx="420" cy="245" rx="95" ry="60" fill="url(#glassEdge)"/>
+    <circle cx="470" cy="310" r="143" fill="none" stroke="#ffffff" stroke-opacity="0.07" stroke-width="2"/>
+  </g>
+
+  <!-- caption chip -->
+  <g font-family="'Cascadia Code','Consolas',monospace">
+    <rect x="330" y="560" width="280" height="34" rx="17" fill="#15151d" stroke="#26262e"/>
+    <text x="470" y="582" font-size="13" fill="#9a9aa6" text-anchor="middle" letter-spacing="1">PIXEL WATCH &#183; PREVIEW</text>
+  </g>
+</svg>

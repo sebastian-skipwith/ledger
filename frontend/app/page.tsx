@@ -8,10 +8,11 @@ import AccountCards from '@/components/AccountCards';
 import BillsList from '@/components/BillsList';
 import AiChat from '@/components/AiChat';
 import InsightStrip from '@/components/InsightStrip';
+import IntelligencePanel from '@/components/IntelligencePanel';
 import PlaidLinkButton from '@/components/PlaidLink';
 
 export default function DashboardPage() {
-  const { user, accessToken, accounts, summary,
+  const { user, accessToken, accounts, summary, activeSection,
           setAccounts, setSummary, setInsights, insights } = useStore();
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<any[]>([]);
@@ -74,6 +75,12 @@ export default function DashboardPage() {
             </p>
           </div>
           <InsightStrip insights={insights} loading={loading} />
+          {activeSection === 'intelligence' && (
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 400, color: 'var(--white)', marginBottom: 12 }}>Money Intelligence</h2>
+              <IntelligencePanel token={accessToken} />
+            </div>
+          )}
           <NetWorthChart token={accessToken} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <AccountCards accounts={accounts} loading={loading} />

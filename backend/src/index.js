@@ -24,6 +24,9 @@ const goalsRouter = require('./routes/goals');
 const summaryRouter = require('./routes/summary');
 const adminRouter = require('./routes/admin');
 const accountRouter = require('./routes/account');
+const developerRouter = require('./routes/developer');
+const intelligenceRouter = require('./routes/intelligence');
+const mcpHttpRouter = require('./routes/mcp-http');
 const billingRouter = require('./routes/billing');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
 const webhooksRouter = require('./routes/webhooks');
@@ -79,6 +82,9 @@ app.use('/api/summary',      authenticate, summaryRouter);
 app.use('/api/billing',      authenticate, billingRouter);
 app.use('/api/admin',        authenticate, adminRouter);
 app.use('/api/account',      authenticate, accountRouter);
+app.use('/api/developer',    authenticate, developerRouter);
+app.use('/api/intelligence', authenticate, aiLimiter, intelligenceRouter);
+app.use('/api/mcp',          authenticate, mcpHttpRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 
 // Error handler
@@ -97,6 +103,18 @@ app.use((err, req, res, next) => {
 (async () => {
   try {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT');
+    await query(`CREATE TABLE IF NOT EXISTS api_keys (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      key_hash TEXT UNIQUE NOT NULL,
+      key_prefix TEXT NOT NULL,
+      scopes TEXT[] DEFAULT ARRAY['read'],
+      last_used_at TIMESTAMPTZ,
+      revoked BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS api_keys_hash ON api_keys(key_hash) WHERE revoked = false');
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

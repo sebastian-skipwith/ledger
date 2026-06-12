@@ -47,11 +47,12 @@ export default function Sidebar() {
 
   const navItems = [
     { id: 'dashboard',    label: 'Dashboard',    icon: '⊞' },
+    { id: 'intelligence', label: 'Intelligence', icon: '✦' },
     { id: 'networth',     label: 'Net Worth',    icon: '↗' },
     { id: 'transactions', label: 'Transactions', icon: '≡' },
     { id: 'bills',        label: 'Bills',        icon: '◷' },
     { id: 'goals',        label: 'Goals',        icon: '◎' },
-    { id: 'ai',           label: 'AI Chat',      icon: '✦' },
+    { id: 'ai',           label: 'AI Chat',      icon: '◇' },
   ];
 
   const acctColors: Record<string, string> = {
@@ -139,6 +140,7 @@ export default function Sidebar() {
       <div style={{ padding: '14px 12px 4px' }}>
         <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.25)', padding: '0 8px', marginBottom: 4 }}>Account</div>
         {[
+          { label: 'Developers / API', fn: () => { window.location.href = '/developers'; } },
           { label: 'Export my data', fn: exportData },
           { label: 'Contact support', fn: () => { window.location.href = 'mailto:support@persistence.finance'; } },
         ].map(item => (

@@ -195,7 +195,26 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
   notification template, Railway DB lockdown steps).
 - Rotating `JWT_SECRET` = global logout kill switch.
 
-## 7. Feature state (as of 2026-06-11)
+## 7. Feature state (as of 2026-06-12)
+
+**Added 2026-06-12 (developer platform + Era parity):**
+- **API-key auth**: `middleware/auth.js` now accepts `sk_live_`/`pk_` keys (SHA-256 hashed
+  in `api_keys` table, ensured at boot) OR a JWT, on the same routes. `req.apiKey` set when used.
+- **Developer portal**: `routes/developer.js` (create/list/revoke keys, key shown once) +
+  web page `/developers` (keys UI + REST + remote-MCP docs). Linked from landing nav + sidebar.
+- **Remote MCP** (`routes/mcp-http.js`, `POST /api/mcp`): JSON-RPC over HTTP so ANY MCP client
+  connects with just URL + API key — no local Node install. Tools: summary, transactions,
+  subscriptions, bills, goals. (The stdio `mcp-server/` still exists for local use.)
+- **Era-style intelligence** (`routes/intelligence.js`): `/subscriptions` (recurring-charge
+  detection), `/cash-flow` (balance forecast w/ shortfall warning), `/categorize` (AI cleanup,
+  Haiku), `/alerts` (low-balance / bill-due / unusual-spend, dedup'd per day). Web UI:
+  `components/IntelligencePanel.tsx`, shown under the "Intelligence" sidebar section.
+- **Auto-launch on startup**: ALREADY EXISTED (settings "Launch at startup" -> `set_autostart`,
+  autostart plugin, default on). No new work — confirmed working.
+- **Domain**: target is landing=`persistence.finance`, app=`app.persistence.finance` (owner
+  decided). Setup steps in `docs/domain-setup.md`; code URL swap is deferred until DNS is live.
+
+### Earlier state (2026-06-11)
 
 **Added 2026-06-11 (ops + landing + desktop v1.3.0):**
 - Account self-service: `GET /api/account/export` (full JSON download) and `DELETE /api/account`

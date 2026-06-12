@@ -19,11 +19,11 @@ html[data-theme="dark"] .brand { filter:invert(1); }
 .tiles { display:flex; }
 body.vertical .tiles { display:grid; grid-template-columns:1fr 1fr; }
 .tile { display:flex; flex-direction:column; justify-content:center; padding:0 14px; border-right:1px solid rgba(var(--fg),0.1); cursor:grab; }
-.tile.dragging { opacity:0.35; }
-.tile.drop-before { box-shadow:inset 3px 0 0 0 var(--text); }
-.tile.drop-after { box-shadow:inset -3px 0 0 0 var(--text); }
-body.vertical .tile.drop-before { box-shadow:inset 0 3px 0 0 var(--text); }
-body.vertical .tile.drop-after { box-shadow:inset 0 -3px 0 0 var(--text); }
+.tile.dragging { opacity:0.45; outline:1px dashed rgba(var(--fg),0.5); }
+.grip { display:flex; align-items:center; padding:0 7px 0 2px; cursor:grab; color:rgba(var(--fg),0.35); font-size:13px; letter-spacing:-3px; flex-shrink:0; }
+.grip:hover { color:rgba(var(--fg),0.7); }
+body.vertical .grip { justify-content:center; padding:2px 0; }
+.rsz-se { background:linear-gradient(135deg, transparent 0 60%, rgba(var(--fg),0.18) 60% 70%, transparent 70% 80%, rgba(var(--fg),0.18) 80% 90%, transparent 90%); border-bottom-right-radius:9px; }
 body.vertical .tile { border-right:none; border-bottom:1px solid rgba(var(--fg),0.08); padding:7px 14px; }
 .tile-label { font-size:8px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--fg),0.45); margin-bottom:2px; }
 .tile-value { font-size:13px; font-weight:500; color:var(--text); letter-spacing:-0.2px; }
@@ -90,6 +90,7 @@ html[data-theme="dark"] #boot img { filter:invert(1); }
 <div id="boot" data-tauri-drag-region><img src="logo.png" alt="Persistence"></div>
 <div id="stage" data-tauri-drag-region>
 <div id="content">
+<div class="grip" data-tauri-drag-region title="Drag to move the bar &#8226; pull any edge or the bottom-right corner to resize">&#8942;&#8942;</div>
 <img class="brand" src="logo.png" alt="Persistence" data-tauri-drag-region>
 <div class="tiles" id="tiles"></div>
 <div class="right">
@@ -98,6 +99,7 @@ html[data-theme="dark"] #boot img { filter:invert(1); }
 <button data-p="week" onclick="setPeriod('week')">1W</button>
 <button data-p="month" onclick="setPeriod('month')">1M</button>
 </div>
+<button class="icon-btn" id="snap-btn" title="Snap bar to the top of the screen" onclick="snapTop()">&#10514;</button>
 <button class="icon-btn" id="theme-btn" title="Toggle light/dark" onclick="toggleTheme()">&#9680;</button>
 <button class="icon-btn" id="settings-btn" title="Settings" onclick="toggleSettingsPanel()">&#9881;</button>
 <div id="pt-badge" title="Click-through is ON (Ctrl+Shift+P to turn off)">GHOST</div>
@@ -159,16 +161,31 @@ function toggleTheme(){ const cur=document.documentElement.dataset.theme==='dark
 function updateClock(){ const d=new Date(); let h=d.getHours(); const m=d.getMinutes(); const ampm=h>=12?'PM':'AM'; if(h>12)h-=12; if(h===0)h=12; document.getElementById('clock').textContent=h+':'+String(m).padStart(2,'0')+' '+ampm; }
 setInterval(updateClock,10000); updateClock();
 
-// Scale the whole HUD to fit the window at any size/shape, never clipping.
+// Scale the HUD to FILL the window at any size/shape, never clipping.
+// Tries the horizontal row plus 1-5 grid columns and keeps whichever layout
+// covers the most window area, so squares/rectangles don't leave dead space.
 let fitRAF=null;
+function applyLayout(mode){
+  const tiles=document.getElementById('tiles');
+  if(mode==='row'){ document.body.classList.remove('vertical'); tiles.style.gridTemplateColumns=''; }
+  else { document.body.classList.add('vertical'); tiles.style.gridTemplateColumns='repeat('+mode+',1fr)'; }
+}
 function fit(){
   const c=document.getElementById('content'); if(!c) return;
   const W=window.innerWidth;
   const H=document.body.classList.contains('settings-open') ? 52 : window.innerHeight;
-  document.body.classList.toggle('vertical', (W/H) < 1.15);
+  let best=null;
+  for(const mode of ['row',1,2,3,4,5]){
+    applyLayout(mode);
+    c.style.transform='none';
+    const cw=c.offsetWidth||1, ch=c.offsetHeight||1;
+    const s=Math.min(W/cw, H/ch)*0.97;
+    const fill=Math.min(s*cw/W,1)*Math.min(s*ch/H,1);
+    if(!best||fill>best.fill+0.001){ best={mode,s,fill}; }
+  }
+  applyLayout(best.mode);
   c.style.transform='none';
-  const cw=c.offsetWidth||1, ch=c.offsetHeight||1;
-  let s=Math.min(W/cw, H/ch)*0.94;
+  let s=best.s;
   if(!isFinite(s)||s<=0) s=1;
   s=Math.max(0.12, Math.min(s, 8));
   c.style.transform='scale('+s+')';
@@ -236,7 +253,7 @@ function tile(key,label,value,sub,cls,delta,goodUp){
     vcls=(cls?cls+' ':'')+dir;
     subHtml='<div class="tile-sub '+dir+'">'+arrow+pct+'</div>';
   }
-  return '<div class="tile" draggable="true" data-key="'+key+'" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+vcls+'">'+value+'</div>'+subHtml+'</div>';
+  return '<div class="tile" data-key="'+key+'" onclick="openDashboard()"><div class="tile-label">'+label+'</div><div class="tile-value '+vcls+'">'+value+'</div>'+subHtml+'</div>';
 }
 function weekdayShort(iso){ try{ return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{weekday:'short'}); }catch(e){ return ''; } }
 // One builder per metric; returns the tile HTML or '' when hidden / no data.
@@ -266,55 +283,62 @@ function renderTiles(){ if(!data) return; const d=computeDeltas(); const m=setti
   document.body.classList.remove('booting');
   scheduleFit();
 }
-// ---- Drag-and-drop tile reordering ----
-let dragKey=null;
+// ---- Tile reordering: pointer-capture drag (HTML5 dnd is unreliable in
+// Tauri webviews; pointer capture guarantees we always see the release) ----
 let didDrag=false;
 function initTileDrag(){
   const c=document.getElementById('tiles');
-  c.addEventListener('dragstart',(e)=>{
-    const t=e.target.closest('.tile'); if(!t) return;
-    dragKey=t.dataset.key; didDrag=true;
-    t.classList.add('dragging');
-    e.dataTransfer.effectAllowed='move';
-    try{ e.dataTransfer.setData('text/plain',dragKey); }catch(err){}
-  });
-  c.addEventListener('dragover',(e)=>{
-    if(!dragKey) return;
-    e.preventDefault(); e.dataTransfer.dropEffect='move';
-    const t=e.target.closest('.tile');
-    c.querySelectorAll('.tile').forEach(x=>x.classList.remove('drop-before','drop-after'));
-    if(!t||t.dataset.key===dragKey) return;
-    const r=t.getBoundingClientRect();
-    const vertical=document.body.classList.contains('vertical');
-    const before=vertical ? (e.clientY < r.top+r.height/2) : (e.clientX < r.left+r.width/2);
-    t.classList.add(before?'drop-before':'drop-after');
-  });
-  c.addEventListener('drop',(e)=>{
-    if(!dragKey) return;
-    e.preventDefault();
-    const t=e.target.closest('.tile');
-    if(t&&t.dataset.key!==dragKey){
-      const r=t.getBoundingClientRect();
-      const vertical=document.body.classList.contains('vertical');
-      const before=vertical ? (e.clientY < r.top+r.height/2) : (e.clientX < r.left+r.width/2);
-      const ord=settings.order.filter(k=>k!==dragKey);
-      let idx=ord.indexOf(t.dataset.key);
-      if(!before) idx++;
-      ord.splice(idx,0,dragKey);
-      settings.order=ord; saveSettings();
+  let drag=null;
+  function finish(){
+    if(!drag) return;
+    if(drag.started){
+      drag.el.classList.remove('dragging');
+      const visible=[...c.querySelectorAll('.tile')].map(t=>t.dataset.key);
+      settings.order=visible.concat(settings.order.filter(k=>!visible.includes(k)));
+      saveSettings();
+      scheduleFit();
+      setTimeout(()=>{ didDrag=false; },250);
     }
-    endTileDrag();
-    renderTiles();
+    drag=null;
+  }
+  c.addEventListener('pointerdown',(e)=>{
+    if(e.button!==0) return;
+    const t=e.target.closest('.tile'); if(!t) return;
+    drag={el:t, sx:e.clientX, sy:e.clientY, started:false, pid:e.pointerId};
+    // Capture on the CONTAINER, not the tile: moving the tile via insertBefore
+    // counts as a DOM removal, which would destroy capture mid-gesture.
+    try{ c.setPointerCapture(e.pointerId); }catch(err){}
   });
-  c.addEventListener('dragend',endTileDrag);
-}
-function endTileDrag(){
-  dragKey=null;
-  document.querySelectorAll('#tiles .tile').forEach(x=>x.classList.remove('dragging','drop-before','drop-after'));
-  setTimeout(()=>{ didDrag=false; },250);
+  c.addEventListener('pointermove',(e)=>{
+    if(!drag||e.pointerId!==drag.pid) return;
+    if(!drag.started){
+      if(Math.abs(e.clientX-drag.sx)<6 && Math.abs(e.clientY-drag.sy)<6) return;
+      drag.started=true; didDrag=true;
+      drag.el.classList.add('dragging');
+    }
+    e.preventDefault();
+    let target=null, before=false;
+    for(const t of c.querySelectorAll('.tile')){
+      if(t===drag.el) continue;
+      const r=t.getBoundingClientRect();
+      if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){
+        target=t;
+        const vertical=document.body.classList.contains('vertical');
+        before=vertical ? (e.clientY < r.top+r.height/2) : (e.clientX < r.left+r.width/2);
+        break;
+      }
+    }
+    if(target){
+      if(before) c.insertBefore(drag.el,target); else c.insertBefore(drag.el,target.nextSibling);
+    }
+  });
+  c.addEventListener('pointerup',finish);
+  c.addEventListener('pointercancel',finish);
+  c.addEventListener('lostpointercapture',finish);
 }
 function openDashboard(){ if(didDrag) return; if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
 function minimizeBar(){ invoke('minimize_bar').catch(e=>console.error('minimize_bar',e)); }
+function snapTop(){ invoke('snap_top').then(()=>scheduleFit()).catch(e=>console.error('snap_top',e)); }
 function quitApp(){ invoke('quit_app').catch(e=>console.error('quit_app',e)); }
 
 // ---- Auto-update ----

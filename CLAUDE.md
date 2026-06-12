@@ -215,6 +215,14 @@ Everything *user-facing* should say **Persistence**. Everything in the list abov
 - Desktop v1.3.x: taskbar icon + Alt-Tab (`skip_taskbar(false)`); boot shows centered pulsing
   P logo (`body.booting`); always-on-top re-asserted every 20s (fixes other topmost apps like
   Claude Desktop covering the bar).
+- **Tile drag-reorder (v1.4.0)**: pointer-events drag in `initTileDrag()` — NOT HTML5 dnd
+  (unreliable in the webview; also never set `draggable="true"`, it hijacks pointer events).
+  Pointer capture MUST be taken on the `#tiles` CONTAINER, not the tile: `insertBefore`
+  reparenting destroys capture on the moved element mid-gesture. Web TopBar uses HTML5 dnd
+  (fine in real browsers), order persisted in `persistence-web-tile-order`.
+- **fit() (v1.4.0) FILLS the window**: tries row + 1-5 grid columns, keeps the layout with the
+  highest area coverage. Also: grip handle (`.grip`, drag-region) at far left, visible
+  bottom-right resize corner, snap-to-top button (`snap_top` command).
 - **Settings panel (v1.3.2): the window GROWS DOWNWARD** (`size_for_settings` /
   `restore_after_settings` commands + `body.settings-open` + `#spanel` in index.html) so the
   bar stays live in the top 52px. **DO NOT create a second webview window at runtime** — on

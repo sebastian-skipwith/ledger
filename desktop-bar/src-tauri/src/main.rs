@@ -173,6 +173,7 @@ fn main() {
             size_for_login,
             restore_bar,
             minimize_bar,
+            snap_top,
             quit_app,
             set_passthrough,
             get_passthrough,
@@ -226,6 +227,21 @@ fn logout() -> Result<(), String> {
 #[tauri::command]
 fn minimize_bar(window: tauri::WebviewWindow) -> Result<(), String> {
     window.minimize().map_err(|e| e.to_string())
+}
+
+/// One click returns the bar to its home position: full width, 52px tall,
+/// flush against the top edge of the current monitor.
+#[tauri::command]
+fn snap_top(window: tauri::WebviewWindow) -> Result<(), String> {
+    let (mx, my, mw) = window.current_monitor().ok().flatten()
+        .map(|m| {
+            let sf = m.scale_factor();
+            (m.position().x as f64 / sf, m.position().y as f64 / sf, m.size().width as f64 / sf)
+        })
+        .unwrap_or((0.0, 0.0, 1280.0));
+    window.set_size(tauri::LogicalSize::new(mw, 52.0)).map_err(|e| e.to_string())?;
+    window.set_position(tauri::LogicalPosition::new(mx, my)).map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 /// Grow the window downward so the settings panel fits below the bar; the bar

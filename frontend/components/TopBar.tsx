@@ -11,30 +11,32 @@ interface TopBarProps {
   onPeriodChange?: (p: 'day'|'week'|'month') => void;
 }
 
-const tiles = [
-  { key: 'net_worth',    label: 'Net Worth',    color: 'var(--text)', prefix: '' },
-  { key: 'total_debt',   label: 'CC / Debt',    color: 'rgba(var(--fg),0.6)', prefix: '' },
-  { key: 'monthly_bills',label: 'Monthly Bills',color: 'rgba(var(--fg),0.5)', prefix: '' },
-  { key: 'cash',         label: 'Cash',         color: 'var(--text)', prefix: '' },
-  { key: 'investments',  label: 'Investments',  color: 'rgba(var(--fg),0.5)', prefix: '' },
-  { key: 'retirement',   label: 'Retirement',   color: 'rgba(var(--fg),0.5)', prefix: '' },
-];
-
 const METRIC_LABELS: Record<string, string> = {
   net_worth: 'Net Worth', total_debt: 'CC / Debt', monthly_bills: 'Monthly Bills',
   cash: 'Cash', investments: 'Investments', retirement: 'Retirement',
   safe_to_spend: 'Safe to Spend', credit_week: 'Credit Cards (week)',
   bills_7d: 'Bills Next 7 Days', goal_progress: 'Goal Progress',
 };
+const SUMMARY_KEYS = ['net_worth', 'total_debt', 'monthly_bills', 'cash', 'investments', 'retirement'];
+const DEFAULT_ORDER = Object.keys(METRIC_LABELS);
 const VIS_KEY = 'persistence-web-metrics';
+const ORDER_KEY = 'persistence-web-tile-order';
 
 function loadVisibility(): Record<string, boolean> {
   const all: Record<string, boolean> = {};
-  for (const k of Object.keys(METRIC_LABELS)) all[k] = true;
+  for (const k of DEFAULT_ORDER) all[k] = true;
   try {
     const saved = JSON.parse(localStorage.getItem(VIS_KEY) || '{}');
     return { ...all, ...saved };
   } catch { return all; }
+}
+
+function loadOrder(): string[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ORDER_KEY) || '[]');
+    const valid = Array.isArray(saved) ? saved.filter((k: string) => DEFAULT_ORDER.includes(k)) : [];
+    return valid.concat(DEFAULT_ORDER.filter(k => !valid.includes(k)));
+  } catch { return DEFAULT_ORDER; }
 }
 
 function weekdayShort(iso: string): string {
@@ -45,13 +47,15 @@ function weekdayShort(iso: string): string {
 export default function TopBar({ summary, hud, loading, deltas, period = 'day', onPeriodChange }: TopBarProps) {
   const [vis, setVis] = useState<Record<string, boolean>>(() => {
     const all: Record<string, boolean> = {};
-    for (const k of Object.keys(METRIC_LABELS)) all[k] = true;
+    for (const k of DEFAULT_ORDER) all[k] = true;
     return all;
   });
+  const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
   const [custOpen, setCustOpen] = useState(false);
   const custRef = useRef<HTMLDivElement>(null);
+  const dragKey = useRef<string | null>(null);
 
-  useEffect(() => { setVis(loadVisibility()); }, []);
+  useEffect(() => { setVis(loadVisibility()); setOrder(loadOrder()); }, []);
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (custRef.current && !custRef.current.contains(e.target as Node)) setCustOpen(false);
@@ -68,43 +72,66 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
     });
   }
 
-  // The 4 metrics added 2026-06-10, served by /api/summary/hud
-  const extraTiles: { key: string; label: string; value: string; sub: string; color: string }[] = [];
-  if (hud) {
-    if (vis.safe_to_spend && hud.safe_to_spend) {
+  function onDragStart(key: string, e: React.DragEvent) {
+    dragKey.current = key;
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', key); } catch {}
+  }
+  function onDragOver(key: string, e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const from = dragKey.current;
+    if (!from || from === key) return;
+    setOrder(o => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const before = e.clientX < rect.left + rect.width / 2;
+      const next = o.filter(k => k !== from);
+      let idx = next.indexOf(key);
+      if (!before) idx++;
+      next.splice(idx, 0, from);
+      return next;
+    });
+  }
+  function onDragEnd() {
+    dragKey.current = null;
+    setOrder(o => { try { localStorage.setItem(ORDER_KEY, JSON.stringify(o)); } catch {} return o; });
+  }
+
+  // Build the value/sub/color for the 4 hud metrics; null = no data, tile hidden.
+  function hudTile(key: string): { value: string; sub: string; color: string } | null {
+    if (!hud) return null;
+    if (key === 'safe_to_spend' && hud.safe_to_spend) {
       const a = Math.round(Number(hud.safe_to_spend.amount) || 0);
-      extraTiles.push({
-        key: 'safe_to_spend', label: 'Safe to Spend',
-        value: formatCurrency(a, true), sub: 'until ' + weekdayShort(hud.safe_to_spend.until),
-        color: a < 0 ? '#dc2626' : '#16a34a',
-      });
+      return { value: formatCurrency(a, true), sub: 'until ' + weekdayShort(hud.safe_to_spend.until), color: a < 0 ? '#dc2626' : '#16a34a' };
     }
-    if (vis.credit_week && hud.credit_week) {
+    if (key === 'credit_week' && hud.credit_week) {
       const v = Math.round(Number(hud.credit_week.spent) || 0);
-      extraTiles.push({
-        key: 'credit_week', label: 'Credit Cards',
-        value: (v > 0 ? '+' : '') + formatCurrency(v, true), sub: 'this week',
-        color: v > 0 ? '#dc2626' : v < 0 ? '#16a34a' : 'var(--text)',
-      });
+      return { value: (v > 0 ? '+' : '') + formatCurrency(v, true), sub: 'this week', color: v > 0 ? '#dc2626' : v < 0 ? '#16a34a' : 'var(--text)' };
     }
-    if (vis.bills_7d && hud.bills_7d) {
-      extraTiles.push({
-        key: 'bills_7d', label: 'Bills 7 Days',
-        value: formatCurrency(Math.round(Number(hud.bills_7d.total) || 0), true),
-        sub: (hud.bills_7d.count || 0) + ' due', color: 'var(--text)',
-      });
+    if (key === 'bills_7d' && hud.bills_7d) {
+      return { value: formatCurrency(Math.round(Number(hud.bills_7d.total) || 0), true), sub: (hud.bills_7d.count || 0) + ' due', color: 'var(--text)' };
     }
-    if (vis.goal_progress && hud.goal_progress && hud.goal_progress.status !== 'none') {
+    if (key === 'goal_progress' && hud.goal_progress && hud.goal_progress.status !== 'none') {
       const g = hud.goal_progress;
-      extraTiles.push({
-        key: 'goal_progress', label: 'Goals',
+      return {
         value: g.status === 'behind' ? 'Behind ' + formatCurrency(Math.abs(g.diff), true)
              : g.status === 'ahead' ? 'Ahead ' + formatCurrency(g.diff, true) : 'On track',
         sub: g.goals_count + ' tracked',
         color: g.status === 'behind' ? '#dc2626' : '#16a34a',
-      });
+      };
     }
+    return null;
   }
+
+  const tileStyle: React.CSSProperties = {
+    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    padding: '0 16px', borderRight: '1px solid rgba(var(--fg),0.07)',
+    cursor: 'grab', flexShrink: 0, transition: 'background 0.15s',
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: 8.5, fontWeight: 600, letterSpacing: '0.7px', textTransform: 'uppercase',
+    color: 'rgba(var(--fg),0.35)', marginBottom: 1,
+  };
 
   return (
     <div style={{
@@ -119,64 +146,50 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
       {/* Brand */}
       <img className="plogo" src="/logo.png" alt="Persistence" style={{ height: 22, width: 'auto', marginRight: 28, flexShrink: 0 }} />
 
-      {/* Metric tiles */}
+      {/* Metric tiles - drag to reorder */}
       <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
-        {tiles.filter(t => vis[t.key]).map(tile => (
-          <div key={tile.key} style={{
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            padding: '0 16px',
-            borderRight: '1px solid rgba(var(--fg),0.07)',
-            cursor: 'pointer', flexShrink: 0,
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.35)', marginBottom: 1 }}>
-              {tile.label}
-            </div>
-            {(() => {
-              const d = deltas ? deltas[tile.key] : undefined;
-              const goodUp = tile.key !== 'total_debt';
-              let color = 'var(--text)';
-              let chip = null;
-              if (!loading && d && d.diff !== 0) {
-                const up = d.diff > 0;
-                const positive = goodUp ? up : !up;
-                color = positive ? '#16a34a' : '#dc2626';
-                const arrow = up ? '\u25b2' : '\u25bc';
-                const pctTxt = (d.pct === null || !isFinite(d.pct)) ? '' : ' ' + Math.abs(d.pct).toFixed(1) + '%';
-                chip = (<div style={{ fontSize: 8, fontWeight: 600, color, marginTop: 1 }}>{arrow}{pctTxt}</div>);
-              }
-              return (<>
+        {order.filter(k => vis[k]).map(key => {
+          if (SUMMARY_KEYS.includes(key)) {
+            const d = deltas ? deltas[key] : undefined;
+            const goodUp = key !== 'total_debt';
+            let color = 'var(--text)';
+            let chip = null;
+            if (!loading && d && d.diff !== 0) {
+              const up = d.diff > 0;
+              const positive = goodUp ? up : !up;
+              color = positive ? '#16a34a' : '#dc2626';
+              const arrow = up ? '\u25b2' : '\u25bc';
+              const pctTxt = (d.pct === null || !isFinite(d.pct)) ? '' : ' ' + Math.abs(d.pct).toFixed(1) + '%';
+              chip = (<div style={{ fontSize: 8, fontWeight: 600, color, marginTop: 1 }}>{arrow}{pctTxt}</div>);
+            }
+            return (
+              <div key={key} draggable onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
+                style={tileStyle}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <div style={labelStyle}>{METRIC_LABELS[key]}</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, fontWeight: 500, color: loading ? 'rgba(var(--fg),0.15)' : color }}>
-                  {loading ? '\u2014\u2014\u2014' : formatCurrency(summary?.[tile.key] || 0, true)}
+                  {loading ? '\u2014\u2014\u2014' : formatCurrency(summary?.[key] || 0, true)}
                 </div>
                 {chip}
-              </>);
-            })()}
-          </div>
-        ))}
-        {!loading && extraTiles.map(t => (
-          <div key={t.key} style={{
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            padding: '0 16px',
-            borderRight: '1px solid rgba(var(--fg),0.07)',
-            cursor: 'pointer', flexShrink: 0,
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            <div style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: '0.7px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.35)', marginBottom: 1 }}>
-              {t.label}
+              </div>
+            );
+          }
+          const t = loading ? null : hudTile(key);
+          if (!t) return null;
+          return (
+            <div key={key} draggable onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
+              style={tileStyle}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <div style={labelStyle}>{METRIC_LABELS[key]}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, fontWeight: 500, color: t.color }}>{t.value}</div>
+              <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(var(--fg),0.35)', marginTop: 1 }}>{t.sub}</div>
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, fontWeight: 500, color: t.color }}>
-              {t.value}
-            </div>
-            <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(var(--fg),0.35)', marginTop: 1 }}>{t.sub}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Right side */}
@@ -194,7 +207,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
 
         {/* Metric customizer */}
         <div ref={custRef} style={{ position: 'relative' }}>
-          <button onClick={() => setCustOpen(o => !o)} title="Choose which metrics to show"
+          <button onClick={() => setCustOpen(o => !o)} title="Choose which metrics to show (drag tiles to reorder)"
             style={{ background:'transparent', border:'none', color:'var(--text)', cursor:'pointer', fontSize:15, opacity:0.65, padding:'2px 4px' }}>
             {'\u2699'}
           </button>
@@ -208,12 +221,15 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.5)', marginBottom: 8 }}>
                 Metrics shown
               </div>
-              {Object.keys(METRIC_LABELS).map(k => (
+              {DEFAULT_ORDER.map(k => (
                 <label key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, padding: '3px 0', cursor: 'pointer', color: 'var(--text)' }}>
                   <span>{METRIC_LABELS[k]}</span>
                   <input type="checkbox" checked={!!vis[k]} onChange={() => toggleMetric(k)} style={{ accentColor: 'var(--text)' }} />
                 </label>
               ))}
+              <div style={{ fontSize: 10, color: 'rgba(var(--fg),0.4)', marginTop: 8, lineHeight: 1.5 }}>
+                Tip: drag the tiles themselves to reorder.
+              </div>
             </div>
           )}
         </div>

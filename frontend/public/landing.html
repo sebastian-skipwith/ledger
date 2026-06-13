@@ -67,6 +67,18 @@ nav {
 .mcp-tool { display: inline-flex; align-items: center; gap: 7px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; margin: 2px 0 10px; }
 .btn-claude { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 12px; background: var(--gold); color: var(--ink); font-size: 15px; font-weight: 700; letter-spacing: .2px; transition: all .15s; border: none; cursor: pointer; }
 .btn-claude:hover { opacity: .88; transform: translateY(-1px); }
+.btn-google { display: inline-flex; align-items: center; gap: 12px; padding: 13px 28px; border-radius: 10px; background: #ffffff; color: #1f1f1f; border: 1px solid #dadce0; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
+.btn-google:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.22); transform: translateY(-1px); }
+
+/* hero collage */
+.collage { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.collage .c-img { width: 100%; display: block; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 70px rgba(0,0,0,0.45); }
+.collage .c-row { display: grid; grid-template-columns: 1.9fr 1fr; gap: 14px; align-items: stretch; }
+.collage .c-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.collage .c-col .c-img { flex: 1; object-fit: cover; object-position: top; min-height: 0; }
+.collage .c-mcp { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(var(--fg),0.03); padding: 14px 18px; font-size: 13.5px; color: var(--subtle); text-align: left; }
+.collage .c-watch { width: 100%; height: 100%; object-fit: cover; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 70px rgba(0,0,0,0.45); }
+@media (max-width: 760px) { .collage .c-row { grid-template-columns: 1fr; } .collage .c-watch { max-height: 420px; } }
 
 /* HERO */
 .hero {
@@ -269,131 +281,26 @@ footer {
     The only finance app with a truly <strong>persistent desktop HUD</strong> — your net worth, safe-to-spend, and upcoming bills floating above every window, all day. Plus an AI that actually knows your accounts.
   </p>
   <div class="hero-cta fade-up delay-2">
-    <button class="btn-hero btn-hero-primary">Start for free →</button>
+    <button class="btn-google" onclick="location.href='/'">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
     <button class="btn-hero btn-hero-secondary">See how it works</button>
   </div>
 
-  <!-- LIVE HUD PREVIEW -->
-  <div class="hud-preview fade-up delay-3">
-    <!-- Top bar -->
-    <div class="hud-bar">
-      <div class="hud-brand"><img class="plogo" src="/logo.png" alt="Persistence" style="height:18px;width:auto;vertical-align:middle;"></div>
-      <div class="hud-tile">
-        <div class="hud-label">Net Worth</div>
-        <div class="hud-val" style="color:var(--text)">$284,674</div>
-        <div class="hud-sub" style="color:var(--text)">↑ $1,287</div>
-      </div>
-      <div class="hud-tile">
-        <div class="hud-label">CC Debt</div>
-        <div class="hud-val" style="color:#b3b3b3">$4,327</div>
-        <div class="hud-sub" style="color:#b3b3b3">↑ $219 mo</div>
-      </div>
-      <div class="hud-tile">
-        <div class="hud-label">Monthly Bills</div>
-        <div class="hud-val" style="color:#cccccc">$2,842</div>
-        <div class="hud-sub">of $3,650 (78%)</div>
-      </div>
-      <div class="hud-tile">
-        <div class="hud-label">Cash</div>
-        <div class="hud-val">$18,920</div>
-        <div class="hud-sub">2 accounts</div>
-      </div>
-      <div class="hud-tile">
-        <div class="hud-label">Investments</div>
-        <div class="hud-val" style="color:#cccccc">$265,754</div>
-        <div class="hud-sub" style="color:var(--text)">↑ 2.1% YTD</div>
-      </div>
-      <div class="hud-tile">
-        <div class="hud-label">Retirement</div>
-        <div class="hud-val" style="color:#cccccc">$102,843</div>
-        <div class="hud-sub">401k + IRA</div>
-      </div>
-      <div class="hud-tile" style="border-right:none">
-        <div class="hud-label">This Month</div>
-        <div class="hud-val" style="color:var(--text)">+$1,532</div>
-        <div class="hud-sub">Income − Exp</div>
-      </div>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:10px;padding-left:12px;">
-        <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(var(--fg),0.3);">Jun 1</span>
-        <button style="background:#ffffff;color:#0a0a0f;border:none;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;">Ask AI ↗</button>
-      </div>
-    </div>
-
-    <!-- Dashboard body -->
-    <div class="hud-dashboard">
-      <div class="hud-sidebar">
-        <div class="hud-nav-item active">⊞ Dashboard</div>
-        <div class="hud-nav-item">↗ Net Worth</div>
-        <div class="hud-nav-item">≡ Transactions</div>
-        <div class="hud-nav-item">◷ Bills</div>
-        <div class="hud-nav-item">◎ Goals</div>
-        <div style="height:1px;background:rgba(var(--fg),0.06);margin:12px 0;"></div>
-        <div style="padding:8px 14px;font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(var(--fg),0.2);">Accounts</div>
-        <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
-          <div style="width:6px;height:6px;border-radius:50%;background:var(--text);"></div>Chase Checking
-        </div>
-        <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
-          <div style="width:6px;height:6px;border-radius:50%;background:#cccccc;"></div>Fidelity
-        </div>
-        <div style="padding:6px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(180,180,200,0.6);">
-          <div style="width:6px;height:6px;border-radius:50%;background:#b3b3b3;"></div>Chase Sapphire
+  <!-- REAL PRODUCT COLLAGE -->
+  <div class="collage fade-up delay-3">
+    <img class="c-img" src="/hud-bar-strip.png" alt="The Persistence desktop HUD bar in dark mode">
+    <div class="c-row">
+      <div class="c-col">
+        <img class="c-img" src="/dashboard-screenshot.png" alt="The Persistence web dashboard" onerror="this.style.display='none'">
+        <div class="c-mcp">
+          <svg width="22" height="22" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="17.5" y2="4.5"/><line x1="12" y1="12" x2="21" y2="9"/><line x1="12" y1="12" x2="20" y2="15.5"/><line x1="12" y1="12" x2="16" y2="20.5"/><line x1="12" y1="12" x2="10" y2="21"/><line x1="12" y1="12" x2="5.5" y2="18.5"/><line x1="12" y1="12" x2="3" y2="13"/><line x1="12" y1="12" x2="4.5" y2="7"/><line x1="12" y1="12" x2="8.5" y2="3.5"/></g></svg>
+          <span><strong>MCP built in</strong> &mdash; ask Claude, Cursor, or any AI client about your actual money.</span>
+          <a href="#connect-ai" style="text-decoration:underline;white-space:nowrap;color:var(--text);">See how &rarr;</a>
         </div>
       </div>
-
-      <div class="hud-main">
-        <div class="hud-section-title">Good morning.</div>
-        <div class="hud-section-sub">Net worth up $1,287 since yesterday.</div>
-        <div class="hud-mini-chart">
-          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-            <span style="font-size:11px;font-weight:600;">Net Worth — 6M</span>
-            <span style="font-size:10px;color:rgba(var(--fg),0.3);">$284,674 ↑</span>
-          </div>
-          <svg class="hud-chart-svg" viewBox="0 0 400 50" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity=".4"/>
-                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <polyline points="0,40 60,35 120,28 160,32 220,18 280,12 340,6 400,2" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
-            <polygon points="0,40 60,35 120,28 160,32 220,18 280,12 340,6 400,2 400,50 0,50" fill="url(#g)"/>
-            <circle cx="400" cy="2" r="3" fill="#ffffff"/>
-          </svg>
-        </div>
-        <div class="mini-cards">
-          <div class="mini-card">
-            <div class="mini-card-label">Cash</div>
-            <div class="mini-card-val" style="color:var(--text)">$18,920</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-label">Investments</div>
-            <div class="mini-card-val" style="color:#cccccc">$265,754</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-label">Retirement</div>
-            <div class="mini-card-val" style="color:#cccccc">$102,843</div>
-          </div>
-          <div class="mini-card">
-            <div class="mini-card-label">Debt</div>
-            <div class="mini-card-val" style="color:#b3b3b3">$4,327</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hud-chat">
-        <div class="chat-header">
-          <div class="chat-avatar">L</div>
-          <div>
-            <div class="chat-name">Persistence AI</div>
-            <div class="chat-status">● Online</div>
-          </div>
-        </div>
-        <div class="chat-msgs">
-          <div class="chat-msg ai">Your net worth hit <strong style="color:var(--text)">$284,674</strong>. CC balance up $219 — at current rate, paid off in <strong style="color:var(--text)">21 days</strong> if you apply this month's surplus.</div>
-          <div class="chat-msg user">What if I put $500/mo extra toward the CC?</div>
-          <div class="chat-msg ai">Payoff in <strong style="color:var(--text)">~7 months</strong>, saving ~$340 in interest. Want me to set up an auto-transfer rule?</div>
-        </div>
-      </div>
+      <img class="c-watch" src="/watch-photo.jpg" alt="The Persistence widget on a Pixel Watch">
     </div>
   </div>
 </div>

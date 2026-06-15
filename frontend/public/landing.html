@@ -70,13 +70,9 @@ nav {
 .btn-google { display: inline-flex; align-items: center; gap: 12px; padding: 13px 28px; border-radius: 10px; background: #ffffff; color: #1f1f1f; border: 1px solid #dadce0; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
 .btn-google:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.22); transform: translateY(-1px); }
 
-/* hero collage (right column) - compact, varied sizes, all above the fold */
-.collage { display: grid; grid-template-columns: 1.9fr 0.72fr; gap: 11px; align-items: start; }
-.collage .cc { display: flex; flex-direction: column; gap: 11px; min-width: 0; }
-.collage img { width: 100%; height: auto; display: block; }
-.collage .framed { border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 46px rgba(0,0,0,0.34); }
-.collage .ip { filter: drop-shadow(0 14px 26px rgba(0,0,0,0.32)); }
-@media (max-width: 920px) { .collage { max-width: 540px; margin: 0 auto; } }
+/* hero demo (right column) - looping HUD GIF */
+.hero-demo img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 70px rgba(0,0,0,0.4); }
+@media (max-width: 920px) { .hero-demo { max-width: 560px; margin: 0 auto; } }
 
 /* HERO - split layout, compact so both columns fit on load */
 .hero { padding: 72px 40px 44px; position: relative; overflow: hidden; }
@@ -344,16 +340,9 @@ footer {
       </div>
     </div>
 
-    <!-- RIGHT: real product collage (landscapes left, devices right) -->
-    <div class="collage fade-up delay-3">
-      <div class="cc">
-        <img class="framed" src="/hud-window.png" alt="The Persistence desktop HUD pinned to the top of a window">
-        <img class="framed" src="/dashboard-screenshot.png" alt="The Persistence web dashboard" onerror="this.style.display='none'">
-      </div>
-      <div class="cc">
-        <img class="ip" src="/iphone-clean.png" alt="The Persistence home-screen widget on iPhone">
-        <img class="framed" src="/watch-photo.jpg" alt="The Persistence widget on a Pixel Watch">
-      </div>
+    <!-- RIGHT: looping HUD demo -->
+    <div class="hero-demo fade-up delay-3">
+      <img src="/hud-demo.gif" alt="The Persistence HUD updating live above a document">
     </div>
   </div>
 </div>

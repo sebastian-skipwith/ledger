@@ -70,8 +70,8 @@ nav {
 .btn-google { display: inline-flex; align-items: center; gap: 12px; padding: 13px 28px; border-radius: 10px; background: #ffffff; color: #1f1f1f; border: 1px solid #dadce0; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
 .btn-google:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.22); transform: translateY(-1px); }
 
-/* hero demo (right column) - looping HUD GIF */
-.hero-demo img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 70px rgba(0,0,0,0.4); }
+/* hero demo (right column) - autoplay looping HUD video */
+.hero-demo video { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 70px rgba(0,0,0,0.4); }
 @media (max-width: 920px) { .hero-demo { max-width: 560px; margin: 0 auto; } }
 
 /* HERO - split layout, compact so both columns fit on load */
@@ -340,9 +340,12 @@ footer {
       </div>
     </div>
 
-    <!-- RIGHT: looping HUD demo -->
+    <!-- RIGHT: autoplay looping HUD demo -->
     <div class="hero-demo fade-up delay-3">
-      <img src="/hud-demo.gif" alt="The Persistence HUD updating live above a document">
+      <video autoplay loop muted playsinline preload="metadata" aria-label="The Persistence HUD updating live above a document">
+        <source src="/hud-demo.webm" type="video/webm">
+        <source src="/hud-demo.mp4" type="video/mp4">
+      </video>
     </div>
   </div>
 </div>

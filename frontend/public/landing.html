@@ -271,12 +271,13 @@ footer {
 <nav id="top">
   <div class="nav-brand"><a href="#top" aria-label="Persistence home"><img class="plogo" src="/logo-wordmark.png" alt="Persistence" style="height:26px;width:auto;vertical-align:middle;display:block;"></a></div>
   <div class="nav-links">
+    <a href="#desktop-hud">Desktop</a>
+    <a href="#web-app">Web app</a>
+    <a href="#mobile-watch">Mobile</a>
     <a href="#features">Features</a>
-    <a href="#how-it-works">How it works</a>
     <a href="#pricing">Pricing</a>
     <a href="/security.html">Security</a>
     <a href="/developers">Developers</a>
-    <a href="/blog">Blog</a>
   </div>
   <div class="nav-right">
     <button onclick="pToggleTheme()" title="Toggle light/dark" style="background:transparent;border:none;color:var(--text);cursor:pointer;font-size:17px;opacity:.65;">◐</button>
@@ -368,6 +369,106 @@ footer {
   </div>
 </section>
 
+<!-- DESKTOP HUD — DEEP DIVE -->
+<section id="desktop-hud" style="padding-top:0;">
+  <div class="section-label">The Desktop HUD</div>
+  <h2>A cockpit for your money,<br><em>one keystroke away.</em></h2>
+  <p class="section-sub">The HUD is a native desktop app for Windows and macOS that floats your finances above every other window — so you never have to go looking for them. Here's everything it does.</p>
+  <img src="/hud-window.png" alt="The Persistence desktop HUD floating above a document" style="display:block;max-width:1100px;width:100%;margin:0 auto 8px;border:1px solid var(--border);border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,0.45);" onerror="this.style.display='none'">
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">▲</div>
+      <div class="feature-title">Always on top</div>
+      <div class="feature-body">A slim bar pinned above everything — email, spreadsheets, your IDE, a game. It's just there, all day, without stealing a single pixel of your workflow.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">↕</div>
+      <div class="feature-title">Live tiles &amp; deltas</div>
+      <div class="feature-body">Net Worth, Safe to Spend, Credit Cards this week, Bills in 7 days, Goal pacing — each tile shows the number and its green/red change, with a 1D / 1W / 1M toggle.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⌨</div>
+      <div class="feature-title">Global hotkeys</div>
+      <div class="feature-body"><strong>Ctrl+Shift+H</strong> shows or hides the HUD instantly. <strong>Ctrl+Shift+P</strong> flips it into ghost mode. They work from any app, anytime — no need to click the bar first.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◌</div>
+      <div class="feature-title">Ghost (click-through) mode</div>
+      <div class="feature-body">Make the bar see-through to your mouse — clicks pass straight through to whatever's behind it. The HUD stays visible but is completely out of the way.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⤢</div>
+      <div class="feature-title">Reshape to fit</div>
+      <div class="feature-body">Drag any edge and the layout fluidly reflows — from a full-width top bar to a compact corner widget. It fills whatever size and shape you give it.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⠿</div>
+      <div class="feature-title">Drag to reorder</div>
+      <div class="feature-body">Grab any tile and drop it where you want. Put the numbers you care about first — your order is remembered between launches.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⇧</div>
+      <div class="feature-title">Move it or snap it</div>
+      <div class="feature-body">Drag the HUD anywhere on screen by its grip, or hit snap-to-top to lock it flush against the top edge of your display in one click.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚙</div>
+      <div class="feature-title">Settings panel</div>
+      <div class="feature-body">Tune bar opacity, choose exactly which metrics show, set the refresh interval, switch light/dark, toggle launch-at-startup, or sign out — all inline, without leaving the bar.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⟳</div>
+      <div class="feature-title">Starts &amp; updates itself</div>
+      <div class="feature-body">Opens automatically when your computer boots, refreshes your accounts on a schedule, and updates itself in the background with cryptographically signed releases.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">▾</div>
+      <div class="feature-title">Tuck it away</div>
+      <div class="feature-body">Minimize the HUD to the system tray when you want a clean screen, and bring it back from the tray menu or a hotkey the moment you need a glance.</div>
+    </div>
+  </div>
+</section>
+
+<!-- THE WEB APP -->
+<section id="web-app" style="padding-top:0;">
+  <div class="section-label">The Web App</div>
+  <h2>The full picture, <em>when you want to dig in.</em></h2>
+  <p class="section-sub">When a glance isn't enough, the full dashboard is one click away in your browser — same data, room to explore. Net worth over time, every account, AI-written insights, and a chat that already knows your money.</p>
+  <img src="/dashboard-screenshot.png" alt="The Persistence web dashboard showing net worth, accounts, insights and the built-in AI chat" style="display:block;max-width:1100px;width:100%;margin:0 auto 8px;border:1px solid var(--border);border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,0.45);" onerror="this.style.display='none'">
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">📈</div>
+      <div class="feature-title">Net worth, charted</div>
+      <div class="feature-body">Your net worth trended over time, with the same metric bar from the HUD up top — every figure carrying a 1D / 1W / 1M delta so you see direction at a glance.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✦</div>
+      <div class="feature-title">AI insights, not just numbers</div>
+      <div class="feature-body">The dashboard surfaces plain-English observations — "strong cash position to leverage," "negative net worth needs attention" — the moment they actually matter.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◎</div>
+      <div class="feature-title">Persistence AI, built in</div>
+      <div class="feature-body">A chat panel sits right beside your data with full context. Ask about your spending, a bill, or whether you can afford something — and get an answer grounded in your real accounts.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-title">Money Intelligence</div>
+      <div class="feature-body">Automatic subscription detection, a 30-day cash-flow forecast that warns before you dip below zero, smart alerts, and one-click cleanup of messy transaction labels.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◇</div>
+      <div class="feature-title">Every account in one place</div>
+      <div class="feature-body">Checking, savings, credit cards, loans and investments across every bank — linked securely through Plaid and refreshed automatically.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◷</div>
+      <div class="feature-title">Bills &amp; goals</div>
+      <div class="feature-body">See what's due in the days ahead before it hits, and track real progress toward the things you're saving for — all on the same screen.</div>
+    </div>
+  </div>
+</section>
+
 <!-- WHY PERSISTENCE -->
 <section id="why" style="padding-top:0;">
   <div class="section-label">Why Persistence</div>
@@ -427,13 +528,28 @@ footer {
   </div>
 </section>
 
-<!-- ON YOUR WRIST -->
-<section id="watch" style="padding-top:0;">
-  <div class="section-label">On Your Wrist</div>
-  <h2>Glanceable from <em>anywhere.</em></h2>
-  <p class="section-sub">The Persistence widget for Pixel Watch keeps your net worth and safe-to-spend one wrist-flick away. Design preview — shipping with the mobile apps.</p>
-  <img src="/watch-photo.jpg" alt="The Persistence widget on a Google Pixel Watch showing net worth and safe-to-spend" style="display:block;max-width:480px;width:100%;margin:0 auto;border:1px solid var(--border);border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,0.45);">
-  <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:14px;">Pixel Watch widget &middot; design preview</div>
+<!-- ON YOUR PHONE & WRIST -->
+<section id="mobile-watch" style="padding-top:0;">
+  <div class="section-label">Phone &amp; Watch</div>
+  <h2>The same glance, <em>on every screen you own.</em></h2>
+  <p class="section-sub">Persistence follows you off the desktop. A home-screen widget on your phone and a watch face keep your net worth and safe-to-spend a glance away — no app to open, nothing to tap. Design preview, shipping with the mobile apps.</p>
+  <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:48px;align-items:center;justify-content:center;">
+    <figure style="margin:0;flex:0 1 320px;text-align:center;">
+      <img src="/iphone-widget.png" alt="The Persistence widget on an iPhone home screen showing net worth and safe-to-spend" style="display:block;width:100%;max-width:300px;margin:0 auto;filter:drop-shadow(0 30px 70px rgba(0,0,0,0.45));">
+      <figcaption style="font-size:13px;color:var(--muted);margin-top:18px;line-height:1.6;">
+        <strong style="color:var(--text);">On your phone.</strong><br>
+        A home- and lock-screen widget shows net worth and what's safe to spend, refreshed in the background — your money, before you even open an app.
+      </figcaption>
+    </figure>
+    <figure style="margin:0;flex:0 1 340px;text-align:center;">
+      <img src="/watch-photo.jpg" alt="The Persistence widget on a Google Pixel Watch showing net worth and safe-to-spend" style="display:block;width:100%;max-width:340px;margin:0 auto;border:1px solid var(--border);border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,0.45);">
+      <figcaption style="font-size:13px;color:var(--muted);margin-top:18px;line-height:1.6;">
+        <strong style="color:var(--text);">On your wrist.</strong><br>
+        A Pixel Watch face puts your net worth and safe-to-spend one wrist-flick away — a quick gut-check before you tap to pay or walk into a store.
+      </figcaption>
+    </figure>
+  </div>
+  <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:28px;">iPhone &amp; Pixel Watch widgets &middot; design preview</div>
 </section>
 
 <!-- FEATURES -->

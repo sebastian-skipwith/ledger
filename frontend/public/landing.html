@@ -75,13 +75,13 @@ nav {
 @media (max-width: 920px) { .hero-demo { max-width: 560px; margin: 0 auto; } }
 
 /* HERO - split layout, compact so both columns fit on load */
-.hero { padding: 72px 40px 44px; position: relative; overflow: hidden; }
+.hero { min-height: 90vh; box-sizing: border-box; display: flex; align-items: center; padding: 96px 40px 56px; position: relative; overflow: hidden; }
 .hero::before {
   content: ''; position: absolute; top: -200px; left: 30%; transform: translateX(-50%);
   width: 800px; height: 800px; border-radius: 50%;
   background: radial-gradient(circle, rgba(var(--fg),0.08) 0%, transparent 70%); pointer-events: none;
 }
-.hero-grid { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.12fr; gap: 44px; align-items: center; position: relative; }
+.hero-grid { width: 100%; max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.12fr; gap: 44px; align-items: center; position: relative; }
 .hero-left { text-align: left; }
 .eyebrow {
   display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px;

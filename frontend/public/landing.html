@@ -85,7 +85,7 @@ nav {
   width: 800px; height: 800px; border-radius: 50%;
   background: radial-gradient(circle, rgba(var(--fg),0.08) 0%, transparent 70%); pointer-events: none;
 }
-.hero-grid { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.12fr; gap: 44px; align-items: start; position: relative; }
+.hero-grid { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.12fr; gap: 44px; align-items: center; position: relative; }
 .hero-left { text-align: left; }
 .eyebrow {
   display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px;
@@ -272,8 +272,8 @@ footer {
 <body>
 
 <!-- NAV -->
-<nav>
-  <div class="nav-brand"><img class="plogo" src="/logo.png" alt="Persistence" style="height:26px;width:auto;vertical-align:middle;"></div>
+<nav id="top">
+  <div class="nav-brand"><a href="#top" aria-label="Persistence home"><img class="plogo" src="/logo-wordmark.png" alt="Persistence" style="height:30px;width:auto;vertical-align:middle;display:block;"></a></div>
   <div class="nav-links">
     <a href="#features">Features</a>
     <a href="#how-it-works">How it works</a>

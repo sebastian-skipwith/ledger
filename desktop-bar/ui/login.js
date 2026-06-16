@@ -3,7 +3,7 @@
 const core = window.__TAURI__?.core;
 const invoke = core?.invoke || (() => Promise.reject('no tauri'));
 const shell = window.__TAURI__?.shell;
-const DESKTOP_URL = 'https://ledger-theta-puce.vercel.app/desktop';
+const DESKTOP_URL = 'https://app.persistence.finance/desktop';
 
 function freeBody() {
 const b = document.body;

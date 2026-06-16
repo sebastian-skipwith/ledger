@@ -150,7 +150,7 @@ fn main() {
                 })
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "quit" => app.exit(0),
-                    "show" => { let _ = app.shell().open("https://ledger-theta-puce.vercel.app".to_string(), None); }
+                    "show" => { let _ = app.shell().open("https://app.persistence.finance".to_string(), None); }
                     "hud" => toggle_visibility(app),
                     "ghost" => toggle_passthrough(app),
                     "settings" => show_settings_window(app),

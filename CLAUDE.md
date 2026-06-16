@@ -46,9 +46,9 @@ docs/
 
 | Thing | URL |
 |---|---|
-| Web app (Vercel) | https://ledger-theta-puce.vercel.app |
-| Landing page (static) | https://ledger-theta-puce.vercel.app/landing.html |
-| Desktop OAuth handoff | https://ledger-theta-puce.vercel.app/desktop |
+| Web app (Vercel) | https://app.persistence.finance (old `https://ledger-theta-puce.vercel.app` still works) |
+| Landing page (static) | https://persistence.finance/landing.html |
+| Desktop OAuth handoff | https://app.persistence.finance/desktop |
 | Backend API (Railway) | https://ledger-production-5649.up.railway.app |
 | GitHub repo | https://github.com/sebastian-skipwith/ledger (branch: `main`) |
 | Latest release | https://github.com/sebastian-skipwith/ledger/releases/tag/v1.0.0 |

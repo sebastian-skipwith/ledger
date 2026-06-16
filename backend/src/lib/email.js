@@ -36,7 +36,7 @@ function welcomeHtml(firstName) {
   <p style="font-size:15px;line-height:1.7;">Questions, ideas, problems? Just reply to this email — it goes straight to a human.</p>
   <p style="font-size:15px;line-height:1.7;">— Sebastian, founder</p>
   <hr style="border:none;border-top:1px solid #e5e5e5;margin:28px 0 14px;">
-  <p style="font-size:11px;color:#888;line-height:1.6;">You're receiving this because an account was created with this address. Read how we protect your data: https://ledger-theta-puce.vercel.app/security.html</p>
+  <p style="font-size:11px;color:#888;line-height:1.6;">You're receiving this because an account was created with this address. Read how we protect your data: https://persistence.finance/security.html</p>
 </div>`;
 }
 

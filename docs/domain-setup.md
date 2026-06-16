@@ -37,18 +37,25 @@ Google Cloud Console → APIs & Services → Credentials → the OAuth 2.0 Clien
 - **Authorized redirect URIs**: add the same if the app uses redirect-based flow.
 Without this, "Sign in with Google" fails on the new domain.
 
-## 4. Code changes (do AFTER the domains resolve + show HTTPS in Vercel)
+## 4. Code changes (DONE 2026-06-16 — domains live, DNS resolving to Vercel)
 
-These are hardcoded `ledger-theta-puce.vercel.app` references that should move to
-`app.persistence.finance`. The old URL keeps working as long as the Vercel project
-serves it, so there's no rush and no breakage — switch when ready, ship a desktop
-release for the desktop ones:
-- `desktop-bar/ui/login.js` — `DESKTOP_URL` (OAuth handoff page)
-- `desktop-bar/ui/index.html` — `openDashboard()` shell.open URL
-- `desktop-bar/src-tauri/src/main.rs` — tray "Open Dashboard" shell.open URL
-- `frontend/public/landing.html` — internal links already relative; nav "Sign in" etc.
-- `frontend/app/developers/page.tsx` + docs — `API_BASE` examples (optional: add
-  `api.persistence.finance` as a Railway custom domain and update `NEXT_PUBLIC_API_URL`).
+Hardcoded `ledger-theta-puce.vercel.app` references moved to the new domains. The
+old URL keeps working (same Vercel project), so installed desktop apps that predate
+the next release keep functioning until users update. Changed:
+- `desktop-bar/ui/login.js` — `DESKTOP_URL` → `https://app.persistence.finance/desktop` ✅
+- `desktop-bar/ui/index.html` — `openDashboard()` → `https://app.persistence.finance` ✅
+- `desktop-bar/src-tauri/src/main.rs` — tray "show" → `https://app.persistence.finance` ✅
+- `backend/src/routes/billing.js` — `APP_URL` fallback → `https://app.persistence.finance` ✅
+- `backend/src/lib/email.js` — welcome-email security link → `https://persistence.finance/security.html` ✅
+- `mcp-server/src/index.js` — connect-code instructions → `https://app.persistence.finance/desktop` ✅
+- `frontend/public/landing.html` — internal links already relative; no change needed.
+- `frontend/app/developers/page.tsx` — uses the Railway API URL, not the Vercel host; unchanged.
+
+**Still pending (owner / release):**
+- Desktop release so installed HUDs pick up the new `app.persistence.finance` URLs
+  (old URL still works until then — no breakage).
+- Optional: add `api.persistence.finance` as a Railway custom domain + update
+  `NEXT_PUBLIC_API_URL`.
 
 Keep the keyring service name, `ledger-store`, and the Railway/Vercel internal URLs
 as-is (see CLAUDE.md DO-NOT-CHANGE) — only the user-facing site hostnames change.

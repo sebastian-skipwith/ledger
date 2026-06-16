@@ -336,7 +336,7 @@ function initTileDrag(){
   c.addEventListener('pointercancel',finish);
   c.addEventListener('lostpointercapture',finish);
 }
-function openDashboard(){ if(didDrag) return; if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://ledger-theta-puce.vercel.app'); } }
+function openDashboard(){ if(didDrag) return; if(window.__TAURI__&&window.__TAURI__.shell){ window.__TAURI__.shell.open('https://app.persistence.finance'); } }
 function minimizeBar(){ invoke('minimize_bar').catch(e=>console.error('minimize_bar',e)); }
 function snapTop(){ invoke('snap_top').then(()=>scheduleFit()).catch(e=>console.error('snap_top',e)); }
 function quitApp(){ invoke('quit_app').catch(e=>console.error('quit_app',e)); }

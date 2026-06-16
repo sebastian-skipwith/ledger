@@ -6,7 +6,7 @@ const { query } = require('../db');
 //   STRIPE_WEBHOOK_SECRET  whsec_...   (from the webhook endpoint in Stripe dashboard)
 //   STRIPE_PRICE_PRO       price id of the Pro $9/mo recurring price
 //   STRIPE_PRICE_WEALTH    price id of the Wealth $29/mo recurring price
-//   APP_URL                https://ledger-theta-puce.vercel.app (checkout redirect target)
+//   APP_URL                https://app.persistence.finance (checkout redirect target)
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) return null;
   return require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -44,7 +44,7 @@ router.post('/checkout', async (req, res, next) => {
       await query('UPDATE users SET stripe_customer_id=$1 WHERE id=$2', [customerId, req.user.id]);
     }
 
-    const appUrl = process.env.APP_URL || 'https://ledger-theta-puce.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://app.persistence.finance';
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
@@ -67,7 +67,7 @@ router.post('/portal', async (req, res, next) => {
       'SELECT stripe_customer_id FROM users WHERE id=$1', [req.user.id]
     )).rows[0]?.stripe_customer_id;
     if (!customerId) return res.status(400).json({ error: 'No billing account yet' });
-    const appUrl = process.env.APP_URL || 'https://ledger-theta-puce.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://app.persistence.finance';
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${appUrl}/`,

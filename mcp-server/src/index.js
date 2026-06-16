@@ -6,7 +6,7 @@
  * and (with confirmation) propose transfers.
  *
  * Auth: set PERSISTENCE_REFRESH_TOKEN to the connect code from
- * https://ledger-theta-puce.vercel.app/desktop (it's a 30-day refresh token).
+ * https://app.persistence.finance/desktop (it's a 30-day refresh token).
  * The server exchanges it for short-lived access tokens automatically.
  *
  * Add to Claude Desktop claude_desktop_config.json (or `claude mcp add` for
@@ -35,7 +35,7 @@ let refreshToken = process.env.PERSISTENCE_REFRESH_TOKEN || process.env.LEDGER_R
 let accessToken = process.env.LEDGER_USER_TOKEN || null; // legacy: static access token
 
 if (!refreshToken && !accessToken) {
-  console.error('PERSISTENCE_REFRESH_TOKEN is required. Get the connect code from https://ledger-theta-puce.vercel.app/desktop');
+  console.error('PERSISTENCE_REFRESH_TOKEN is required. Get the connect code from https://app.persistence.finance/desktop');
   process.exit(1);
 }
 

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — Persistence</title>
+<meta name="description" content="The terms that govern your use of Persistence — the personal-finance dashboard, desktop HUD, and AI tools.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+.plogo{display:inline-block}
+html[data-theme="dark"] .plogo{filter:invert(1);}
+body{transition:background .2s,color .2s;}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --fg: 17,17,17; --bgtrip: 255,255,255;
+  --ink: #ffffff; --ink2: #f4f4f7; --gold: #111111; --gold2: #333333;
+  --muted: rgba(17,17,17,0.5); --subtle: rgba(17,17,17,0.72);
+  --border: rgba(0,0,0,0.1); --text: #14141f;
+}
+html[data-theme="dark"] {
+  --fg: 255,255,255; --bgtrip: 8,8,16;
+  --ink: #080810; --ink2: #0e0e1a; --gold: #ffffff; --gold2: #e6e6e6;
+  --muted: rgba(var(--fg),0.5); --subtle: rgba(var(--fg),0.7);
+  --border: rgba(var(--fg),0.1); --text: #f5f5fa;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--text); font-family: 'Syne', sans-serif; -webkit-font-smoothing: antialiased; }
+::selection { background: rgba(var(--fg),0.3); }
+a { text-decoration: none; color: inherit; }
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 60px; display: flex; align-items: center; padding: 0 40px;
+  background: rgba(var(--bgtrip),0.8); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: var(--gold); }
+.nav-links { display: flex; gap: 28px; margin-left: 48px; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--muted); transition: color .15s; }
+.nav-links a:hover { color: var(--text); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+main { max-width: 780px; margin: 0 auto; padding: 130px 28px 80px; }
+h1 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 44px; margin-bottom: 10px; }
+h1 em { font-style: italic; color: var(--gold); }
+.lede { color: var(--subtle); font-size: 16px; line-height: 1.6; margin-bottom: 44px; }
+h2 { font-size: 13px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--gold); margin: 42px 0 16px; }
+.card { border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 14px; background: rgba(var(--fg),0.02); }
+.card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.card p { font-size: 13.5px; line-height: 1.65; color: var(--subtle); }
+.card.flag { border-color: rgba(var(--fg),0.28); background: rgba(var(--fg),0.05); }
+p.body { font-size: 13.5px; line-height: 1.7; color: var(--subtle); margin-bottom: 12px; }
+ul.plain { list-style: none; }
+ul.plain li { font-size: 13.5px; line-height: 1.7; color: var(--subtle); padding-left: 18px; position: relative; margin-bottom: 6px; }
+ul.plain li::before { content: '—'; position: absolute; left: 0; color: var(--gold); }
+.note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 18px; }
+footer { display: flex; align-items: center; justify-content: space-between; padding: 26px 40px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+.footer-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: var(--gold); }
+.footer-links { display: flex; gap: 20px; }
+.footer-links a { font-size: 12px; color: var(--muted); transition: color .15s; }
+.footer-links a:hover { color: var(--text); }
+.footer-copy { font-size: 12px; color: var(--muted); }
+a.inline { text-decoration: underline; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand"><a href="/landing.html"><img class="plogo" src="/logo.png" alt="Persistence" style="height:26px;width:auto;vertical-align:middle;"></a></div>
+  <div class="nav-links">
+    <a href="/landing.html#features">Features</a>
+    <a href="/landing.html#pricing">Pricing</a>
+    <a href="/security.html">Security</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="/terms.html" style="color:var(--text);">Terms</a>
+  </div>
+  <div class="nav-right">
+    <button onclick="pToggleTheme()" title="Toggle light/dark" style="background:transparent;border:none;color:var(--text);cursor:pointer;font-size:17px;opacity:.65;">&#9680;</button>
+  </div>
+</nav>
+
+<main>
+  <h1>Terms of <em>service.</em></h1>
+  <p class="lede">These terms govern your use of Persistence. By creating an account or using the website, web app, desktop app, or API, you agree to them. If you don't agree, please don't use the service.</p>
+
+  <h2>1. What Persistence is</h2>
+  <p class="body">Persistence is a personal-finance tool. It links to your financial accounts (through Plaid) on a <strong>read-only</strong> basis to show balances, transactions, net worth, bills, and goals across a web dashboard, a desktop HUD, and optional AI features and integrations (including a developer API and MCP server). Persistence cannot move money, make payments, or place trades; any automation only proposes actions for you to review and carry out yourself.</p>
+
+  <h2>2. Not financial advice</h2>
+  <div class="card flag">
+    <h3>Persistence is an informational tool, not an advisor</h3>
+    <p>Persistence is not a bank, broker-dealer, investment adviser, tax adviser, or financial planner, and nothing in the product is personalized financial, investment, tax, or legal advice. Figures such as "safe to spend," forecasts, categorizations, and AI-generated insights are estimates and informational only, may be inaccurate or incomplete, and should not be relied on as the sole basis for any financial decision. You are solely responsible for your decisions; consider consulting a qualified professional. Always verify important figures with your financial institution.</p>
+  </div>
+
+  <h2>3. Eligibility &amp; your account</h2>
+  <ul class="plain">
+    <li>You must be at least 18 years old and able to form a binding contract.</li>
+    <li>You're responsible for the accuracy of the information you provide and for activity under your account.</li>
+    <li>Keep your login credentials secure. Tell us promptly at <a class="inline" href="mailto:support@persistence.finance">support@persistence.finance</a> if you suspect unauthorized access.</li>
+  </ul>
+
+  <h2>4. Third-party services</h2>
+  <p class="body">Persistence relies on third parties — including Plaid, your financial institutions, Google (sign-in), Anthropic (AI), and Stripe (payments). Your use of those services is also subject to their own terms and privacy policies, and we are not responsible for their acts, omissions, availability, or the accuracy of data they provide. Your bank connection is provided through Plaid and governed by Plaid's end-user terms.</p>
+
+  <h2>5. Acceptable use</h2>
+  <p class="body">You agree not to:</p>
+  <ul class="plain">
+    <li>Access accounts or data that aren't yours, or use the service for anyone without their authorization.</li>
+    <li>Reverse-engineer, disrupt, overload, or attempt to gain unauthorized access to the service or its infrastructure.</li>
+    <li>Use the service to break the law, infringe rights, or abuse the AI features or API (including exceeding rate limits or sharing API keys).</li>
+    <li>Resell or redistribute the service without our permission.</li>
+  </ul>
+
+  <h2>6. Subscriptions &amp; billing</h2>
+  <ul class="plain">
+    <li>Persistence offers free and paid plans. Paid subscriptions are billed in advance on a recurring basis through Stripe and renew automatically until cancelled.</li>
+    <li>You can cancel anytime; cancellation takes effect at the end of the current billing period, and you'll keep paid features until then.</li>
+    <li>Except where required by law, payments are non-refundable. Prices and plan features may change with notice; changes apply to the next billing cycle.</li>
+  </ul>
+
+  <h2>7. Intellectual property</h2>
+  <p class="body">Persistence and its software, design, and content are owned by us and protected by law. We grant you a limited, non-exclusive, non-transferable right to use the service for your personal use. Your financial data remains yours — these terms don't give us ownership of it; we use it only to provide the service as described in our <a class="inline" href="/privacy.html">Privacy Policy</a>.</p>
+
+  <h2>8. Disclaimers</h2>
+  <p class="body">The service is provided "as is" and "as available," without warranties of any kind, whether express or implied, including merchantability, fitness for a particular purpose, accuracy, and non-infringement. We do not warrant that the service will be uninterrupted, error-free, or that data shown will be accurate or complete.</p>
+
+  <h2>9. Limitation of liability</h2>
+  <p class="body">To the fullest extent permitted by law, Persistence and its operators will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of profits, data, or financial loss, arising out of or relating to your use of (or inability to use) the service. Our total liability for any claim relating to the service will not exceed the greater of the amount you paid us in the twelve months before the claim or USD $100.</p>
+
+  <h2>10. Indemnification</h2>
+  <p class="body">You agree to indemnify and hold harmless Persistence and its operators from claims, damages, and expenses (including reasonable legal fees) arising from your misuse of the service or violation of these terms.</p>
+
+  <h2>11. Termination</h2>
+  <p class="body">You may stop using and delete your account at any time. We may suspend or terminate access if you violate these terms or to protect the service or its users. You can export your data before deleting your account; deletion removes your data and revokes your bank connections at Plaid as described in our Privacy Policy.</p>
+
+  <h2>12. Changes to these terms</h2>
+  <p class="body">Persistence is in active development, and we may update these terms as the product evolves. We'll revise the date below and, for material changes, notify you through the app or by email. Continuing to use the service after changes take effect means you accept the updated terms.</p>
+
+  <h2>13. Governing law &amp; contact</h2>
+  <p class="body">These terms are governed by the laws of the United States and the state in which the operator of Persistence resides, without regard to conflict-of-laws rules. Questions about these terms? Email <a class="inline" href="mailto:support@persistence.finance">support@persistence.finance</a>.</p>
+
+  <p class="note">These Terms of Service are provided for transparency and are not legal advice. Persistence is an independent product in active development; before relying on these terms you should have them reviewed against your jurisdiction and business specifics (e.g. the governing-law state and any region-specific consumer rules). Last updated: June 16, 2026.</p>
+</main>
+
+<footer>
+  <div class="footer-brand"><img class="plogo" src="/logo.png" alt="Persistence" style="height:22px;width:auto;vertical-align:middle;"></div>
+  <div class="footer-links">
+    <a href="/security.html">Security</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="/terms.html">Terms</a>
+    <a href="mailto:support@persistence.finance">Support</a>
+  </div>
+  <div class="footer-copy">&copy; 2026 Persistence. All rights reserved.</div>
+</footer>
+
+<script>
+function pToggleTheme(){ const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }
+(function(){ try{ const t=localStorage.getItem('persistence-theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){} })();
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Persistence</title>
+<meta name="description" content="How Persistence collects, uses, shares, and protects your personal and financial data — and the controls you have over it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+.plogo{display:inline-block}
+html[data-theme="dark"] .plogo{filter:invert(1);}
+body{transition:background .2s,color .2s;}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --fg: 17,17,17; --bgtrip: 255,255,255;
+  --ink: #ffffff; --ink2: #f4f4f7; --gold: #111111; --gold2: #333333;
+  --muted: rgba(17,17,17,0.5); --subtle: rgba(17,17,17,0.72);
+  --border: rgba(0,0,0,0.1); --text: #14141f;
+}
+html[data-theme="dark"] {
+  --fg: 255,255,255; --bgtrip: 8,8,16;
+  --ink: #080810; --ink2: #0e0e1a; --gold: #ffffff; --gold2: #e6e6e6;
+  --muted: rgba(var(--fg),0.5); --subtle: rgba(var(--fg),0.7);
+  --border: rgba(var(--fg),0.1); --text: #f5f5fa;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--ink); color: var(--text); font-family: 'Syne', sans-serif; -webkit-font-smoothing: antialiased; }
+::selection { background: rgba(var(--fg),0.3); }
+a { text-decoration: none; color: inherit; }
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 60px; display: flex; align-items: center; padding: 0 40px;
+  background: rgba(var(--bgtrip),0.8); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: var(--gold); }
+.nav-links { display: flex; gap: 28px; margin-left: 48px; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--muted); transition: color .15s; }
+.nav-links a:hover { color: var(--text); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+main { max-width: 780px; margin: 0 auto; padding: 130px 28px 80px; }
+h1 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 44px; margin-bottom: 10px; }
+h1 em { font-style: italic; color: var(--gold); }
+.lede { color: var(--subtle); font-size: 16px; line-height: 1.6; margin-bottom: 44px; }
+h2 { font-size: 13px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--gold); margin: 42px 0 16px; }
+.card { border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 14px; background: rgba(var(--fg),0.02); }
+.card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.card p { font-size: 13.5px; line-height: 1.65; color: var(--subtle); }
+.card p + p { margin-top: 8px; }
+p.body { font-size: 13.5px; line-height: 1.7; color: var(--subtle); margin-bottom: 12px; }
+ul.plain { list-style: none; }
+ul.plain li { font-size: 13.5px; line-height: 1.7; color: var(--subtle); padding-left: 18px; position: relative; margin-bottom: 6px; }
+ul.plain li::before { content: '—'; position: absolute; left: 0; color: var(--gold); }
+.note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 18px; }
+footer { display: flex; align-items: center; justify-content: space-between; padding: 26px 40px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+.footer-brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 18px; color: var(--gold); }
+.footer-links { display: flex; gap: 20px; }
+.footer-links a { font-size: 12px; color: var(--muted); transition: color .15s; }
+.footer-links a:hover { color: var(--text); }
+.footer-copy { font-size: 12px; color: var(--muted); }
+a.inline { text-decoration: underline; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand"><a href="/landing.html"><img class="plogo" src="/logo.png" alt="Persistence" style="height:26px;width:auto;vertical-align:middle;"></a></div>
+  <div class="nav-links">
+    <a href="/landing.html#features">Features</a>
+    <a href="/landing.html#pricing">Pricing</a>
+    <a href="/security.html">Security</a>
+    <a href="/privacy.html" style="color:var(--text);">Privacy</a>
+    <a href="/terms.html">Terms</a>
+  </div>
+  <div class="nav-right">
+    <button onclick="pToggleTheme()" title="Toggle light/dark" style="background:transparent;border:none;color:var(--text);cursor:pointer;font-size:17px;opacity:.65;">&#9680;</button>
+  </div>
+</nav>
+
+<main>
+  <h1>Privacy <em>policy.</em></h1>
+  <p class="lede">Persistence exists to show you your money — not to take liberties with it. This policy explains what we collect, why, who we share it with, and the controls you have. For the technical detail on how it's protected, see our <a class="inline" href="/security.html">Security &amp; Privacy</a> page.</p>
+
+  <h2>Who we are</h2>
+  <p class="body">Persistence ("Persistence", "we", "us") provides a personal-finance dashboard, a desktop HUD, and AI tools that help you see and understand your own money. This policy applies to the Persistence website, web app, desktop app, and API. If you have questions, contact <a class="inline" href="mailto:support@persistence.finance">support@persistence.finance</a>.</p>
+
+  <h2>What we collect</h2>
+  <ul class="plain">
+    <li><strong>Account information</strong> — your email address, and if you sign in with Google, your basic Google profile (name, email, profile image). If you use email sign-in, a bcrypt hash of your password (never the password itself).</li>
+    <li><strong>Financial data via Plaid</strong> — when you link an institution, we receive account balances, transactions, account and institution metadata, and a revocable access token. We never see or store your bank username or password — you enter those inside Plaid's own secure window.</li>
+    <li><strong>Goals, bills, and settings</strong> — information you create in the product, plus your preferences (e.g. which HUD tiles to show).</li>
+    <li><strong>Billing information</strong> — if you subscribe to a paid plan, your payment is processed by Stripe. We store a Stripe customer/subscription identifier and your plan status; we do not store your full card number.</li>
+    <li><strong>Technical &amp; diagnostic data</strong> — basic request logs and, if errors occur, crash/error reports (via Sentry) used to keep the service reliable.</li>
+  </ul>
+
+  <h2>How we use it</h2>
+  <ul class="plain">
+    <li>To build and display your dashboard, HUD, watch/phone widgets, and net-worth history.</li>
+    <li>To generate AI insights and answer your questions when you choose to use AI features.</li>
+    <li>To send essential service email (e.g. a welcome message and important account notices) via Resend.</li>
+    <li>To operate billing and subscriptions, prevent abuse, and keep the service secure and reliable.</li>
+  </ul>
+  <p class="body">We do not use your financial data for advertising, and we do not build advertising profiles.</p>
+
+  <h2>AI features</h2>
+  <div class="card">
+    <h3>What the AI sees</h3>
+    <p>When you use AI insights or chat, relevant parts of your financial picture (balances, recent transactions, bills, goals) are sent to <strong>Anthropic's Claude API</strong> solely to generate your answer. Under Anthropic's commercial API terms, that data is not used to train their models. AI features are optional — the dashboard and HUD work without them.</p>
+  </div>
+
+  <h2>Who we share it with</h2>
+  <p class="body">We do not sell your personal or financial data — no advertisers, no data brokers, no "anonymized" data sales. We share data only with the service providers that make the product work, each acting on our behalf:</p>
+  <ul class="plain">
+    <li><strong>Plaid</strong> — secure bank connectivity.</li>
+    <li><strong>Anthropic</strong> — AI insights and chat (only when you use them).</li>
+    <li><strong>Google</strong> — only if you choose Google sign-in.</li>
+    <li><strong>Stripe</strong> — payment processing for paid plans.</li>
+    <li><strong>Resend</strong> — delivery of essential service email.</li>
+    <li><strong>Sentry</strong> — error and crash diagnostics.</li>
+    <li><strong>Railway &amp; Vercel</strong> — hosting for our API/database and web app.</li>
+  </ul>
+  <p class="body">We may also disclose information if required by law, to enforce our terms, or to protect the rights, safety, and security of our users and the service.</p>
+
+  <h2>How it's stored &amp; protected</h2>
+  <p class="body">All connections use TLS/HTTPS. Data is held in a managed PostgreSQL database with encryption at rest, and your Plaid access tokens are additionally encrypted at the application level (AES&#8209;256&#8209;GCM) before storage. Sessions are short-lived and renewed with rotating refresh tokens. Full detail is on our <a class="inline" href="/security.html">Security &amp; Privacy</a> page.</p>
+
+  <h2>Data retention</h2>
+  <p class="body">We keep your data for as long as your account is active. When you delete your account, we delete your personal and financial data and revoke your bank connections at Plaid. Some limited records may be retained where required for legal, tax, or fraud-prevention purposes, and routine backups are cycled out on a rolling basis.</p>
+
+  <h2>Your rights &amp; controls</h2>
+  <ul class="plain">
+    <li><strong>Access &amp; export</strong> — download a complete export of everything we hold from the app (Sidebar &rarr; Account &rarr; Export my data).</li>
+    <li><strong>Unlink</strong> — disconnect any institution at any time, which invalidates its access token.</li>
+    <li><strong>Delete</strong> — permanently delete your account and associated data in-app; deletion also revokes your bank connections at Plaid.</li>
+    <li><strong>Questions or requests</strong> — email <a class="inline" href="mailto:support@persistence.finance">support@persistence.finance</a> and we'll help.</li>
+  </ul>
+
+  <h2>Cookies &amp; sessions</h2>
+  <p class="body">We use only the storage necessary to keep you signed in and remember your preferences (for example, your session token and your theme/HUD settings). We do not use third-party advertising or cross-site tracking cookies.</p>
+
+  <h2>Children</h2>
+  <p class="body">Persistence is not directed to, and not intended for, anyone under 18. We do not knowingly collect data from children. If you believe a child has provided us information, contact us and we will delete it.</p>
+
+  <h2>International users</h2>
+  <p class="body">Persistence is operated from the United States, and your data is processed and stored in the United States. If you access the service from outside the U.S., you understand your data will be transferred to and handled there.</p>
+
+  <h2>Changes to this policy</h2>
+  <p class="body">Persistence is in active development. We will update this policy as the product evolves and as we add or change processors, and we'll revise the date below when we do. Material changes will be communicated through the app or by email.</p>
+
+  <p class="note">This Privacy Policy is provided for transparency and is not legal advice. Persistence is an independent product in active development; you should review this policy against your own circumstances. Last updated: June 16, 2026.</p>
+</main>
+
+<footer>
+  <div class="footer-brand"><img class="plogo" src="/logo.png" alt="Persistence" style="height:22px;width:auto;vertical-align:middle;"></div>
+  <div class="footer-links">
+    <a href="/security.html">Security</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="/terms.html">Terms</a>
+    <a href="mailto:support@persistence.finance">Support</a>
+  </div>
+  <div class="footer-copy">&copy; 2026 Persistence. All rights reserved.</div>
+</footer>
+
+<script>
+function pToggleTheme(){ const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }
+(function(){ try{ const t=localStorage.getItem('persistence-theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){} })();
+</script>
+</body>
+</html>

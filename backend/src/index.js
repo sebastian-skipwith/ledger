@@ -28,6 +28,7 @@ const developerRouter = require('./routes/developer');
 const intelligenceRouter = require('./routes/intelligence');
 const mcpHttpRouter = require('./routes/mcp-http');
 const billingRouter = require('./routes/billing');
+const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
 const webhooksRouter = require('./routes/webhooks');
 const { authenticate } = require('./middleware/auth');
@@ -81,6 +82,7 @@ app.use('/api/bills',        authenticate, billsRouter);
 app.use('/api/goals',        authenticate, goalsRouter);
 app.use('/api/summary',      authenticate, summaryRouter);
 app.use('/api/billing',      authenticate, billingRouter);
+app.use('/api/credit',       authenticate, creditRouter);
 app.use('/api/admin',        authenticate, adminRouter);
 app.use('/api/account',      authenticate, accountRouter);
 app.use('/api/developer',    authenticate, developerRouter);
@@ -104,6 +106,17 @@ app.use((err, req, res, next) => {
 (async () => {
   try {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT');
+    // Per-account prior balance so the UI can show change since the last sync.
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS previous_balance NUMERIC');
+    // Manually-tracked credit scores (Plaid does not provide credit scores).
+    await query(`CREATE TABLE IF NOT EXISTS credit_scores (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      score INTEGER NOT NULL,
+      source TEXT,
+      recorded_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS credit_scores_user ON credit_scores(user_id, recorded_at DESC)');
     await query(`CREATE TABLE IF NOT EXISTS api_keys (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

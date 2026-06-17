@@ -9,6 +9,7 @@ interface TopBarProps {
   deltas?: any;
   period?: 'day'|'week'|'month';
   onPeriodChange?: (p: 'day'|'week'|'month') => void;
+  onTileClick?: (key: string) => void;
 }
 
 const METRIC_LABELS: Record<string, string> = {
@@ -44,7 +45,7 @@ function weekdayShort(iso: string): string {
   catch { return ''; }
 }
 
-export default function TopBar({ summary, hud, loading, deltas, period = 'day', onPeriodChange }: TopBarProps) {
+export default function TopBar({ summary, hud, loading, deltas, period = 'day', onPeriodChange, onTileClick }: TopBarProps) {
   const [vis, setVis] = useState<Record<string, boolean>>(() => {
     const all: Record<string, boolean> = {};
     for (const k of DEFAULT_ORDER) all[k] = true;
@@ -163,7 +164,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
               chip = (<div style={{ fontSize: 8, fontWeight: 600, color, marginTop: 1 }}>{arrow}{pctTxt}</div>);
             }
             return (
-              <div key={key} draggable onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
+              <div key={key} draggable onClick={() => onTileClick && onTileClick(key)} onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
                 style={tileStyle}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -179,7 +180,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
           const t = loading ? null : hudTile(key);
           if (!t) return null;
           return (
-            <div key={key} draggable onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
+            <div key={key} draggable onClick={() => onTileClick && onTileClick(key)} onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
               style={tileStyle}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}

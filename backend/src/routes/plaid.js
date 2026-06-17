@@ -65,7 +65,7 @@ router.post('/exchange-token', async (req, res, next) => {
             current_balance, available_balance, currency, institution_name, mask)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
          ON CONFLICT (plaid_account_id) DO UPDATE SET
-           current_balance=$8, available_balance=$9, updated_at=NOW()`,
+           previous_balance=accounts.current_balance, current_balance=$8, available_balance=$9, updated_at=NOW()`,
         [
           req.user.id, plaidItemId, acct.account_id,
           acct.name, acct.official_name, acct.type, acct.subtype,
@@ -211,7 +211,7 @@ async function syncTransactions(userId, plaidItemId, accessToken) {
     const balResp = await plaid.accountsGet({ access_token: decryptSecret(items[0].access_token) });
     for (const acct of balResp.data.accounts) {
       await query(
-        `UPDATE accounts SET current_balance=$1, available_balance=$2, updated_at=NOW()
+        `UPDATE accounts SET previous_balance=current_balance, current_balance=$1, available_balance=$2, updated_at=NOW()
          WHERE plaid_account_id=$3`,
         [acct.balances.current, acct.balances.available, acct.account_id]
       );

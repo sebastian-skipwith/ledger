@@ -59,6 +59,7 @@ export default function Sidebar() {
 
   const navItems = [
     { id: 'dashboard',    label: 'Dashboard',    icon: '⊞' },
+    { id: 'analytics',    label: 'Analytics',    icon: '◔' },
     { id: 'intelligence', label: 'Intelligence', icon: '✦' },
     { id: 'networth',     label: 'Net Worth',    icon: '↗' },
     { id: 'transactions', label: 'Transactions', icon: '≡' },

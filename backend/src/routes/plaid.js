@@ -126,8 +126,16 @@ router.delete('/items/:id', async (req, res, next) => {
       [req.params.id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Item not found' });
-    await plaid.itemRemove({ access_token: decryptSecret(rows[0].access_token) });
+    // Best-effort revoke at Plaid; tolerate failures (e.g. a leftover sandbox
+    // token under a production key, or an already-invalid item) so local
+    // cleanup still proceeds.
+    try { await plaid.itemRemove({ access_token: decryptSecret(rows[0].access_token) }); }
+    catch (e) { console.warn('itemRemove failed (continuing with local delete):', e?.response?.data?.error_code || e.message); }
+    // Remove local data explicitly (transactions -> accounts -> item), then re-snapshot.
+    await query('DELETE FROM transactions WHERE account_id IN (SELECT id FROM accounts WHERE plaid_item_id=$1)', [req.params.id]);
+    await query('DELETE FROM accounts WHERE plaid_item_id=$1', [req.params.id]);
     await query('DELETE FROM plaid_items WHERE id=$1', [req.params.id]);
+    await snapshotNetWorth(req.user.id);
     res.json({ success: true });
   } catch (err) {
     next(err);

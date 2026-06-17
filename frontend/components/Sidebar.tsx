@@ -28,6 +28,17 @@ export default function Sidebar() {
     } catch (e: any) { alert('Deletion failed: ' + e.message); }
   }
 
+  async function disconnectAllBanks() {
+    if (!confirm('Disconnect ALL linked banks and remove their accounts & transactions?\n\nUse this to clear leftover sandbox/test data before linking real accounts. This cannot be undone.')) return;
+    try {
+      const items = await apiCall('/api/plaid/items', { token: accessToken! });
+      for (const it of items) {
+        await apiCall(`/api/plaid/items/${it.id}`, { method: 'DELETE', token: accessToken! });
+      }
+      location.reload();
+    } catch (e: any) { alert('Could not disconnect: ' + e.message); }
+  }
+
   async function upgrade(tier: 'pro' | 'wealth') {
     try {
       const { url } = await apiCall('/api/billing/checkout', {
@@ -150,6 +161,7 @@ export default function Sidebar() {
         {[
           { label: 'Developers / API', fn: () => { window.location.href = '/developers'; } },
           { label: 'Export my data', fn: exportData },
+          { label: 'Disconnect all banks', fn: disconnectAllBanks },
           { label: 'Contact support', fn: () => { window.location.href = 'mailto:support@persistence.finance'; } },
         ].map(item => (
           <button key={item.label} onClick={item.fn} style={{

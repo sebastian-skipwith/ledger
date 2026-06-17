@@ -21,7 +21,7 @@ router.post('/create-link-token', async (req, res, next) => {
   try {
     const response = await plaid.linkTokenCreate({
       user: { client_user_id: req.user.id },
-      client_name: 'Ledger',
+      client_name: 'Persistence',
       products: [Products.Transactions, Products.Investments, Products.Liabilities],
       country_codes: [CountryCode.Us],
       language: 'en',
@@ -251,3 +251,4 @@ async function snapshotNetWorth(userId) {
 
 module.exports = router;
 module.exports.syncTransactions = syncTransactions;
+module.exports.plaid = plaid; // used by routes/webhooks.js for signature verification

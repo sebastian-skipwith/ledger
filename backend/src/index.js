@@ -59,7 +59,8 @@ app.use(limiter);
 // is mounted before express.json().
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookRouter);
 
-app.use(express.json());
+// Capture the raw body (used to verify Plaid webhook signatures in routes/webhooks.js).
+app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
 
 // Health check
 app.get('/health', (req, res) => {

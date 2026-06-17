@@ -12,7 +12,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: 'Persistence — Personal Finance',
-  description: 'Your financial cockpit. AI-powered money management with persistent HUD.',
+  description: 'Your financial command center. AI-powered money management with persistent HUD.',
   icons: { icon: '/favicon.png' },
 };
 

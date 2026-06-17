@@ -92,6 +92,9 @@ export default function DashboardPage() {
               <PlaidLinkButton token={accessToken} onSuccess={loadData} />
             </div>
           )}
+          <div style={{ textAlign: 'center', marginTop: 'auto', paddingTop: 16 }}>
+            <a href="https://persistence.finance" style={{ fontSize: 11, color: 'var(--muted)', textDecoration: 'none' }}>← Back to persistence.finance</a>
+          </div>
         </main>
         <AiChat token={accessToken} summary={summary} />
       </div>
@@ -187,7 +190,7 @@ function AuthScreen() {
       <div style={{ width: 360 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img className="plogo" src="/logo.png" alt="Persistence" style={{ height: 46, width: 'auto', margin: '0 auto 8px', display: 'block' }} />
-          <p style={{ color: 'var(--muted)', fontSize: 13 }}>Your financial cockpit</p>
+          <p style={{ color: 'var(--muted)', fontSize: 13 }}>Your financial command center</p>
         </div>
         <div style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: 16, padding: 28 }}>
 

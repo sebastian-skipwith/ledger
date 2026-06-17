@@ -1,5 +1,6 @@
 'use client';
 import { useStore, formatCurrency, apiCall } from '@/lib/store';
+import PlaidLinkButton from '@/components/PlaidLink';
 
 export default function Sidebar() {
   const { accounts, activeSection, setActiveSection, user, accessToken, logout } = useStore();
@@ -106,13 +107,20 @@ export default function Sidebar() {
             </div>
           </div>
         ))}
-        <button style={{
-          display: 'block', width: '100%', marginTop: 8,
-          background: 'rgba(59,125,255,0.08)', border: '1px dashed rgba(59,125,255,0.25)',
-          color: 'rgba(59,125,255,0.7)', borderRadius: 7, padding: 9,
-          textAlign: 'center', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-          fontFamily: 'var(--font-syne)', letterSpacing: '0.3px',
-        }}>+ Link Account</button>
+        {accessToken && (
+          <PlaidLinkButton
+            token={accessToken}
+            onSuccess={() => window.location.reload()}
+            label="+ Link Account"
+            style={{
+              display: 'block', width: '100%', marginTop: 8,
+              background: 'rgba(59,125,255,0.08)', border: '1px dashed rgba(59,125,255,0.25)',
+              color: 'rgba(59,125,255,0.7)', borderRadius: 7, padding: 9,
+              textAlign: 'center', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              fontFamily: 'var(--font-syne)', letterSpacing: '0.3px',
+            }}
+          />
+        )}
       </div>
 
       <div style={{ height: 1, background: 'rgba(var(--fg),0.07)', margin: '16px 12px' }} />

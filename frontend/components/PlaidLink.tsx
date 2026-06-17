@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, type CSSProperties } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { apiCall } from '@/lib/store';
 
-export default function PlaidLinkButton({ token, onSuccess }: { token: string; onSuccess: () => void }) {
+export default function PlaidLinkButton({ token, onSuccess, label, style }: { token: string; onSuccess: () => void; label?: string; style?: CSSProperties }) {
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -61,7 +61,7 @@ export default function PlaidLinkButton({ token, onSuccess }: { token: string; o
       <button
         onClick={startLink}
         disabled={loading}
-        style={{
+        style={style ?? {
           background: '#3b7dff',
           color: 'white',
           border: 'none',
@@ -74,7 +74,7 @@ export default function PlaidLinkButton({ token, onSuccess }: { token: string; o
           opacity: loading ? 0.7 : 1,
         }}
       >
-        {loading ? 'Connecting…' : 'Connect Bank Account (via Plaid)'}
+        {loading ? 'Connecting…' : (label ?? 'Connect Bank Account (via Plaid)')}
       </button>
       {error && (
         <p style={{ color: '#ff6b6b', marginTop: 8, fontSize: 12 }}>{error}</p>

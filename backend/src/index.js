@@ -67,36 +67,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '1.0.0', time: new Date().toISOString() });
 });
 
-// TEMP diagnostic — replicates the create-link-token call to surface the exact
-// Plaid error in production. Reports only non-sensitive info. REMOVE after debugging.
-app.get('/api/_plaiddiag', async (req, res) => {
-  const { plaid } = require('./routes/plaid');
-  const { Products, CountryCode } = require('plaid');
-  const out = {
-    plaid_env: process.env.PLAID_ENV || '(unset)',
-    has_client_id: !!process.env.PLAID_CLIENT_ID,
-    has_secret: !!process.env.PLAID_SECRET,
-    secret_len: (process.env.PLAID_SECRET || '').length,
-    api_url: process.env.API_URL || '(unset)',
-  };
-  try {
-    const r = await plaid.linkTokenCreate({
-      user: { client_user_id: 'diag-test' },
-      client_name: 'Persistence',
-      products: [Products.Transactions, Products.Investments, Products.Liabilities],
-      country_codes: [CountryCode.Us],
-      language: 'en',
-      webhook: `${process.env.API_URL}/api/webhooks/plaid`,
-    });
-    out.ok = true;
-    out.link_token_prefix = (r.data.link_token || '').slice(0, 14);
-  } catch (e) {
-    out.ok = false;
-    out.error = e?.response?.data || e.message;
-  }
-  res.json(out);
-});
-
 // Public routes
 app.use('/api/auth', authRouter);
 app.use('/api/auth', googleAuthRouter);

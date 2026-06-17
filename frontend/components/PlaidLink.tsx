@@ -45,7 +45,11 @@ export default function PlaidLinkButton({ token, onSuccess, label, style }: { to
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: handleSuccess,
-    onExit: () => {
+    onExit: (err: any, metadata: any) => {
+      if (err) {
+        console.error('Plaid Link exit error:', err, metadata);
+        setError(`Plaid [${err.error_code || err.error_type || 'error'}]: ${err.display_message || err.error_message || 'Something went wrong.'}`);
+      }
       setLoading(false);
       setLinkToken(null);
     },

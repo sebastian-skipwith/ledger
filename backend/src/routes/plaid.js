@@ -22,7 +22,11 @@ router.post('/create-link-token', async (req, res, next) => {
     const response = await plaid.linkTokenCreate({
       user: { client_user_id: req.user.id },
       client_name: 'Persistence',
-      products: [Products.Transactions, Products.Investments, Products.Liabilities],
+      // Only require transactions so banks that don't expose investments/
+      // liabilities (e.g. PNC via Akoya) can still link; Plaid fetches the
+      // optional products whenever the institution supports them.
+      products: [Products.Transactions],
+      optional_products: [Products.Investments, Products.Liabilities],
       country_codes: [CountryCode.Us],
       language: 'en',
       webhook: `${process.env.API_URL}/api/webhooks/plaid`,

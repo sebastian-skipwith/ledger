@@ -111,7 +111,9 @@ export default function Analytics({ token, accounts }: { token: string; accounts
     const income = txns.reduce((s, t) => s + (num(t.amount) < 0 ? Math.abs(num(t.amount)) : 0), 0);
     const cats = byCategory.slice(0, 6);
     const totalSpend = cats.reduce((s, c) => s + c.value, 0);
-    if (totalSpend <= 0) return null;
+    // Need at least two spending categories with real spend so the diagram
+    // actually branches — otherwise recharts renders a degenerate empty block.
+    if (cats.length < 2 || totalSpend <= 0) return null;
     const rootName = income > 0 ? 'Income' : 'Spending';
     const nodes = [{ name: rootName }, ...cats.map(c => ({ name: c.name }))];
     const links = cats.map((c, i) => ({ source: 0, target: i + 1, value: Math.max(1, Math.round(c.value)) }));

@@ -39,6 +39,17 @@ export default function Sidebar() {
     } catch (e: any) { alert('Could not disconnect: ' + e.message); }
   }
 
+  async function renameAccount(acct: any) {
+    const name = prompt('Rename this account:', acct.name);
+    if (name === null) return;
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === acct.name) return;
+    try {
+      await apiCall(`/api/accounts/${acct.id}`, { method: 'PATCH', token: accessToken!, body: JSON.stringify({ name: trimmed }) });
+      location.reload();
+    } catch (e: any) { alert('Rename failed: ' + e.message); }
+  }
+
   async function upgrade(tier: 'pro' | 'wealth') {
     try {
       const { url } = await apiCall('/api/billing/checkout', {
@@ -117,6 +128,11 @@ export default function Sidebar() {
                 {formatCurrency(Math.abs(acct.current_balance), true)}
               </div>
             </div>
+            <button onClick={() => renameAccount(acct)} title="Rename account"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.3)', fontSize: 12, padding: '2px 4px', flexShrink: 0 }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(var(--fg),0.75)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(var(--fg),0.3)')}
+            >{'✎'}</button>
           </div>
         ))}
         {accessToken && (

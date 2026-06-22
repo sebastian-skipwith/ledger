@@ -680,6 +680,33 @@ footer {
   </div>
 </section>
 
+<!-- FAQ -->
+<section id="faq" style="padding-top:0;">
+  <div class="section-label">Questions</div>
+  <h2>Frequently <em>asked.</em></h2>
+  <p class="section-sub">Everything worth knowing before you connect an account.</p>
+  <style>
+    .faq-item { border:1px solid var(--border); border-radius:12px; margin-bottom:10px; background:rgba(var(--fg),0.02); }
+    .faq-item summary { list-style:none; cursor:pointer; padding:16px 20px; font-size:15px; font-weight:600; color:var(--text); display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    .faq-item summary::-webkit-details-marker { display:none; }
+    .faq-item summary::after { content:'+'; font-size:20px; color:var(--muted); font-weight:400; flex-shrink:0; }
+    .faq-item[open] summary::after { content:'\2013'; }
+    .faq-item .faq-a { padding:0 20px 18px; font-size:13.5px; line-height:1.7; color:var(--subtle); }
+    .faq-item .faq-a a { text-decoration:underline; }
+  </style>
+  <div style="max-width:760px;">
+    <details class="faq-item"><summary>What is Persistence?</summary><div class="faq-a">Persistence is a personal-finance app built around an always-on-top desktop HUD (a thin overlay for Windows and macOS) plus a full web app. It shows your net worth, safe-to-spend, and upcoming bills at a glance, and adds AI insights on top of your real accounts — connected securely through Plaid.</div></details>
+    <details class="faq-item"><summary>Is my bank data safe?</summary><div class="faq-a">Yes. Your bank login credentials never touch our servers — Plaid handles the connection — and the access tokens we hold are encrypted at rest with AES&#8209;256&#8209;GCM. Data is read-only, sessions are short-lived, and app updates are cryptographically signed. Full detail on our <a href="/security.html">Security</a> and <a href="/privacy.html">Privacy</a> pages.</div></details>
+    <details class="faq-item"><summary>Can Persistence move my money or make payments?</summary><div class="faq-a">No. Persistence is strictly read-only: it can see balances and transactions to show you an accurate picture, but it cannot move money, make payments, place trades, or change anything at your bank. The same applies to any AI you connect — it can read your finances but never act on your accounts.</div></details>
+    <details class="faq-item"><summary>Which banks and accounts work?</summary><div class="faq-a">Persistence connects through Plaid, which supports thousands of US banks, credit unions, brokerages, and card issuers. You can link checking and savings, credit cards, loans, and investment and retirement accounts — grouped into cash, investments, retirement, and debt. The free plan includes up to 2 linked accounts; paid plans remove the limit.</div></details>
+    <details class="faq-item"><summary>What does it cost?</summary><div class="faq-a">There's a free tier covering the dashboard, up to 2 linked accounts, the phone widget, and 10 AI messages a day. Pro is $9/month and unlocks unlimited accounts, unlimited AI chat, the desktop HUD on all platforms, MCP server access, and automation — with a 14-day trial. A $29/month Wealth plan adds portfolio and tax-focused tools for investors.</div></details>
+    <details class="faq-item"><summary>Do I have to switch from the finance app I already use?</summary><div class="faq-a">No. Persistence is designed to run alongside whatever you already use — it reads your accounts through Plaid rather than replacing your bank or budgeting tool. Many people keep their existing app and add Persistence for the always-visible HUD and the AI connection.</div></details>
+    <details class="faq-item"><summary>How does the AI / Claude connection work?</summary><div class="faq-a">Persistence ships a built-in MCP server, so MCP-compatible assistants — Claude Desktop, Claude Code, Cursor, and others — can read your finances directly. You create an API key in the <a href="/developers">Developers</a> portal, paste a short config into your AI client, and it gains read-only tools for your summary, transactions, subscriptions, bills, and goals. The key is read-only and revocable anytime.</div></details>
+    <details class="faq-item"><summary>Is Persistence a bank?</summary><div class="faq-a">No. Persistence is not a bank and never holds your money. It's a dashboard that securely reads data from your existing bank and brokerage accounts through Plaid so you can see and understand it — your money stays exactly where it is.</div></details>
+    <details class="faq-item"><summary>How do I get started?</summary><div class="faq-a">Sign in with Google on the web app, link an account or two through Plaid, and your dashboard and net worth populate right away. From there you can install the desktop HUD and, if you want, create an API key to connect your AI assistant. Setup takes a couple of minutes.</div></details>
+  </div>
+</section>
+
 <!-- CTA -->
 <div class="cta-section">
   <div class="section-label">Your command center awaits</div>
@@ -699,6 +726,7 @@ footer {
   <div class="footer-links">
     <a href="#features">Features</a>
     <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
     <a href="#connect-ai">MCP</a>
     <a href="/developers">API Docs</a>
     <a href="/security.html">Security</a>

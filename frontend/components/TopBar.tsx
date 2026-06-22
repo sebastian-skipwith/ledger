@@ -55,6 +55,14 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
   const [custOpen, setCustOpen] = useState(false);
   const custRef = useRef<HTMLDivElement>(null);
   const dragKey = useRef<string | null>(null);
+  const dragged = useRef(false);
+
+  function onTileClickGuarded(key: string) {
+    // A drag-to-reorder gesture can fire a trailing click on the source tile;
+    // ignore it so reordering doesn't accidentally open the drill-down modal.
+    if (dragged.current) return;
+    onTileClick && onTileClick(key);
+  }
 
   useEffect(() => { setVis(loadVisibility()); setOrder(loadOrder()); }, []);
   useEffect(() => {
@@ -75,6 +83,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
 
   function onDragStart(key: string, e: React.DragEvent) {
     dragKey.current = key;
+    dragged.current = true;
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', key); } catch {}
   }
@@ -96,6 +105,10 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
   function onDragEnd() {
     dragKey.current = null;
     setOrder(o => { try { localStorage.setItem(ORDER_KEY, JSON.stringify(o)); } catch {} return o; });
+    // Clear the drag flag shortly after: a trailing synthetic click (if the
+    // browser fires one) lands within a few ms and stays ignored, while a
+    // later genuine click works normally.
+    setTimeout(() => { dragged.current = false; }, 80);
   }
 
   // Build the value/sub/color for the 4 hud metrics; null = no data, tile hidden.
@@ -164,7 +177,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
               chip = (<div style={{ fontSize: 8, fontWeight: 600, color, marginTop: 1 }}>{arrow}{pctTxt}</div>);
             }
             return (
-              <div key={key} draggable onClick={() => onTileClick && onTileClick(key)} onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
+              <div key={key} draggable onClick={() => onTileClickGuarded(key)} onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
                 style={tileStyle}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -180,7 +193,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
           const t = loading ? null : hudTile(key);
           if (!t) return null;
           return (
-            <div key={key} draggable onClick={() => onTileClick && onTileClick(key)} onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
+            <div key={key} draggable onClick={() => onTileClickGuarded(key)} onDragStart={e => onDragStart(key, e)} onDragOver={e => onDragOver(key, e)} onDragEnd={onDragEnd}
               style={tileStyle}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(var(--fg),0.04)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}

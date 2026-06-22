@@ -31,7 +31,9 @@ const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
 const webhooksRouter = require('./routes/webhooks');
+const oauthRouter = require('./routes/oauth');
 const { authenticate } = require('./middleware/auth');
+const { mcpAuthenticate } = require('./middleware/mcp-auth');
 const { query } = require('./db');
 
 const app = express();
@@ -73,6 +75,11 @@ app.use('/api/auth', authRouter);
 app.use('/api/auth', googleAuthRouter);
 app.use('/api/webhooks', webhooksRouter);
 
+// OAuth 2.1 authorization server + discovery (public) so MCP clients like
+// Claude can connect to /api/mcp via OAuth. Mounted at root for the
+// /.well-known/* discovery paths.
+app.use(oauthRouter);
+
 // Protected routes
 app.use('/api/plaid',        authenticate, plaidRouter);
 app.use('/api/accounts',     authenticate, accountsRouter);
@@ -87,7 +94,7 @@ app.use('/api/admin',        authenticate, adminRouter);
 app.use('/api/account',      authenticate, accountRouter);
 app.use('/api/developer',    authenticate, developerRouter);
 app.use('/api/intelligence', authenticate, aiLimiter, intelligenceRouter);
-app.use('/api/mcp',          authenticate, mcpHttpRouter);
+app.use('/api/mcp',          mcpAuthenticate, mcpHttpRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 
 // Error handler
@@ -129,6 +136,62 @@ app.use((err, req, res, next) => {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
     await query('CREATE INDEX IF NOT EXISTS api_keys_hash ON api_keys(key_hash) WHERE revoked = false');
+
+    // ── OAuth 2.1 authorization-server tables (for MCP connectors like Claude) ──
+    await query(`CREATE TABLE IF NOT EXISTS oauth_clients (
+      client_id TEXT PRIMARY KEY,
+      redirect_uris TEXT[] NOT NULL,
+      client_name TEXT,
+      scope TEXT DEFAULT 'mcp:read',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS oauth_pending_authorizations (
+      request_id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      redirect_uri TEXT NOT NULL,
+      scope TEXT,
+      resource TEXT,
+      code_challenge TEXT,
+      code_challenge_method TEXT DEFAULT 'S256',
+      state TEXT,
+      consumed BOOLEAN DEFAULT FALSE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS oauth_authorization_codes (
+      code_hash TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      redirect_uri TEXT NOT NULL,
+      scope TEXT,
+      resource TEXT,
+      code_challenge TEXT,
+      code_challenge_method TEXT DEFAULT 'S256',
+      used BOOLEAN DEFAULT FALSE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS oauth_access_tokens (
+      token_hash TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      scope TEXT,
+      resource TEXT,
+      revoked BOOLEAN DEFAULT FALSE,
+      last_used_at TIMESTAMPTZ,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS oauth_refresh_tokens (
+      token_hash TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      scope TEXT,
+      resource TEXT,
+      revoked BOOLEAN DEFAULT FALSE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

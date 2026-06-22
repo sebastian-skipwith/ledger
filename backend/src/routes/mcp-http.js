@@ -11,31 +11,38 @@ const { query } = require('../db');
 // initialize, tools/list, tools/call.
 // ─────────────────────────────────────────────────────────────────────────
 
+// Every tool is read-only (no writes, no money movement). The annotations make
+// that explicit to Claude/users and are required for the Connectors Directory.
 const TOOLS = [
   {
     name: 'get_financial_summary',
     description: 'Net worth, cash, investments, retirement, debt and monthly bills.',
     inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get financial summary', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
   {
     name: 'get_transactions',
     description: 'Recent transactions. Optional days (default 30) and limit (default 50).',
     inputSchema: { type: 'object', properties: { days: { type: 'number' }, limit: { type: 'number' } } },
+    annotations: { title: 'Get transactions', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
   {
     name: 'get_subscriptions',
     description: 'Detected recurring subscriptions and their total monthly cost.',
     inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get subscriptions', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
   {
     name: 'get_bills',
     description: 'Upcoming bills and recurring expenses.',
     inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get bills', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
   {
     name: 'get_goals',
     description: 'Financial goals and progress.',
     inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get goals', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
 ];
 

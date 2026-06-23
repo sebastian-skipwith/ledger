@@ -3,13 +3,16 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useAppLock } from '@/lib/useAppLock';
 import { useStore } from '@/lib/store';
 import { theme } from '@/lib/theme';
+import { LockScreen } from '@/components/LockScreen';
 
 export default function RootLayout() {
   // Wait for persisted auth to load from SecureStore before routing, so we
   // don't flash the login screen for an already-signed-in user.
   const hasHydrated = useStore((s) => s.hasHydrated);
+  const { locked, authing, retry } = useAppLock();
 
   // GestureHandlerRootView is required (outside SafeAreaProvider) for
   // victory-native's chart press/scrubber gestures to work.
@@ -30,6 +33,8 @@ export default function RootLayout() {
             <ActivityIndicator color={theme.text} />
           </View>
         )}
+        {/* Biometric lock overlay — painted above everything when locked. */}
+        {locked && <LockScreen authing={authing} onUnlock={retry} />}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

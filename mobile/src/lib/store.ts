@@ -21,6 +21,10 @@ interface AppState {
   setHud: (hud: Hud | null) => void;
   setInsights: (insights: any[]) => void;
 
+  // Settings (persisted)
+  biometricLock: boolean;
+  setBiometricLock: (v: boolean) => void;
+
   // Hydration gate — true once persisted auth has loaded from SecureStore.
   hasHydrated: boolean;
   setHasHydrated: (v: boolean) => void;
@@ -53,6 +57,9 @@ export const useStore = create<AppState>()(
       setHud: (hud) => set({ hud }),
       setInsights: (insights) => set({ insights }),
 
+      biometricLock: false,
+      setBiometricLock: (biometricLock) => set({ biometricLock }),
+
       hasHydrated: false,
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
@@ -64,6 +71,7 @@ export const useStore = create<AppState>()(
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        biometricLock: state.biometricLock,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

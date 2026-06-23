@@ -15,11 +15,20 @@ const plaidConfig = new Configuration({
 });
 const plaid = new PlaidApi(plaidConfig);
 
+// The Android app's package. Android OAuth banks require the link_token to be
+// created with android_package_name; we hardcode it (never trust a client value)
+// and only attach it when the mobile client opts in via { platform: 'android' }.
+const ANDROID_PACKAGE_NAME = 'finance.persistence.app';
+
 // POST /api/plaid/create-link-token
 // Returns a link_token to initialize Plaid Link in the frontend
 router.post('/create-link-token', async (req, res, next) => {
   try {
-    const response = await plaid.linkTokenCreate({
+    const isAndroid =
+      req.body?.platform === 'android' ||
+      req.body?.android_package_name === ANDROID_PACKAGE_NAME;
+
+    const linkRequest = {
       user: { client_user_id: req.user.id },
       client_name: 'Persistence',
       // Only require transactions so banks that don't expose investments/
@@ -30,7 +39,16 @@ router.post('/create-link-token', async (req, res, next) => {
       country_codes: [CountryCode.Us],
       language: 'en',
       webhook: `${process.env.API_URL}/api/webhooks/plaid`,
-    });
+    };
+
+    // Native Android SDK: Plaid derives the OAuth redirect from the package name,
+    // so we set android_package_name and leave redirect_uri blank. Web is
+    // unchanged (it sends no body → isAndroid false → identical request).
+    if (isAndroid) {
+      linkRequest.android_package_name = ANDROID_PACKAGE_NAME;
+    }
+
+    const response = await plaid.linkTokenCreate(linkRequest);
     res.json({ link_token: response.data.link_token });
   } catch (err) {
     next(err);

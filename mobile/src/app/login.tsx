@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,10 +14,23 @@ import {
 import { loginWithEmail, loginWithGoogle, registerWithEmail } from '@/lib/auth';
 import { googleConfigured } from '@/lib/google';
 import { useStore } from '@/lib/store';
-import { fonts, radius, theme } from '@/lib/theme';
+import { fonts, radius } from '@/lib/theme';
 import { Wordmark } from '@/components/Wordmark';
 
 type Mode = 'login' | 'register';
+
+// The sign-in screen uses a LIGHT palette (white bg, black text/buttons, black
+// logo) — distinct from the dark app behind it.
+const c = {
+  bg: '#ffffff',
+  ink: '#14141f', // near-black text + primary buttons + logo
+  muted: '#6b6b80',
+  border: 'rgba(0,0,0,0.12)',
+  field: 'rgba(0,0,0,0.04)',
+  toggleOn: 'rgba(0,0,0,0.08)',
+  red: '#dc2626',
+  onInk: '#ffffff',
+};
 
 export default function LoginScreen() {
   const token = useStore((s) => s.accessToken);
@@ -55,19 +69,20 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.ink }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar style="dark" />
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }} keyboardShouldPersistTaps="handled">
         <View style={{ alignItems: 'center', marginBottom: 28 }}>
-          <Wordmark height={44} />
-          <Text style={{ color: theme.muted, fontSize: 13, marginTop: 10, fontFamily: fonts.sans }}>
+          <Wordmark height={48} tintColor={c.ink} />
+          <Text style={{ color: c.muted, fontSize: 13, marginTop: 12, fontFamily: fonts.sans }}>
             Your financial command center
           </Text>
         </View>
 
         <View
           style={{
-            backgroundColor: theme.card,
-            borderColor: theme.border,
+            backgroundColor: c.bg,
+            borderColor: c.border,
             borderWidth: 1,
             borderRadius: radius.lg,
             padding: 22,
@@ -86,12 +101,13 @@ export default function LoginScreen() {
                   paddingVertical: 12,
                   borderRadius: radius.sm,
                   borderWidth: 1,
-                  borderColor: theme.border,
-                  backgroundColor: pressed ? 'rgba(255,255,255,0.06)' : 'transparent',
+                  borderColor: c.border,
+                  backgroundColor: pressed ? 'rgba(0,0,0,0.04)' : c.bg,
                   marginBottom: 16,
                 })}
               >
-                <Text style={{ color: theme.text, fontSize: 14, fontWeight: '600', fontFamily: fonts.sans }}>
+                <GoogleG />
+                <Text style={{ color: c.ink, fontSize: 14, fontWeight: '600', fontFamily: fonts.sans }}>
                   Continue with Google
                 </Text>
               </Pressable>
@@ -99,33 +115,31 @@ export default function LoginScreen() {
             </>
           )}
 
-          <View style={{ flexDirection: 'row', borderRadius: radius.sm, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, marginBottom: 18 }}>
+          <View style={{ flexDirection: 'row', borderRadius: radius.sm, overflow: 'hidden', borderWidth: 1, borderColor: c.border, marginBottom: 18 }}>
             {(['login', 'register'] as Mode[]).map((m) => (
               <Pressable
                 key={m}
                 onPress={() => setMode(m)}
-                style={{ flex: 1, paddingVertical: 9, alignItems: 'center', backgroundColor: mode === m ? 'rgba(255,255,255,0.12)' : 'transparent' }}
+                style={{ flex: 1, paddingVertical: 9, alignItems: 'center', backgroundColor: mode === m ? c.toggleOn : 'transparent' }}
               >
-                <Text style={{ color: mode === m ? theme.text : theme.muted, fontSize: 13, fontWeight: '600', fontFamily: fonts.sans }}>
+                <Text style={{ color: mode === m ? c.ink : c.muted, fontSize: 13, fontWeight: '600', fontFamily: fonts.sans }}>
                   {m === 'login' ? 'Sign In' : 'Create Account'}
                 </Text>
               </Pressable>
             ))}
           </View>
 
-          {mode === 'register' && (
-            <Field placeholder="Full name" value={name} onChangeText={setName} autoCapitalize="words" />
-          )}
+          {mode === 'register' && <Field placeholder="Full name" value={name} onChangeText={setName} autoCapitalize="words" />}
           <Field placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
           <Field placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
 
-          {!!error && <Text style={{ color: theme.red, fontSize: 12.5, marginBottom: 10, fontFamily: fonts.sans }}>{error}</Text>}
+          {!!error && <Text style={{ color: c.red, fontSize: 12.5, marginBottom: 10, fontFamily: fonts.sans }}>{error}</Text>}
 
           <Pressable
             onPress={submit}
             disabled={loading}
             style={({ pressed }) => ({
-              backgroundColor: theme.accent,
+              backgroundColor: c.ink,
               opacity: loading ? 0.7 : pressed ? 0.9 : 1,
               paddingVertical: 13,
               borderRadius: radius.sm,
@@ -133,9 +147,9 @@ export default function LoginScreen() {
             })}
           >
             {loading ? (
-              <ActivityIndicator color={theme.accentFg} />
+              <ActivityIndicator color={c.onInk} />
             ) : (
-              <Text style={{ color: theme.accentFg, fontSize: 14.5, fontWeight: '700', fontFamily: fonts.sans }}>
+              <Text style={{ color: c.onInk, fontSize: 14.5, fontWeight: '700', fontFamily: fonts.sans }}>
                 {mode === 'login' ? 'Sign In' : 'Create Account'}
               </Text>
             )}
@@ -149,9 +163,18 @@ export default function LoginScreen() {
 function Divider() {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-      <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
-      <Text style={{ color: theme.muted, fontSize: 11 }}>or</Text>
-      <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
+      <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+      <Text style={{ color: c.muted, fontSize: 11 }}>or</Text>
+      <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+    </View>
+  );
+}
+
+// Google "G" mark in its brand colors.
+function GoogleG() {
+  return (
+    <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontSize: 13, fontWeight: '800', color: '#4285F4' }}>G</Text>
     </View>
   );
 }
@@ -159,14 +182,14 @@ function Divider() {
 function Field(props: React.ComponentProps<typeof TextInput>) {
   return (
     <TextInput
-      placeholderTextColor={theme.muted}
+      placeholderTextColor={c.muted}
       {...props}
       style={{
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: c.field,
         borderWidth: 1,
-        borderColor: theme.border,
+        borderColor: c.border,
         borderRadius: radius.sm,
-        color: theme.text,
+        color: c.ink,
         fontSize: 15,
         paddingHorizontal: 14,
         paddingVertical: 11,

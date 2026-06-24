@@ -1,4 +1,4 @@
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
 
 // The WEB OAuth client ID is REQUIRED for GoogleSignin to return a non-null
 // idToken (counter-intuitive, but that's the native SDK contract). Create three
@@ -27,9 +27,14 @@ export async function googleSignIn(): Promise<string> {
   }
   configure();
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  const res: any = await GoogleSignin.signIn();
-  // v13+ returns { type, data: { idToken, ... } }; older returns { idToken }.
-  const idToken = res?.data?.idToken ?? res?.idToken;
-  if (!idToken) throw new Error('No Google ID token returned.');
-  return idToken as string;
+  const res = await GoogleSignin.signIn();
+  if (isSuccessResponse(res)) {
+    const idToken = res.data.idToken;
+    if (!idToken) throw new Error('No Google ID token returned.');
+    return idToken;
+  }
+  // A non-success response means the user dismissed the picker.
+  const err: any = new Error('Sign-in cancelled');
+  err.code = 'SIGN_IN_CANCELLED';
+  throw err;
 }

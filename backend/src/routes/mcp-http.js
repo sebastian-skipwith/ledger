@@ -4,6 +4,7 @@ const { projectCashFlow, detectAnomalies } = require('./intelligence');
 const { applyRules } = require('../lib/rules');
 const { snapshotNetWorth } = require('./plaid');
 const { getHouseholdView } = require('./household');
+const { getPortfolioForUser } = require('./investments');
 
 // Categories the agent may assign (shared taxonomy with the AI categorizer).
 const WRITE_CATS = ['Groceries', 'Dining', 'Transport', 'Shopping', 'Utilities', 'Housing', 'Entertainment', 'Health', 'Travel', 'Subscriptions', 'Income', 'Transfer', 'Other'];
@@ -137,6 +138,18 @@ const TOOLS = [
     description: 'Combined household view: net worth and accounts across all members of your shared household (if you are in one).',
     inputSchema: { type: 'object', properties: {} },
     annotations: { title: 'Get household', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'get_portfolio',
+    description: 'Your investment portfolio: total value, every position (value, weight, unrealized gain), allocation by asset type, and drift vs your target allocation.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get portfolio', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'get_portfolio_performance',
+    description: 'Your portfolio market value over time (daily snapshots). Optional days (default 180).',
+    inputSchema: { type: 'object', properties: { days: { type: 'number' } } },
+    annotations: { title: 'Get portfolio performance', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
 ];
 
@@ -305,6 +318,17 @@ async function callTool(userId, name, args = {}) {
       [userId]);
     if (!hm.rows.length) return { household: null, message: 'You are not part of a household yet.' };
     return await getHouseholdView(userId, hm.rows[0].household_id);
+  }
+  if (name === 'get_portfolio') {
+    return await getPortfolioForUser(userId);
+  }
+  if (name === 'get_portfolio_performance') {
+    const days = Math.min(Math.max(parseInt(args.days, 10) || 180, 1), 730);
+    const { rows } = await query(
+      `SELECT snapshot_date, total_value, total_cost_basis FROM portfolio_snapshots
+       WHERE user_id=$1 AND snapshot_date >= CURRENT_DATE - $2 ORDER BY snapshot_date`,
+      [userId, days]);
+    return rows;
   }
 
   throw new Error(`Unknown tool: ${name}`);

@@ -3,6 +3,7 @@ const { PlaidApi, PlaidEnvironments, Configuration, Products, CountryCode } = re
 const { query, getClient } = require('../db');
 const { encryptSecret, decryptSecret } = require('../lib/crypto');
 const { applyPostSync } = require('../lib/post-sync');
+const portfolio = require('../lib/portfolio');
 
 // Initialize Plaid client
 const plaidConfig = new Configuration({
@@ -100,8 +101,9 @@ router.post('/exchange-token', async (req, res, next) => {
 
     await client.query('COMMIT');
 
-    // Kick off async transaction sync (don't await — returns immediately)
+    // Kick off async transaction + holdings sync (don't await — returns immediately)
     syncTransactions(req.user.id, plaidItemId, access_token).catch(console.error);
+    syncHoldings(req.user.id, plaidItemId, access_token).catch(console.error);
 
     res.json({ success: true, accounts_synced: accounts.length });
   } catch (err) {
@@ -120,7 +122,9 @@ router.post('/sync', async (req, res, next) => {
       'SELECT * FROM plaid_items WHERE user_id = $1', [req.user.id]
     );
     for (const item of items) {
-      syncTransactions(req.user.id, item.id, decryptSecret(item.access_token)).catch(console.error);
+      const token = decryptSecret(item.access_token);
+      syncTransactions(req.user.id, item.id, token).catch(console.error);
+      syncHoldings(req.user.id, item.id, token).catch(console.error);
     }
     res.json({ message: `Syncing ${items.length} institution(s) in background` });
   } catch (err) {
@@ -284,7 +288,85 @@ async function snapshotNetWorth(userId) {
   );
 }
 
+// Pull investment holdings (read-only) for an item and upsert securities +
+// holdings. Best-effort + error-swallowed: items at non-investment institutions
+// (or without investments consent) simply return early without breaking sync.
+async function syncHoldings(userId, plaidItemId, accessToken) {
+  let resp;
+  try {
+    resp = await plaid.investmentsHoldingsGet({ access_token: accessToken });
+  } catch (err) {
+    return; // institution doesn't support investments / consent not granted
+  }
+  const securities = resp.data.securities || [];
+  const holdings = resp.data.holdings || [];
+  if (!securities.length) return;
+
+  // Upsert securities FIRST so holdings' FK resolves.
+  for (const s of securities) {
+    await query(
+      `INSERT INTO securities (security_id, ticker_symbol, name, type, close_price, close_price_as_of, is_cash_equivalent, iso_currency_code, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
+       ON CONFLICT (security_id) DO UPDATE SET
+         ticker_symbol=EXCLUDED.ticker_symbol, name=EXCLUDED.name, type=EXCLUDED.type,
+         close_price=EXCLUDED.close_price, close_price_as_of=EXCLUDED.close_price_as_of,
+         is_cash_equivalent=EXCLUDED.is_cash_equivalent, iso_currency_code=EXCLUDED.iso_currency_code, updated_at=NOW()`,
+      [s.security_id, s.ticker_symbol || null, s.name || null, s.type || null, s.close_price ?? null, s.close_price_as_of || null, s.is_cash_equivalent ?? null, s.iso_currency_code || null]
+    );
+  }
+
+  // Map this item's plaid_account_id -> local accounts.id.
+  const { rows: accts } = await query('SELECT id, plaid_account_id FROM accounts WHERE plaid_item_id=$1', [plaidItemId]);
+  const acctMap = {};
+  for (const a of accts) acctMap[a.plaid_account_id] = a.id;
+
+  const seenByAccount = {};
+  for (const h of holdings) {
+    const accountId = acctMap[h.account_id];
+    if (!accountId) continue;
+    (seenByAccount[accountId] ||= new Set()).add(h.security_id);
+    await query(
+      `INSERT INTO holdings (user_id, account_id, security_id, quantity, institution_price, institution_value, cost_basis, iso_currency_code, as_of, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+       ON CONFLICT (account_id, security_id) DO UPDATE SET
+         quantity=EXCLUDED.quantity, institution_price=EXCLUDED.institution_price,
+         institution_value=EXCLUDED.institution_value, cost_basis=EXCLUDED.cost_basis,
+         iso_currency_code=EXCLUDED.iso_currency_code, as_of=EXCLUDED.as_of, updated_at=NOW()`,
+      [userId, accountId, h.security_id, h.quantity, h.institution_price ?? null, h.institution_value ?? null, h.cost_basis ?? null, h.iso_currency_code || null, h.institution_price_as_of || null]
+    );
+  }
+
+  // Drop fully-sold positions (touched accounts only).
+  for (const [accountId, seen] of Object.entries(seenByAccount)) {
+    const ids = [...seen];
+    await query('DELETE FROM holdings WHERE account_id=$1 AND NOT (security_id = ANY($2))', [accountId, ids]);
+  }
+
+  await snapshotPortfolio(userId);
+}
+
+// Daily portfolio market-value + allocation snapshot (parallels snapshotNetWorth).
+async function snapshotPortfolio(userId) {
+  const { rows } = await query(
+    `SELECT h.quantity, h.institution_price, h.institution_value, h.cost_basis,
+            s.close_price, s.type, s.is_cash_equivalent
+     FROM holdings h JOIN securities s ON s.security_id=h.security_id
+     WHERE h.user_id=$1`,
+    [userId]
+  );
+  if (!rows.length) return;
+  const total = portfolio.totalValue(rows);
+  const costBasis = rows.reduce((t, h) => t + (h.cost_basis == null ? 0 : parseFloat(h.cost_basis)), 0);
+  await query(
+    `INSERT INTO portfolio_snapshots (user_id, snapshot_date, total_value, total_cost_basis, allocation)
+     VALUES ($1, CURRENT_DATE, $2, $3, $4)
+     ON CONFLICT (user_id, snapshot_date) DO UPDATE SET total_value=$2, total_cost_basis=$3, allocation=$4`,
+    [userId, total, costBasis, JSON.stringify(portfolio.allocationByType(rows))]
+  );
+}
+
 module.exports = router;
 module.exports.syncTransactions = syncTransactions;
+module.exports.syncHoldings = syncHoldings; // used by webhooks.js for HOLDINGS updates
 module.exports.snapshotNetWorth = snapshotNetWorth; // used by manual-account writes
 module.exports.plaid = plaid; // used by routes/webhooks.js for signature verification

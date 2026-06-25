@@ -33,6 +33,7 @@ const intelligenceRouter = require('./routes/intelligence');
 const mcpHttpRouter = require('./routes/mcp-http');
 const rulesRouter = require('./routes/rules');
 const householdRouter = require('./routes/household');
+const investmentsRouter = require('./routes/investments');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -104,6 +105,7 @@ app.use('/api/mcp',          mcpAuthenticate, mcpHttpRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 app.use('/api/rules',        authenticate, rulesRouter);
 app.use('/api/household',    authenticate, householdRouter);
+app.use('/api/investments',  authenticate, investmentsRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -255,6 +257,51 @@ app.use((err, req, res, next) => {
     await query("CREATE INDEX IF NOT EXISTS household_members_invited ON household_members(invited_email) WHERE status='invited'");
     // DB-level guard against duplicate pending invites (UNIQUE(household_id,user_id) allows NULLs).
     await query("CREATE UNIQUE INDEX IF NOT EXISTS household_members_pending_uq ON household_members (household_id, LOWER(invited_email)) WHERE status='invited'");
+
+    // Investment holdings (read-only, from Plaid Investments) + portfolio snapshots.
+    await query(`CREATE TABLE IF NOT EXISTS securities (
+      security_id TEXT PRIMARY KEY,
+      ticker_symbol TEXT,
+      name TEXT,
+      type TEXT,
+      close_price NUMERIC(20,6),
+      close_price_as_of DATE,
+      is_cash_equivalent BOOLEAN,
+      iso_currency_code TEXT,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS holdings (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+      security_id TEXT NOT NULL REFERENCES securities(security_id),
+      quantity NUMERIC(28,10) NOT NULL,
+      institution_price NUMERIC(20,6),
+      institution_value NUMERIC(20,2),
+      cost_basis NUMERIC(20,2),
+      iso_currency_code TEXT,
+      as_of DATE,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (account_id, security_id)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS holdings_user ON holdings(user_id)');
+    await query(`CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      snapshot_date DATE NOT NULL,
+      total_value NUMERIC(20,2) NOT NULL,
+      total_cost_basis NUMERIC(20,2),
+      allocation JSONB,
+      UNIQUE (user_id, snapshot_date)
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS target_allocations (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      targets JSONB NOT NULL,
+      drift_threshold NUMERIC DEFAULT 0.05,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (user_id)
+    )`);
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

@@ -14,7 +14,8 @@
         "EXPO_PUBLIC_API_URL": "https://ledger-production-5649.up.railway.app",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "12845654566-s43111gvggr1vbbg7fd5a52nqt0bpsd9.apps.googleusercontent.com",
         "EXPO_PUBLIC_POSTHOG_KEY": "phc_mG7hyHLfXtFk5xYkzeMab68SkoAbJZTn6yHYAqWbRhNJ",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://0222ae4bdce6de7f1de37d6ef197e47d@o4511623326859264.ingest.us.sentry.io/4511623612137472"
+        "EXPO_PUBLIC_SENTRY_DSN": "https://0222ae4bdce6de7f1de37d6ef197e47d@o4511623326859264.ingest.us.sentry.io/4511623612137472",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "preview": {
@@ -26,7 +27,8 @@
         "EXPO_PUBLIC_API_URL": "https://ledger-production-5649.up.railway.app",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "12845654566-s43111gvggr1vbbg7fd5a52nqt0bpsd9.apps.googleusercontent.com",
         "EXPO_PUBLIC_POSTHOG_KEY": "phc_mG7hyHLfXtFk5xYkzeMab68SkoAbJZTn6yHYAqWbRhNJ",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://0222ae4bdce6de7f1de37d6ef197e47d@o4511623326859264.ingest.us.sentry.io/4511623612137472"
+        "EXPO_PUBLIC_SENTRY_DSN": "https://0222ae4bdce6de7f1de37d6ef197e47d@o4511623326859264.ingest.us.sentry.io/4511623612137472",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
@@ -35,7 +37,8 @@
         "EXPO_PUBLIC_API_URL": "https://ledger-production-5649.up.railway.app",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "12845654566-s43111gvggr1vbbg7fd5a52nqt0bpsd9.apps.googleusercontent.com",
         "EXPO_PUBLIC_POSTHOG_KEY": "phc_mG7hyHLfXtFk5xYkzeMab68SkoAbJZTn6yHYAqWbRhNJ",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://0222ae4bdce6de7f1de37d6ef197e47d@o4511623326859264.ingest.us.sentry.io/4511623612137472"
+        "EXPO_PUBLIC_SENTRY_DSN": "https://0222ae4bdce6de7f1de37d6ef197e47d@o4511623326859264.ingest.us.sentry.io/4511623612137472",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },

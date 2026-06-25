@@ -13,7 +13,7 @@ const QUICK_PROMPTS = [
   'Am I on track for retirement?',
 ];
 
-export default function AiChat({ token, summary }: { token: string; summary: any }) {
+export default function AiChat({ token, summary, docked = true }: { token: string; summary: any; docked?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -125,9 +125,9 @@ export default function AiChat({ token, summary }: { token: string; summary: any
 
   return (
     <div style={{
-      width: 320, flexShrink: 0,
-      borderLeft: '1px solid rgba(var(--fg),0.07)',
-      display: 'flex', flexDirection: 'column',
+      width: docked ? 320 : '100%', flexShrink: 0, flex: docked ? undefined : 1,
+      borderLeft: docked ? '1px solid rgba(var(--fg),0.07)' : 'none',
+      display: 'flex', flexDirection: 'column', minHeight: 0,
       background: 'rgba(var(--fg),0.012)',
     }}>
       {/* Header */}

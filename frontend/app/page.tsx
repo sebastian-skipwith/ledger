@@ -10,6 +10,8 @@ import AiChat from '@/components/AiChat';
 import InsightStrip from '@/components/InsightStrip';
 import IntelligencePanel from '@/components/IntelligencePanel';
 import Analytics from '@/components/Analytics';
+import TransactionsView from '@/components/TransactionsView';
+import GoalsView from '@/components/GoalsView';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -62,51 +64,83 @@ export default function DashboardPage() {
   }
 
   if (!user || !accessToken) return <AuthScreen />;
+  const token = accessToken; // narrowed to string for use in nested closures
   const deltas = computeDeltas();
+
+  function renderSection() {
+    switch (activeSection) {
+      case 'analytics':
+        return <Analytics token={token} accounts={accounts} />;
+      case 'intelligence':
+        return (
+          <div>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 400, color: 'var(--white)', marginBottom: 12 }}>Money Intelligence</h2>
+            <IntelligencePanel token={token} />
+          </div>
+        );
+      case 'networth':
+        return (
+          <>
+            <NetWorthChart token={token} />
+            <AccountCards accounts={accounts} loading={loading} />
+          </>
+        );
+      case 'transactions':
+        return <TransactionsView token={token} accounts={accounts} />;
+      case 'bills':
+        return <BillsList token={token} full />;
+      case 'goals':
+        return <GoalsView token={token} />;
+      case 'dashboard':
+      default:
+        return (
+          <>
+            <NetWorthChart token={token} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <AccountCards accounts={accounts} loading={loading} />
+              <BillsList token={token} />
+            </div>
+          </>
+        );
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <TopBar summary={summary} hud={hud} loading={loading} deltas={deltas} period={period} onPeriodChange={setPeriod} onTileClick={setDrill} />
       <DrillModal metric={drill} accounts={accounts} summary={summary} onClose={() => setDrill(null)} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', marginTop: 52 }}>
         <Sidebar />
-        <main style={{ flex: 1, overflow: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 400, color: 'var(--white)', marginBottom: 4 }}>
-              Good {timeGreeting()}, {user.full_name?.split(' ')[0]}.
-            </h1>
-            <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-              {summary ? `Net worth ${formatCurrency(summary.net_worth)}` : 'Loading...'}
-            </p>
-          </div>
-          <InsightStrip insights={insights} loading={loading} />
-          {activeSection === 'intelligence' && (
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 400, color: 'var(--white)', marginBottom: 12 }}>Money Intelligence</h2>
-              <IntelligencePanel token={accessToken} />
-            </div>
-          )}
-          {activeSection === 'analytics' ? (
-            <Analytics token={accessToken} accounts={accounts} />
-          ) : (
-            <>
-              <NetWorthChart token={accessToken} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <AccountCards accounts={accounts} loading={loading} />
-                <BillsList token={accessToken} />
+        {activeSection === 'ai' ? (
+          <main style={{ flex: 1, overflow: 'hidden', display: 'flex', minHeight: 0 }}>
+            <AiChat token={token} summary={summary} docked={false} />
+          </main>
+        ) : (
+          <>
+            <main style={{ flex: 1, overflow: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 400, color: 'var(--white)', marginBottom: 4 }}>
+                  Good {timeGreeting()}, {user.full_name?.split(' ')[0]}.
+                </h1>
+                <p style={{ color: 'var(--muted)', fontSize: 13 }}>
+                  {summary ? `Net worth ${formatCurrency(summary.net_worth)}` : 'Loading...'}
+                </p>
               </div>
-            </>
-          )}
-          {accounts.length === 0 && !loading && (
-            <div style={{ padding: 32, textAlign: 'center', border: '1px dashed rgba(var(--fg),0.15)', borderRadius: 12 }}>
-              <p style={{ color: 'var(--muted)', marginBottom: 16, fontSize: 14 }}>No accounts linked yet.</p>
-              <PlaidLinkButton token={accessToken} onSuccess={loadData} />
-            </div>
-          )}
-          <div style={{ textAlign: 'center', marginTop: 'auto', paddingTop: 16 }}>
-            <a href="https://persistence.finance" style={{ fontSize: 11, color: 'var(--muted)', textDecoration: 'none' }}>← Back to persistence.finance</a>
-          </div>
-        </main>
-        <AiChat token={accessToken} summary={summary} />
+              {activeSection === 'dashboard' && <InsightStrip insights={insights} loading={loading} />}
+              {renderSection()}
+              {accounts.length === 0 && !loading && (
+                <div style={{ padding: 32, textAlign: 'center', border: '1px dashed rgba(var(--fg),0.15)', borderRadius: 12 }}>
+                  <p style={{ color: 'var(--muted)', marginBottom: 16, fontSize: 14 }}>No accounts linked yet.</p>
+                  <PlaidLinkButton token={token} onSuccess={loadData} />
+                </div>
+              )}
+              <div style={{ textAlign: 'center', marginTop: 'auto', paddingTop: 16 }}>
+                <a href="https://persistence.finance" style={{ fontSize: 11, color: 'var(--muted)', textDecoration: 'none' }}>← Back to persistence.finance</a>
+              </div>
+            </main>
+            <AiChat token={token} summary={summary} />
+          </>
+        )}
       </div>
     </div>
   );

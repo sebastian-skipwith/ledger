@@ -231,5 +231,63 @@ router.post('/alerts/:id/read', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Detect duplicate charges + subscription price increases (read-only).
+async function detectAnomalies(userId) {
+  const [dupRes, txnRes] = await Promise.all([
+    query(
+      `SELECT COALESCE(t1.merchant_name_clean,t1.merchant_name,t1.name) AS merchant,
+              t1.amount::float AS amount, t1.date AS first_date, t2.date AS second_date
+       FROM transactions t1
+       JOIN transactions t2 ON t1.user_id=t2.user_id AND t1.id < t2.id
+         AND t1.amount = t2.amount AND t1.amount > 5
+         AND COALESCE(t1.merchant_name_clean,t1.merchant_name,t1.name)
+           = COALESCE(t2.merchant_name_clean,t2.merchant_name,t2.name)
+         AND ABS(t2.date - t1.date) <= 3
+       WHERE t1.user_id=$1 AND t1.date >= CURRENT_DATE - 60
+       ORDER BY t2.date DESC LIMIT 25`,
+      [userId]
+    ),
+    query(
+      `SELECT COALESCE(merchant_name_clean,merchant_name,name) AS merchant,
+              ROUND(amount::numeric,2)::float AS amount, date
+       FROM transactions WHERE user_id=$1 AND amount > 0 AND date >= CURRENT_DATE - 400
+       ORDER BY merchant, date`,
+      [userId]
+    ),
+  ]);
+
+  // Price increases: a recurring merchant whose latest charge jumped >=10% after
+  // being stable across the prior two charges.
+  const byMerchant = {};
+  for (const r of txnRes.rows) (byMerchant[r.merchant] ||= []).push(r);
+  const price_increases = [];
+  for (const charges of Object.values(byMerchant)) {
+    if (charges.length < 3) continue;
+    const a = charges.map((c) => c.amount);
+    const n = a.length;
+    const latest = a[n - 1], prev = a[n - 2], prior = a[n - 3];
+    const stable = Math.abs(prev - prior) <= Math.max(0.01, prior * 0.02);
+    if (stable && prev > 0 && latest > prev * 1.1) {
+      price_increases.push({
+        merchant: charges[0].merchant,
+        old_amount: prev,
+        new_amount: latest,
+        pct_increase: Math.round((latest / prev - 1) * 100),
+        date: charges[n - 1].date,
+      });
+    }
+  }
+
+  return { duplicates: dupRes.rows, price_increases };
+}
+
+// GET /api/intelligence/anomalies — duplicate charges + subscription price hikes
+router.get('/anomalies', async (req, res, next) => {
+  try {
+    res.json(await detectAnomalies(req.user.id));
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
 module.exports.projectCashFlow = projectCashFlow;
+module.exports.detectAnomalies = detectAnomalies;

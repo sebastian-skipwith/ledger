@@ -1,13 +1,15 @@
 const router = require('express').Router();
 const { query } = require('../db');
-const { projectCashFlow } = require('./intelligence');
+const { projectCashFlow, detectAnomalies } = require('./intelligence');
+const { applyRules } = require('../lib/rules');
+const { snapshotNetWorth } = require('./plaid');
 
 // Categories the agent may assign (shared taxonomy with the AI categorizer).
 const WRITE_CATS = ['Groceries', 'Dining', 'Transport', 'Shopping', 'Utilities', 'Housing', 'Entertainment', 'Health', 'Travel', 'Subscriptions', 'Income', 'Transfer', 'Other'];
 
 // Tools that mutate data — read-only developer API keys (scopes without 'write')
 // are blocked from these in the POST handler. NONE of these move money.
-const WRITE_TOOLS = new Set(['set_transaction_category', 'create_goal', 'update_goal', 'create_bill', 'add_credit_score', 'remember_fact', 'forget_fact']);
+const WRITE_TOOLS = new Set(['set_transaction_category', 'create_goal', 'update_goal', 'create_bill', 'add_credit_score', 'remember_fact', 'forget_fact', 'create_rule', 'add_manual_account']);
 
 // ─────────────────────────────────────────────────────────────────────────
 // Remote MCP endpoint (JSON-RPC over HTTP). Lets ANY MCP client connect with
@@ -109,6 +111,25 @@ const TOOLS = [
     description: 'Check whether you can afford a purchase now (or by a date) without going negative or raiding active goals, using your cash-flow forecast.',
     inputSchema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number' }, when: { type: 'string', description: 'ISO date you would spend it; default today' } } },
     annotations: { title: 'Can I afford it', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  // ── Automation + manual accounts ──
+  {
+    name: 'create_rule',
+    description: 'Create an automation rule that categorizes or tags matching transactions (existing and future).',
+    inputSchema: { type: 'object', required: ['match_field', 'match_op', 'match_value', 'action', 'action_value'], properties: { match_field: { type: 'string', enum: ['merchant', 'name', 'amount'] }, match_op: { type: 'string', enum: ['contains', 'equals', 'gt', 'lt'] }, match_value: { type: 'string' }, action: { type: 'string', enum: ['set_category', 'set_tag'] }, action_value: { type: 'string' } } },
+    annotations: { title: 'Create rule', readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'add_manual_account',
+    description: 'Add a manual (non-Plaid) account so its balance counts toward net worth.',
+    inputSchema: { type: 'object', required: ['name', 'type'], properties: { name: { type: 'string' }, type: { type: 'string', enum: ['depository', 'investment', 'credit', 'loan'] }, subtype: { type: 'string' }, current_balance: { type: 'number' }, institution_name: { type: 'string' } } },
+    annotations: { title: 'Add manual account', readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'get_anomalies',
+    description: 'Detected duplicate charges and subscription price increases.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get anomalies', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
 ];
 
@@ -240,6 +261,35 @@ async function callTool(userId, name, args = {}) {
             : 'This purchase would eat into money set aside for your active goals.'),
       forecast: { start_balance: proj.start_balance, projected_end_balance: proj.projected_end_balance },
     };
+  }
+
+  // ── Automation + manual accounts ──
+  if (name === 'create_rule') {
+    if (!['merchant', 'name', 'amount'].includes(args.match_field)) throw new Error('Invalid match_field');
+    if (!['contains', 'equals', 'gt', 'lt'].includes(args.match_op)) throw new Error('Invalid match_op');
+    if (!['set_category', 'set_tag'].includes(args.action)) throw new Error('Invalid action');
+    if (!args.match_value || !args.action_value) throw new Error('match_value and action_value are required');
+    if (args.action === 'set_category' && !WRITE_CATS.includes(args.action_value)) throw new Error('Invalid category');
+    const { rows } = await query(
+      `INSERT INTO transaction_rules (user_id, match_field, match_op, match_value, action, action_value)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [userId, args.match_field, args.match_op, String(args.match_value), args.action, String(args.action_value)]);
+    applyRules(userId).catch(() => {});
+    return rows[0];
+  }
+  if (name === 'add_manual_account') {
+    if (!args.name || !['depository', 'investment', 'credit', 'loan'].includes(args.type)) {
+      throw new Error('name and a valid type (depository|investment|credit|loan) are required');
+    }
+    const { rows } = await query(
+      `INSERT INTO accounts (user_id, name, type, subtype, current_balance, institution_name, source)
+       VALUES ($1,$2,$3,$4,$5,$6,'manual') RETURNING id, name, type, subtype, current_balance, institution_name`,
+      [userId, args.name, args.type, args.subtype || null, args.current_balance || 0, args.institution_name || null]);
+    snapshotNetWorth(userId).catch(() => {});
+    return rows[0];
+  }
+  if (name === 'get_anomalies') {
+    return await detectAnomalies(userId);
   }
 
   throw new Error(`Unknown tool: ${name}`);

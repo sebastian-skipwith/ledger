@@ -31,6 +31,7 @@ const accountRouter = require('./routes/account');
 const developerRouter = require('./routes/developer');
 const intelligenceRouter = require('./routes/intelligence');
 const mcpHttpRouter = require('./routes/mcp-http');
+const rulesRouter = require('./routes/rules');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -100,6 +101,7 @@ app.use('/api/developer',    authenticate, developerRouter);
 app.use('/api/intelligence', authenticate, aiLimiter, intelligenceRouter);
 app.use('/api/mcp',          mcpAuthenticate, mcpHttpRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
+app.use('/api/rules',        authenticate, rulesRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -209,6 +211,25 @@ app.use((err, req, res, next) => {
       UNIQUE(user_id, key)
     )`);
     await query('CREATE INDEX IF NOT EXISTS agent_memory_user ON agent_memory(user_id, updated_at DESC)');
+
+    // Cleaned merchant name + free-form tags for transactions; manual-account flag.
+    await query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS merchant_name_clean TEXT');
+    await query('ALTER TABLE transactions ADD COLUMN IF NOT EXISTS tags TEXT[]');
+    await query("ALTER TABLE accounts ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'plaid'");
+
+    // Plain-English categorization/tagging rules applied on sync + on demand.
+    await query(`CREATE TABLE IF NOT EXISTS transaction_rules (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      match_field TEXT NOT NULL CHECK (match_field IN ('merchant','name','amount')),
+      match_op TEXT NOT NULL CHECK (match_op IN ('contains','equals','gt','lt')),
+      match_value TEXT NOT NULL,
+      action TEXT NOT NULL CHECK (action IN ('set_category','set_tag')),
+      action_value TEXT NOT NULL,
+      active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS transaction_rules_user ON transaction_rules(user_id) WHERE active = true');
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

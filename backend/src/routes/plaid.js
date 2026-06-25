@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { PlaidApi, PlaidEnvironments, Configuration, Products, CountryCode } = require('plaid');
 const { query, getClient } = require('../db');
 const { encryptSecret, decryptSecret } = require('../lib/crypto');
+const { applyPostSync } = require('../lib/post-sync');
 
 // Initialize Plaid client
 const plaidConfig = new Configuration({
@@ -240,6 +241,10 @@ async function syncTransactions(userId, plaidItemId, accessToken) {
     }
   }
 
+  // Post-sync enrichment: merchant-name cleanup + categorization rules.
+  // Internally error-swallowed, so it can never break the sync.
+  await applyPostSync(userId);
+
   // Snapshot net worth
   await snapshotNetWorth(userId);
 
@@ -281,4 +286,5 @@ async function snapshotNetWorth(userId) {
 
 module.exports = router;
 module.exports.syncTransactions = syncTransactions;
+module.exports.snapshotNetWorth = snapshotNetWorth; // used by manual-account writes
 module.exports.plaid = plaid; // used by routes/webhooks.js for signature verification

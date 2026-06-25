@@ -66,6 +66,11 @@ nav {
 .mcp-msg.user { background: rgba(var(--fg),0.08); margin-left: 56px; }
 .mcp-msg.ai { background: rgba(var(--fg),0.03); border: 1px solid var(--border); margin-right: 32px; }
 .mcp-tool { display: inline-flex; align-items: center; gap: 7px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; margin: 2px 0 10px; }
+.mcp-caps { max-width: 660px; margin: 0 auto 34px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.mcp-caps span { font-size: 12.5px; color: var(--muted); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; background: rgba(var(--fg),0.02); }
+.mcp-caps span strong { color: var(--subtle); font-weight: 700; }
+.mcp-caps span.never { border-color: rgba(22,163,74,0.35); }
+.mcp-caps span.never strong { color: #16a34a; }
 .btn-claude { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 12px; background: var(--gold); color: var(--ink); font-size: 15px; font-weight: 700; letter-spacing: .2px; transition: all .15s; border: none; cursor: pointer; }
 .btn-claude:hover { opacity: .88; transform: translateY(-1px); }
 .btn-google { display: inline-flex; align-items: center; gap: 12px; padding: 13px 28px; border-radius: 10px; background: #ffffff; color: #1f1f1f; border: 1px solid #dadce0; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
@@ -274,7 +279,9 @@ footer {
   <div class="nav-links">
     <a href="#desktop-hud">Desktop</a>
     <a href="#web-app">Web app</a>
+    <a href="#connect-ai">AI</a>
     <a href="#mobile-watch">Mobile</a>
+    <a href="#household">Household</a>
     <a href="#features">Features</a>
     <a href="#pricing">Pricing</a>
     <a href="/security.html">Security</a>
@@ -484,9 +491,9 @@ footer {
 
 <!-- CONNECT YOUR AI (MCP) -->
 <section id="connect-ai" style="padding-top:0;">
-  <div class="section-label">MCP Built In</div>
-  <h2>Your money, in <em>every AI you use.</em></h2>
-  <p class="section-sub">Persistence ships a hosted MCP server. Connect the assistants you already work with — read-only, with a key you can revoke anytime.</p>
+  <div class="section-label">Agentic AI</div>
+  <h2>Now your AI can <em>organize your money</em><br>— not just read it.</h2>
+  <p class="section-sub">Persistence ships a hosted MCP server, now <strong style="color:var(--text);">18 tools</strong> deep. Connect the assistants you already use and let them categorize spending, set goals, build automation rules, log accounts, and remember what matters. The one thing they can <strong style="color:var(--text);">never</strong> do: move your money.</p>
 
   <div class="mcp-logos">
     <span class="mcp-chip"><svg width="17" height="17" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="17.5" y2="4.5"/><line x1="12" y1="12" x2="21" y2="9"/><line x1="12" y1="12" x2="20" y2="15.5"/><line x1="12" y1="12" x2="16" y2="20.5"/><line x1="12" y1="12" x2="10" y2="21"/><line x1="12" y1="12" x2="5.5" y2="18.5"/><line x1="12" y1="12" x2="3" y2="13"/><line x1="12" y1="12" x2="4.5" y2="7"/><line x1="12" y1="12" x2="8.5" y2="3.5"/></g></svg>Claude</span>
@@ -500,10 +507,19 @@ footer {
   </div>
 
   <div class="mcp-demo">
-    <div class="hdr"><span class="dot"></span> PERSISTENCE CONNECTED · 5 TOOLS AVAILABLE</div>
-    <div class="mcp-msg user">Can I afford the $400 flight to Denver this month?</div>
-    <div class="mcp-tool"><svg width="12" height="12" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="4"/><line x1="12" y1="12" x2="19" y2="7"/><line x1="12" y1="12" x2="19" y2="17"/><line x1="12" y1="12" x2="12" y2="20"/><line x1="12" y1="12" x2="5" y2="17"/><line x1="12" y1="12" x2="5" y2="7"/></g></svg> persistence · get_financial_summary</div>
-    <div class="mcp-msg ai">Yes — comfortably. You have <strong>$1,240 safe to spend</strong> before Friday and $18,920 in cash. Booking the $400 flight still leaves every bill this month covered, with about $840 of cushion. Want me to log it as a planned expense?</div>
+    <div class="hdr"><span class="dot"></span> PERSISTENCE CONNECTED · 18 TOOLS AVAILABLE</div>
+    <div class="mcp-msg user">Tidy up my spending — tag every Chipotle charge as Dining, and flag anything weird.</div>
+    <div class="mcp-tool"><svg width="12" height="12" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="4"/><line x1="12" y1="12" x2="19" y2="7"/><line x1="12" y1="12" x2="19" y2="17"/><line x1="12" y1="12" x2="12" y2="20"/><line x1="12" y1="12" x2="5" y2="17"/><line x1="12" y1="12" x2="5" y2="7"/></g></svg> persistence · create_rule · get_anomalies</div>
+    <div class="mcp-msg ai">Done. I made a rule that tags Chipotle as <strong>Dining</strong> and applied it to 14 past charges. Two flags: a possible <strong>duplicate</strong> — two $64.20 Whole Foods charges two days apart — and your <strong>Spotify went $10.99 → $11.99</strong> last month. Nothing was moved; I only organize your data.</div>
+    <div class="mcp-msg user">Can I afford a $400 flight to Denver this month?</div>
+    <div class="mcp-tool"><svg width="12" height="12" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="4"/><line x1="12" y1="12" x2="19" y2="7"/><line x1="12" y1="12" x2="19" y2="17"/><line x1="12" y1="12" x2="12" y2="20"/><line x1="12" y1="12" x2="5" y2="17"/><line x1="12" y1="12" x2="5" y2="7"/></g></svg> persistence · can_i_afford</div>
+    <div class="mcp-msg ai">Yes — comfortably. Your forecast low point stays around <strong>$840 above</strong> your goal contributions even after the flight, with every bill this month still covered.</div>
+  </div>
+
+  <div class="mcp-caps">
+    <span><strong>Reads</strong> net worth · transactions · subscriptions · bills · goals · household</span>
+    <span><strong>Organizes</strong> categories · goals · bills · rules · manual accounts · memory</span>
+    <span class="never"><strong>Never</strong> moves money · pays · transfers · trades</span>
   </div>
 
   <div style="text-align:center;">
@@ -514,9 +530,42 @@ footer {
 
 <!-- ON YOUR PHONE & WRIST -->
 <section id="mobile-watch" style="padding-top:0;">
-  <div class="section-label">Phone &amp; Watch</div>
-  <h2>The same glance, <em>on every screen you own.</em></h2>
-  <p class="section-sub">Persistence follows you off the desktop. A home-screen widget on your phone and a watch face keep your net worth and safe-to-spend a glance away — no app to open, nothing to tap. Design preview, shipping with the mobile apps.</p>
+  <div class="section-label">The Mobile App</div>
+  <h2>Your command center, <em>now in your pocket.</em></h2>
+  <p class="section-sub">The Persistence app brings the whole thing to mobile — full dashboard, analytics, transactions and secure bank linking — plus a native <strong style="color:var(--text);">home-screen widget</strong> for net worth &amp; safe-to-spend and a <strong style="color:var(--text);">biometric app-lock</strong>. Built with React Native and heading to Google Play now; iPhone and watch are next.</p>
+
+  <div class="features" style="margin-bottom:44px;">
+    <div class="feature-card">
+      <div class="feature-icon">▦</div>
+      <div class="feature-title">Home-screen widget</div>
+      <div class="feature-body">A native Android widget shows your net worth and safe-to-spend right on your home screen, refreshed in the background. Tap to jump into the app.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚷</div>
+      <div class="feature-title">Biometric app-lock</div>
+      <div class="feature-body">Optional Face / fingerprint unlock guards the app on open and when you return to it — your balances never flash in the app switcher.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⊞</div>
+      <div class="feature-title">The full dashboard</div>
+      <div class="feature-body">Net worth, cash, investments, retirement, debt, monthly bills and safe-to-spend — the same HUD numbers, with pull-to-refresh.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📈</div>
+      <div class="feature-title">Analytics on the go</div>
+      <div class="feature-body">A scrubbable net-worth chart, income-vs-expenses, a spending-by-category donut, credit score and subscriptions — wherever you are.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏦</div>
+      <div class="feature-title">Link banks from your phone</div>
+      <div class="feature-body">Connect accounts through Plaid right in the app, browse your full transaction feed, and manage or disconnect institutions anytime.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⟲</div>
+      <div class="feature-title">One account, every screen</div>
+      <div class="feature-body">Sign in once — the app, web dashboard and desktop HUD all share the same secure data, so you pick up right where you left off.</div>
+    </div>
+  </div>
   <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:48px;align-items:center;justify-content:center;">
     <figure style="margin:0;flex:0 1 320px;text-align:center;">
       <img src="/iphone-widget.png" alt="The Persistence widget on an iPhone home screen showing net worth and safe-to-spend" style="display:block;width:100%;max-width:300px;margin:0 auto;filter:drop-shadow(0 30px 70px rgba(0,0,0,0.45));">
@@ -533,7 +582,32 @@ footer {
       </figcaption>
     </figure>
   </div>
-  <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:28px;">iPhone &amp; Pixel Watch widgets &middot; design preview</div>
+  <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:28px;">Android app shipping to Google Play &middot; iPhone &amp; Pixel Watch shown as design previews</div>
+</section>
+
+<!-- SHARED HOUSEHOLDS -->
+<section id="household" style="padding-top:0;">
+  <div class="section-label">Shared Households</div>
+  <h2>Your money, together — <em>without sharing logins.</em></h2>
+  <p class="section-sub">Invite a partner to a shared household and see one combined picture — your net worth, side by side. Each of you keeps your own accounts and your own login, and anything you mark private stays private.</p>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">⌂</div>
+      <div class="feature-title">One combined view</div>
+      <div class="feature-body">Net worth, cash, investments and debt pooled across everyone in the household, with a per-person breakdown so you always know who's holding what.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✉</div>
+      <div class="feature-title">Invite by email</div>
+      <div class="feature-body">Add a partner with their email — they accept from their own account. No password sharing, no handing over your logins, ever.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◐</div>
+      <div class="feature-title">Private stays private</div>
+      <div class="feature-body">Only the accounts you choose to show are shared. Hide an account and it's invisible to the household — and you can leave or remove a member anytime.</div>
+    </div>
+  </div>
 </section>
 
 <!-- FEATURES -->
@@ -556,17 +630,17 @@ footer {
     <div class="feature-card">
       <div class="feature-icon">🔗</div>
       <div class="feature-title">MCP Server</div>
-      <div class="feature-body">Connect your finances to Claude Desktop, Claude Code, Cursor — any MCP-compatible AI client. Your money becomes a tool your AI can use, safely and read-only.</div>
+      <div class="feature-body">Connect your finances to Claude, Cursor, ChatGPT — any MCP-compatible client. 18 tools let your AI read and organize your money (categorize, set goals, build rules) — but never move it.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">⚡</div>
-      <div class="feature-title">Smart Automation</div>
-      <div class="feature-body">Set rules, let AI execute them. "Move $500 to savings when checking hits $8k." "Alert me if a bill doubles." Propose, confirm, done.</div>
+      <div class="feature-title">Rules &amp; auto-cleanup</div>
+      <div class="feature-body">Plain-English rules categorize and tag transactions automatically — "tag every Chipotle as Dining." Messy merchant names get cleaned up, and duplicate charges or subscription price hikes get flagged.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">📱</div>
       <div class="feature-title">Every Device</div>
-      <div class="feature-body">iOS home screen and lock screen widgets. Android Glance widgets. Apple Watch complications. Your net worth is always one glance away.</div>
+      <div class="feature-body">A native Android app with a home-screen widget and biometric lock, the always-on desktop HUD, and the full web dashboard — all in sync. iPhone and watch are on the way.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">🏦</div>
@@ -697,11 +771,12 @@ footer {
   <div style="max-width:760px;">
     <details class="faq-item"><summary>What is Persistence?</summary><div class="faq-a">Persistence is a personal-finance app built around an always-on-top desktop HUD (a thin overlay for Windows and macOS) plus a full web app. It shows your net worth, safe-to-spend, and upcoming bills at a glance, and adds AI insights on top of your real accounts — connected securely through Plaid.</div></details>
     <details class="faq-item"><summary>Is my bank data safe?</summary><div class="faq-a">Yes. Your bank login credentials never touch our servers — Plaid handles the connection — and the access tokens we hold are encrypted at rest with AES&#8209;256&#8209;GCM. Data is read-only, sessions are short-lived, and app updates are cryptographically signed. Full detail on our <a href="/security.html">Security</a> and <a href="/privacy.html">Privacy</a> pages.</div></details>
-    <details class="faq-item"><summary>Can Persistence move my money or make payments?</summary><div class="faq-a">No. Persistence is strictly read-only: it can see balances and transactions to show you an accurate picture, but it cannot move money, make payments, place trades, or change anything at your bank. The same applies to any AI you connect — it can read your finances but never act on your accounts.</div></details>
+    <details class="faq-item"><summary>Can Persistence move my money or make payments?</summary><div class="faq-a">No. Persistence can never move money, make payments, place trades, or change anything at your bank — full stop. A connected AI can read your finances and help <em>organize</em> them (categorize transactions, set goals, build rules, add manual accounts), but it has no tool that moves a single dollar. Your money stays exactly where it is.</div></details>
     <details class="faq-item"><summary>Which banks and accounts work?</summary><div class="faq-a">Persistence connects through Plaid, which supports thousands of US banks, credit unions, brokerages, and card issuers. You can link checking and savings, credit cards, loans, and investment and retirement accounts — grouped into cash, investments, retirement, and debt. The free plan includes up to 2 linked accounts; paid plans remove the limit.</div></details>
     <details class="faq-item"><summary>What does it cost?</summary><div class="faq-a">There's a free tier covering the dashboard, up to 2 linked accounts, the phone widget, and 10 AI messages a day. Pro is $9/month and unlocks unlimited accounts, unlimited AI chat, the desktop HUD on all platforms, MCP server access, and automation — with a 14-day trial. A $29/month Wealth plan adds portfolio and tax-focused tools for investors.</div></details>
     <details class="faq-item"><summary>Do I have to switch from the finance app I already use?</summary><div class="faq-a">No. Persistence is designed to run alongside whatever you already use — it reads your accounts through Plaid rather than replacing your bank or budgeting tool. Many people keep their existing app and add Persistence for the always-visible HUD and the AI connection.</div></details>
-    <details class="faq-item"><summary>How does the AI / Claude connection work?</summary><div class="faq-a">Persistence ships a built-in MCP server, so MCP-compatible assistants — Claude Desktop, Claude Code, Cursor, and others — can read your finances directly. You create an API key in the <a href="/developers">Developers</a> portal, paste a short config into your AI client, and it gains read-only tools for your summary, transactions, subscriptions, bills, and goals. The key is read-only and revocable anytime.</div></details>
+    <details class="faq-item"><summary>How does the AI / Claude connection work?</summary><div class="faq-a">Persistence ships a built-in MCP server, so MCP-compatible assistants — Claude, Claude Code, Cursor, ChatGPT and others — connect directly to your finances. You authorize it once, and your AI gains 18 tools: reading your summary, transactions, subscriptions, bills, goals and household, plus organizing actions like categorizing, setting goals, building rules, adding manual accounts and remembering preferences. None of them move money, and you can revoke access anytime from the <a href="/developers">Developers</a> portal.</div></details>
+    <details class="faq-item"><summary>Can I share a view with my partner?</summary><div class="faq-a">Yes. Create a household and invite a partner by email — they accept from their own account, so you never share logins. You'll both see one combined net-worth view across everyone's accounts, with a per-person breakdown. Each person keeps their own accounts and login, and any account you mark hidden stays private to you.</div></details>
     <details class="faq-item"><summary>Is Persistence a bank?</summary><div class="faq-a">No. Persistence is not a bank and never holds your money. It's a dashboard that securely reads data from your existing bank and brokerage accounts through Plaid so you can see and understand it — your money stays exactly where it is.</div></details>
     <details class="faq-item"><summary>How do I get started?</summary><div class="faq-a">Sign in with Google on the web app, link an account or two through Plaid, and your dashboard and net worth populate right away. From there you can install the desktop HUD and, if you want, create an API key to connect your AI assistant. Setup takes a couple of minutes.</div></details>
   </div>

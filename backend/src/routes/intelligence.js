@@ -64,53 +64,58 @@ router.get('/subscriptions', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// GET /api/intelligence/cash-flow?days=30
 // Project the cash balance forward using recurring income (negative txns) and
-// upcoming bills, so users see a shortfall before it happens.
+// upcoming bills. Pure function so other features (e.g. the affordability tool)
+// reuse the SAME forecast the web Intelligence panel shows.
+async function projectCashFlow(userId, daysArg) {
+  const days = Math.min(Math.max(parseInt(daysArg || 30, 10) || 30, 1), 90);
+
+  const [accts, bills, income] = await Promise.all([
+    query(`SELECT COALESCE(SUM(current_balance),0) AS cash FROM accounts
+           WHERE user_id=$1 AND type='depository' AND is_hidden=false`, [userId]),
+    query(`SELECT name, amount, next_due_date FROM bills
+           WHERE user_id=$1 AND active=true AND next_due_date IS NOT NULL
+             AND next_due_date <= CURRENT_DATE + $2`, [userId, days]),
+    // Average monthly income from the last 90 days of credits.
+    query(`SELECT COALESCE(SUM(ABS(amount)),0) AS total FROM transactions
+           WHERE user_id=$1 AND amount < 0 AND date >= CURRENT_DATE - 90`, [userId]),
+  ]);
+
+  let balance = parseFloat(accts.rows[0].cash);
+  const startBalance = balance;
+  const dailyIncome = parseFloat(income.rows[0].total) / 90;
+  const billsByDate = {};
+  for (const b of bills.rows) {
+    const d = new Date(b.next_due_date).toISOString().slice(0, 10);
+    (billsByDate[d] ||= []).push({ name: b.name, amount: parseFloat(b.amount) });
+  }
+
+  const series = [];
+  let lowest = { date: null, balance };
+  const today = new Date();
+  for (let i = 1; i <= days; i++) {
+    const d = new Date(today); d.setDate(today.getDate() + i);
+    const iso = d.toISOString().slice(0, 10);
+    balance += dailyIncome;
+    for (const b of (billsByDate[iso] || [])) balance -= b.amount;
+    series.push({ date: iso, balance: Math.round(balance) });
+    if (balance < lowest.balance) lowest = { date: iso, balance: Math.round(balance) };
+  }
+
+  return {
+    start_balance: Math.round(startBalance),
+    projected_end_balance: Math.round(balance),
+    lowest_point: lowest,
+    will_go_negative: lowest.balance < 0,
+    estimated_monthly_income: Math.round(dailyIncome * 30),
+    series,
+  };
+}
+
+// GET /api/intelligence/cash-flow?days=30
 router.get('/cash-flow', async (req, res, next) => {
   try {
-    const days = Math.min(parseInt(req.query.days || '30', 10), 90);
-
-    const [accts, bills, income] = await Promise.all([
-      query(`SELECT COALESCE(SUM(current_balance),0) AS cash FROM accounts
-             WHERE user_id=$1 AND type='depository' AND is_hidden=false`, [req.user.id]),
-      query(`SELECT name, amount, next_due_date FROM bills
-             WHERE user_id=$1 AND active=true AND next_due_date IS NOT NULL
-               AND next_due_date <= CURRENT_DATE + $2`, [req.user.id, days]),
-      // Average monthly income from the last 90 days of credits.
-      query(`SELECT COALESCE(SUM(ABS(amount)),0) AS total FROM transactions
-             WHERE user_id=$1 AND amount < 0 AND date >= CURRENT_DATE - 90`, [req.user.id]),
-    ]);
-
-    let balance = parseFloat(accts.rows[0].cash);
-    const startBalance = balance;
-    const dailyIncome = parseFloat(income.rows[0].total) / 90;
-    const billsByDate = {};
-    for (const b of bills.rows) {
-      const d = new Date(b.next_due_date).toISOString().slice(0, 10);
-      (billsByDate[d] ||= []).push({ name: b.name, amount: parseFloat(b.amount) });
-    }
-
-    const series = [];
-    let lowest = { date: null, balance: balance };
-    const today = new Date();
-    for (let i = 1; i <= days; i++) {
-      const d = new Date(today); d.setDate(today.getDate() + i);
-      const iso = d.toISOString().slice(0, 10);
-      balance += dailyIncome;
-      for (const b of (billsByDate[iso] || [])) balance -= b.amount;
-      series.push({ date: iso, balance: Math.round(balance) });
-      if (balance < lowest.balance) lowest = { date: iso, balance: Math.round(balance) };
-    }
-
-    res.json({
-      start_balance: Math.round(startBalance),
-      projected_end_balance: Math.round(balance),
-      lowest_point: lowest,
-      will_go_negative: lowest.balance < 0,
-      estimated_monthly_income: Math.round(dailyIncome * 30),
-      series,
-    });
+    res.json(await projectCashFlow(req.user.id, req.query.days));
   } catch (err) { next(err); }
 });
 
@@ -227,3 +232,4 @@ router.post('/alerts/:id/read', async (req, res, next) => {
 });
 
 module.exports = router;
+module.exports.projectCashFlow = projectCashFlow;

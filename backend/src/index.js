@@ -196,6 +196,19 @@ app.use((err, req, res, next) => {
       expires_at TIMESTAMPTZ NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
+
+    // Durable key/value memory the AI connector can read/write so financial
+    // goals & preferences persist across sessions and across AI clients.
+    await query(`CREATE TABLE IF NOT EXISTS agent_memory (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      key TEXT NOT NULL,
+      value TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, key)
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS agent_memory_user ON agent_memory(user_id, updated_at DESC)');
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

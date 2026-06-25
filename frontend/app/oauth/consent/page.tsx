@@ -51,16 +51,23 @@ export default function ConsentPage() {
               Connect to {info.client_name}
             </h2>
             <p style={{ color: 'var(--muted)', fontSize: 13.5, textAlign: 'center', lineHeight: 1.6, marginBottom: 20 }}>
-              <strong style={{ color: 'var(--text)' }}>{info.client_name}</strong> is requesting <strong style={{ color: 'var(--text)' }}>read-only</strong> access to your Persistence finances for <strong style={{ color: 'var(--text)' }}>{user.email}</strong>.
+              <strong style={{ color: 'var(--text)' }}>{info.client_name}</strong> is requesting access to your Persistence finances for <strong style={{ color: 'var(--text)' }}>{user.email}</strong>.
             </p>
             <div style={{ background: 'rgba(var(--fg),0.04)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.5)', marginBottom: 8 }}>It will be able to read</div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--subtle)', lineHeight: 1.9 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.5)', marginBottom: 8 }}>It can read</div>
+              <ul style={{ margin: '0 0 12px', paddingLeft: 18, fontSize: 13, color: 'var(--subtle)', lineHeight: 1.9 }}>
                 <li>Your financial summary &amp; net worth</li>
                 <li>Recent transactions</li>
                 <li>Subscriptions, bills &amp; goals</li>
               </ul>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10 }}>It <strong>cannot</strong> move money, make payments, or change anything. You can revoke access anytime.</div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.5)', marginBottom: 8 }}>It can change</div>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--subtle)', lineHeight: 1.9 }}>
+                <li>Recategorize your transactions</li>
+                <li>Create &amp; update savings/debt goals</li>
+                <li>Add bills &amp; recurring expenses</li>
+                <li>Log credit scores &amp; remember preferences you tell it</li>
+              </ul>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10 }}>It <strong>cannot</strong> move money, make payments, transfer funds, or trade — it can only organize and annotate your data. You can revoke access anytime.</div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => decide(false)} disabled={busy} style={{ flex: 1, padding: '11px 0', background: 'transparent', color: 'var(--text)', border: '1px solid rgba(var(--fg),0.2)', borderRadius: 8, fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-syne)', cursor: 'pointer' }}>Deny</button>

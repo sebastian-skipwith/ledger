@@ -1,5 +1,13 @@
 const router = require('express').Router();
 const { query } = require('../db');
+const { projectCashFlow } = require('./intelligence');
+
+// Categories the agent may assign (shared taxonomy with the AI categorizer).
+const WRITE_CATS = ['Groceries', 'Dining', 'Transport', 'Shopping', 'Utilities', 'Housing', 'Entertainment', 'Health', 'Travel', 'Subscriptions', 'Income', 'Transfer', 'Other'];
+
+// Tools that mutate data — read-only developer API keys (scopes without 'write')
+// are blocked from these in the POST handler. NONE of these move money.
+const WRITE_TOOLS = new Set(['set_transaction_category', 'create_goal', 'update_goal', 'create_bill', 'add_credit_score', 'remember_fact', 'forget_fact']);
 
 // ─────────────────────────────────────────────────────────────────────────
 // Remote MCP endpoint (JSON-RPC over HTTP). Lets ANY MCP client connect with
@@ -11,8 +19,9 @@ const { query } = require('../db');
 // initialize, tools/list, tools/call.
 // ─────────────────────────────────────────────────────────────────────────
 
-// Every tool is read-only (no writes, no money movement). The annotations make
-// that explicit to Claude/users and are required for the Connectors Directory.
+// Read tools plus non-money-movement write tools (categorize, goals, bills,
+// credit, memory). NO tool can ever move money, pay, transfer, or trade. The
+// annotations make each tool's read/write nature explicit to Claude/users.
 const TOOLS = [
   {
     name: 'get_financial_summary',
@@ -43,6 +52,63 @@ const TOOLS = [
     description: 'Financial goals and progress.',
     inputSchema: { type: 'object', properties: {} },
     annotations: { title: 'Get goals', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  // ── Write tools (non-money-movement) ──
+  {
+    name: 'set_transaction_category',
+    description: 'Set the category for one of your transactions.',
+    inputSchema: { type: 'object', required: ['transaction_id', 'category'], properties: { transaction_id: { type: 'string' }, category: { type: 'string', enum: WRITE_CATS } } },
+    annotations: { title: 'Set transaction category', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'create_goal',
+    description: 'Create a savings, debt-payoff, or investment goal.',
+    inputSchema: { type: 'object', required: ['name', 'type', 'target_amount'], properties: { name: { type: 'string' }, type: { type: 'string', enum: ['savings', 'debt_payoff', 'investment'] }, target_amount: { type: 'number' }, target_date: { type: 'string' }, monthly_contribution: { type: 'number' }, notes: { type: 'string' } } },
+    annotations: { title: 'Create goal', readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'update_goal',
+    description: 'Update an existing goal (e.g. current saved amount, target, or mark complete).',
+    inputSchema: { type: 'object', required: ['goal_id'], properties: { goal_id: { type: 'string' }, name: { type: 'string' }, target_amount: { type: 'number' }, current_amount: { type: 'number' }, target_date: { type: 'string' }, monthly_contribution: { type: 'number' }, completed: { type: 'boolean' } } },
+    annotations: { title: 'Update goal', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'create_bill',
+    description: 'Add a recurring bill or expense.',
+    inputSchema: { type: 'object', required: ['name', 'amount', 'frequency'], properties: { name: { type: 'string' }, amount: { type: 'number' }, frequency: { type: 'string', enum: ['weekly', 'monthly', 'yearly'] }, next_due_date: { type: 'string' }, category: { type: 'string' } } },
+    annotations: { title: 'Create bill', readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'add_credit_score',
+    description: 'Record a credit-score reading (300-850).',
+    inputSchema: { type: 'object', required: ['score'], properties: { score: { type: 'number' }, source: { type: 'string' } } },
+    annotations: { title: 'Add credit score', readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  },
+  // ── Memory (cross-session/cross-client) ──
+  {
+    name: 'remember_fact',
+    description: 'Store a durable fact/preference about the user (e.g. risk tolerance, a savings target) so future chats recall it.',
+    inputSchema: { type: 'object', required: ['key', 'value'], properties: { key: { type: 'string' }, value: { type: 'string' } } },
+    annotations: { title: 'Remember fact', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'get_memory',
+    description: 'List everything you have remembered about the user.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get memory', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'forget_fact',
+    description: 'Delete a remembered fact by key.',
+    inputSchema: { type: 'object', required: ['key'], properties: { key: { type: 'string' } } },
+    annotations: { title: 'Forget fact', readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  },
+  // ── Decision support (read-only) ──
+  {
+    name: 'can_i_afford',
+    description: 'Check whether you can afford a purchase now (or by a date) without going negative or raiding active goals, using your cash-flow forecast.',
+    inputSchema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number' }, when: { type: 'string', description: 'ISO date you would spend it; default today' } } },
+    annotations: { title: 'Can I afford it', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
 ];
 
@@ -79,6 +145,103 @@ async function callTool(userId, name, args = {}) {
     const { rows } = await query(`SELECT name, type, target_amount, current_amount, target_date FROM goals WHERE user_id=$1`, [userId]);
     return rows;
   }
+
+  // ── Write tools (all user-scoped; none move money) ──
+  if (name === 'set_transaction_category') {
+    if (!WRITE_CATS.includes(args.category)) throw new Error('Invalid category');
+    const { rows } = await query(
+      `UPDATE transactions SET category_custom=$1 WHERE id=$2 AND user_id=$3
+       RETURNING id, COALESCE(merchant_name,name) AS name, amount, category_custom`,
+      [args.category, args.transaction_id, userId]);
+    if (!rows.length) throw new Error('Transaction not found');
+    return rows[0];
+  }
+  if (name === 'create_goal') {
+    if (!['savings', 'debt_payoff', 'investment'].includes(args.type)) throw new Error('Invalid goal type');
+    if (!(Number(args.target_amount) > 0)) throw new Error('target_amount must be positive');
+    const { rows } = await query(
+      `INSERT INTO goals (user_id, name, type, target_amount, target_date, monthly_contribution, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [userId, args.name, args.type, args.target_amount, args.target_date || null, args.monthly_contribution || null, args.notes || null]);
+    return rows[0];
+  }
+  if (name === 'update_goal') {
+    const allowed = ['name', 'target_amount', 'current_amount', 'target_date', 'monthly_contribution', 'completed'];
+    const updates = [], params = [];
+    let i = 1;
+    for (const f of allowed) if (args[f] !== undefined) { updates.push(`${f}=$${i++}`); params.push(args[f]); }
+    if (!updates.length) throw new Error('No fields to update');
+    params.push(args.goal_id, userId);
+    const { rows } = await query(`UPDATE goals SET ${updates.join(', ')} WHERE id=$${i++} AND user_id=$${i++} RETURNING *`, params);
+    if (!rows.length) throw new Error('Goal not found');
+    return rows[0];
+  }
+  if (name === 'create_bill') {
+    if (!['weekly', 'monthly', 'yearly'].includes(args.frequency)) throw new Error('Invalid frequency');
+    if (!(Number(args.amount) > 0)) throw new Error('amount must be positive');
+    const { rows } = await query(
+      `INSERT INTO bills (user_id, name, amount, frequency, next_due_date, category)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [userId, args.name, args.amount, args.frequency, args.next_due_date || null, args.category || null]);
+    return rows[0];
+  }
+  if (name === 'add_credit_score') {
+    const score = parseInt(args.score, 10);
+    if (!Number.isFinite(score) || score < 300 || score > 850) throw new Error('Score must be a whole number between 300 and 850.');
+    const source = (args.source || '').toString().trim().slice(0, 60) || null;
+    const { rows } = await query(
+      `INSERT INTO credit_scores (user_id, score, source) VALUES ($1,$2,$3) RETURNING id, score, source, recorded_at`,
+      [userId, score, source]);
+    return rows[0];
+  }
+
+  // ── Memory ──
+  if (name === 'remember_fact') {
+    const key = String(args.key || '').trim().slice(0, 120);
+    const value = String(args.value || '').trim().slice(0, 2000);
+    if (!key || !value) throw new Error('key and value are required');
+    const { rows } = await query(
+      `INSERT INTO agent_memory (user_id, key, value) VALUES ($1,$2,$3)
+       ON CONFLICT (user_id, key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()
+       RETURNING key, value, updated_at`, [userId, key, value]);
+    return rows[0];
+  }
+  if (name === 'get_memory') {
+    const { rows } = await query(`SELECT key, value, updated_at FROM agent_memory WHERE user_id=$1 ORDER BY updated_at DESC`, [userId]);
+    return rows;
+  }
+  if (name === 'forget_fact') {
+    const r = await query(`DELETE FROM agent_memory WHERE user_id=$1 AND key=$2`, [userId, String(args.key || '').trim()]);
+    return { forgotten: r.rowCount };
+  }
+
+  // ── Affordability (read-only; reuses the cash-flow forecast + goals) ──
+  if (name === 'can_i_afford') {
+    const amount = Number(args.amount);
+    if (!(amount > 0)) throw new Error('amount must be positive');
+    const when = args.when ? new Date(args.when) : new Date();
+    const horizonDays = Math.min(Math.max(Math.ceil((when - new Date()) / 86400000) + 30, 30), 90);
+    const proj = await projectCashFlow(userId, horizonDays);
+    const goalsRes = await query(`SELECT COALESCE(SUM(monthly_contribution),0) AS reserve FROM goals WHERE user_id=$1 AND completed=false`, [userId]);
+    const goalReserve = Number(goalsRes.rows[0].reserve);
+    const lowestAfter = proj.lowest_point.balance - amount;
+    const affordable = lowestAfter >= goalReserve;
+    return {
+      amount,
+      when: when.toISOString().slice(0, 10),
+      affordable,
+      projected_lowest_balance_after_purchase: Math.round(lowestAfter),
+      current_lowest_point: proj.lowest_point,
+      goal_contributions_at_risk: affordable ? 0 : Math.round(Math.max(0, goalReserve - lowestAfter)),
+      reason: affordable
+        ? 'Your forecasted low point stays above your goal contributions after this purchase.'
+        : (lowestAfter < 0
+            ? 'This purchase would push your projected balance negative.'
+            : 'This purchase would eat into money set aside for your active goals.'),
+      forecast: { start_balance: proj.start_balance, projected_end_balance: proj.projected_end_balance },
+    };
+  }
+
   throw new Error(`Unknown tool: ${name}`);
 }
 
@@ -99,6 +262,10 @@ router.post('/', async (req, res) => {
       return reply({ tools: TOOLS });
     }
     if (method === 'tools/call') {
+      // Read-only developer API keys (a scopes array without 'write') can't mutate.
+      if (WRITE_TOOLS.has(params.name) && Array.isArray(req.user.scopes) && !req.user.scopes.includes('write')) {
+        return fail(-32003, 'This credential is read-only (missing write scope).');
+      }
       const data = await callTool(req.user.id, params.name, params.arguments || {});
       return reply({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
     }

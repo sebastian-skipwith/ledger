@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiCall } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { fonts, theme } from '@/lib/theme';
+import { track } from '@/lib/track';
 
 interface Txn {
   id: string;
@@ -56,6 +57,7 @@ export default function ActivityScreen() {
   }, [fetchPage]);
 
   useEffect(() => {
+    track('viewed_activity');
     (async () => {
       setLoading(true);
       await initialLoad();

@@ -4,6 +4,7 @@ import { create, dismissLink, LinkLogLevel, open } from 'react-native-plaid-link
 import type { LinkExit, LinkSuccess } from 'react-native-plaid-link-sdk';
 import { apiCall } from '@/lib/api';
 import { refreshFinances } from '@/lib/finances';
+import { track } from '@/lib/track';
 import { fonts, radius, theme } from '@/lib/theme';
 
 type Status = 'idle' | 'starting' | 'finishing';
@@ -23,6 +24,7 @@ export function PlaidLinkButton({
   const launch = useCallback(async () => {
     setError('');
     setStatus('starting');
+    track('bank_link_started');
     try {
       // 1. Mint a fresh, single-use link_token. Tell the backend we're Android so
       //    it attaches android_package_name (required for OAuth banks).
@@ -47,6 +49,7 @@ export function PlaidLinkButton({
                 institution: inst ? { institution_id: inst.id, name: inst.name } : undefined,
               }),
             });
+            track('bank_linked');
             await refreshFinances();
             onLinked?.();
             // Transactions sync asynchronously on the server — re-pull shortly.

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_URL } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import { fonts, radius, theme } from '@/lib/theme';
+import { resetUser } from '@/lib/track';
 import { ConnectionsCard } from '@/components/ConnectionsCard';
 
 export default function SettingsScreen() {
@@ -35,6 +36,7 @@ export default function SettingsScreen() {
   }
 
   function signOut() {
+    resetUser(); // clear PostHog identity so the next user starts fresh
     logout();
     router.replace('/login');
   }

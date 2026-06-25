@@ -3,6 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type AnalyticsData, fetchAnalytics } from '@/lib/analytics';
 import { fonts, theme } from '@/lib/theme';
+import { track } from '@/lib/track';
 import { Card } from '@/components/Card';
 import { CreditCard } from '@/components/CreditCard';
 import { InsightsStrip } from '@/components/InsightsStrip';
@@ -26,6 +27,7 @@ export default function AnalyticsScreen() {
   }, []);
 
   useEffect(() => {
+    track('viewed_analytics');
     (async () => {
       setLoading(true);
       await load();

@@ -4,7 +4,11 @@ require('dotenv').config();
 let Sentry = null;
 if (process.env.SENTRY_DSN) {
   Sentry = require('@sentry/node');
-  Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 0.1 });
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
+    tracesSampleRate: 0.1,
+  });
 }
 
 const express = require('express');

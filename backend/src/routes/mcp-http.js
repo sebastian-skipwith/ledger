@@ -241,6 +241,7 @@ async function callTool(userId, name, args = {}) {
     const amount = Number(args.amount);
     if (!(amount > 0)) throw new Error('amount must be positive');
     const when = args.when ? new Date(args.when) : new Date();
+    if (isNaN(when)) throw new Error('when must be an ISO date (YYYY-MM-DD)');
     const horizonDays = Math.min(Math.max(Math.ceil((when - new Date()) / 86400000) + 30, 30), 90);
     const proj = await projectCashFlow(userId, horizonDays);
     const goalsRes = await query(`SELECT COALESCE(SUM(monthly_contribution),0) AS reserve FROM goals WHERE user_id=$1 AND completed=false`, [userId]);
@@ -312,11 +313,13 @@ router.post('/', async (req, res) => {
       return reply({ tools: TOOLS });
     }
     if (method === 'tools/call') {
+      const p = params || {};
+      if (!p.name) return fail(-32602, 'Missing params.name');
       // Read-only developer API keys (a scopes array without 'write') can't mutate.
-      if (WRITE_TOOLS.has(params.name) && Array.isArray(req.user.scopes) && !req.user.scopes.includes('write')) {
+      if (WRITE_TOOLS.has(p.name) && Array.isArray(req.user.scopes) && !req.user.scopes.includes('write')) {
         return fail(-32003, 'This credential is read-only (missing write scope).');
       }
-      const data = await callTool(req.user.id, params.name, params.arguments || {});
+      const data = await callTool(req.user.id, p.name, p.arguments || {});
       return reply({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
     }
     if (method === 'notifications/initialized' || method === 'ping') {

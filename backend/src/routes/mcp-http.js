@@ -3,6 +3,7 @@ const { query } = require('../db');
 const { projectCashFlow, detectAnomalies } = require('./intelligence');
 const { applyRules } = require('../lib/rules');
 const { snapshotNetWorth } = require('./plaid');
+const { getHouseholdView } = require('./household');
 
 // Categories the agent may assign (shared taxonomy with the AI categorizer).
 const WRITE_CATS = ['Groceries', 'Dining', 'Transport', 'Shopping', 'Utilities', 'Housing', 'Entertainment', 'Health', 'Travel', 'Subscriptions', 'Income', 'Transfer', 'Other'];
@@ -130,6 +131,12 @@ const TOOLS = [
     description: 'Detected duplicate charges and subscription price increases.',
     inputSchema: { type: 'object', properties: {} },
     annotations: { title: 'Get anomalies', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'get_household',
+    description: 'Combined household view: net worth and accounts across all members of your shared household (if you are in one).',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get household', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
 ];
 
@@ -291,6 +298,13 @@ async function callTool(userId, name, args = {}) {
   }
   if (name === 'get_anomalies') {
     return await detectAnomalies(userId);
+  }
+  if (name === 'get_household') {
+    const hm = await query(
+      `SELECT household_id FROM household_members WHERE user_id=$1 AND status='active' ORDER BY created_at LIMIT 1`,
+      [userId]);
+    if (!hm.rows.length) return { household: null, message: 'You are not part of a household yet.' };
+    return await getHouseholdView(userId, hm.rows[0].household_id);
   }
 
   throw new Error(`Unknown tool: ${name}`);

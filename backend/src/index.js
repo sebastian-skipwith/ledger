@@ -32,6 +32,7 @@ const developerRouter = require('./routes/developer');
 const intelligenceRouter = require('./routes/intelligence');
 const mcpHttpRouter = require('./routes/mcp-http');
 const rulesRouter = require('./routes/rules');
+const householdRouter = require('./routes/household');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -102,6 +103,7 @@ app.use('/api/intelligence', authenticate, aiLimiter, intelligenceRouter);
 app.use('/api/mcp',          mcpAuthenticate, mcpHttpRouter);
 app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 app.use('/api/rules',        authenticate, rulesRouter);
+app.use('/api/household',    authenticate, householdRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -230,6 +232,29 @@ app.use((err, req, res, next) => {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
     await query('CREATE INDEX IF NOT EXISTS transaction_rules_user ON transaction_rules(user_id) WHERE active = true');
+
+    // Shared household views: members keep their own accounts; an active member
+    // sees the combined view of all members' non-hidden accounts.
+    await query(`CREATE TABLE IF NOT EXISTS households (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      name TEXT NOT NULL,
+      created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS household_members (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      invited_email TEXT,
+      role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('owner','member')),
+      status TEXT NOT NULL DEFAULT 'invited' CHECK (status IN ('invited','active')),
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(household_id, user_id)
+    )`);
+    await query("CREATE INDEX IF NOT EXISTS household_members_user ON household_members(user_id) WHERE status='active'");
+    await query("CREATE INDEX IF NOT EXISTS household_members_invited ON household_members(invited_email) WHERE status='invited'");
+    // DB-level guard against duplicate pending invites (UNIQUE(household_id,user_id) allows NULLs).
+    await query("CREATE UNIQUE INDEX IF NOT EXISTS household_members_pending_uq ON household_members (household_id, LOWER(invited_email)) WHERE status='invited'");
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

@@ -34,6 +34,7 @@ const mcpHttpRouter = require('./routes/mcp-http');
 const rulesRouter = require('./routes/rules');
 const householdRouter = require('./routes/household');
 const investmentsRouter = require('./routes/investments');
+const strategiesRouter = require('./routes/strategies');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -106,6 +107,7 @@ app.use('/api/ai',           authenticate, aiLimiter, aiRouter);
 app.use('/api/rules',        authenticate, rulesRouter);
 app.use('/api/household',    authenticate, householdRouter);
 app.use('/api/investments',  authenticate, investmentsRouter);
+app.use('/api/strategies',   authenticate, strategiesRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -302,6 +304,64 @@ app.use((err, req, res, next) => {
       updated_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE (user_id)
     )`);
+
+    // ── Trading layer (strategy engine + propose/approve). Real money is gated:
+    // see lib/executor.js. Paper is pure simulation; nothing here moves money. ──
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS live_enabled BOOLEAN DEFAULT FALSE');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS trading_halted BOOLEAN DEFAULT FALSE');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS trading_halted BOOLEAN DEFAULT FALSE');
+    await query(`CREATE TABLE IF NOT EXISTS broker_credentials (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      broker TEXT NOT NULL DEFAULT 'alpaca',
+      env TEXT NOT NULL CHECK (env IN ('paper','live')),
+      key_id_enc TEXT,
+      secret_enc TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (user_id, broker, env)
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS risk_limits (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      account_id UUID REFERENCES accounts(id) ON DELETE CASCADE,
+      max_order_notional NUMERIC(20,2) DEFAULT 500,
+      max_daily_notional NUMERIC(20,2) DEFAULT 2000,
+      max_position_pct NUMERIC DEFAULT 0.25,
+      allowlist TEXT[] DEFAULT '{}',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (user_id, account_id)
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS strategies (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      account_id UUID REFERENCES accounts(id) ON DELETE SET NULL,
+      strategy_key TEXT NOT NULL,
+      params JSONB NOT NULL DEFAULT '{}',
+      mode TEXT NOT NULL DEFAULT 'paper' CHECK (mode IN ('paper','live')),
+      enabled BOOLEAN DEFAULT FALSE,
+      last_run_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS proposed_actions (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      account_id UUID REFERENCES accounts(id) ON DELETE SET NULL,
+      strategy_id UUID REFERENCES strategies(id) ON DELETE SET NULL,
+      source TEXT NOT NULL DEFAULT 'strategy' CHECK (source IN ('strategy','ai','manual')),
+      type TEXT NOT NULL DEFAULT 'trade' CHECK (type IN ('trade','rebalance')),
+      mode TEXT NOT NULL DEFAULT 'paper' CHECK (mode IN ('paper','live')),
+      payload JSONB NOT NULL,
+      rationale TEXT,
+      status TEXT NOT NULL DEFAULT 'proposed' CHECK (status IN ('proposed','approved','executed','rejected','failed','expired')),
+      approved_by UUID,
+      approved_at TIMESTAMPTZ,
+      executed_at TIMESTAMPTZ,
+      broker_order_id TEXT,
+      result JSONB,
+      expires_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS proposed_actions_user_status ON proposed_actions(user_id, status)');
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

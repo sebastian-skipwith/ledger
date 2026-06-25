@@ -11,7 +11,8 @@ const WRITE_CATS = ['Groceries', 'Dining', 'Transport', 'Shopping', 'Utilities',
 
 // Tools that mutate data — read-only developer API keys (scopes without 'write')
 // are blocked from these in the POST handler. NONE of these move money.
-const WRITE_TOOLS = new Set(['set_transaction_category', 'create_goal', 'update_goal', 'create_bill', 'add_credit_score', 'remember_fact', 'forget_fact', 'create_rule', 'add_manual_account']);
+// propose_trade ONLY records a proposal — it does not execute or move money.
+const WRITE_TOOLS = new Set(['set_transaction_category', 'create_goal', 'update_goal', 'create_bill', 'add_credit_score', 'remember_fact', 'forget_fact', 'create_rule', 'add_manual_account', 'propose_trade']);
 
 // ─────────────────────────────────────────────────────────────────────────
 // Remote MCP endpoint (JSON-RPC over HTTP). Lets ANY MCP client connect with
@@ -150,6 +151,24 @@ const TOOLS = [
     description: 'Your portfolio market value over time (daily snapshots). Optional days (default 180).',
     inputSchema: { type: 'object', properties: { days: { type: 'number' } } },
     annotations: { title: 'Get portfolio performance', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'list_strategies',
+    description: 'Investment strategies available (DCA, target-allocation rebalance, equal-weight) and the ones you have configured, with mode (paper or live) and parameters.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'List strategies', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'get_proposed_actions',
+    description: 'Trade proposals awaiting review. Live proposals require your explicit approval in the Persistence app before any money moves; paper proposals are simulated. Optional status (default proposed).',
+    inputSchema: { type: 'object', properties: { status: { type: 'string' } } },
+    annotations: { title: 'Get proposed actions', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'propose_trade',
+    description: 'Propose a trade for the user to review. This ONLY creates a proposal — it never executes and never moves money. A live order runs only after the user approves it in the Persistence app, and only within their risk limits. Args: ticker, side (buy|sell), notional (USD), rationale, mode (paper|live, default paper).',
+    inputSchema: { type: 'object', properties: { ticker: { type: 'string' }, side: { type: 'string', enum: ['buy', 'sell'] }, notional: { type: 'number' }, rationale: { type: 'string' }, mode: { type: 'string', enum: ['paper', 'live'] } }, required: ['ticker', 'side', 'notional'] },
+    annotations: { title: 'Propose trade', readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   },
 ];
 
@@ -329,6 +348,42 @@ async function callTool(userId, name, args = {}) {
        WHERE user_id=$1 AND snapshot_date >= CURRENT_DATE - $2 ORDER BY snapshot_date`,
       [userId, days]);
     return rows;
+  }
+  if (name === 'list_strategies') {
+    const { STRATEGIES } = require('../lib/strategies');
+    const catalog = Object.values(STRATEGIES).map((s) => ({ key: s.key, label: s.label, paramSchema: s.paramSchema }));
+    const { rows } = await query(
+      'SELECT id, strategy_key, params, mode, enabled, last_run_at FROM strategies WHERE user_id=$1 ORDER BY created_at DESC', [userId]);
+    return { catalog, your_strategies: rows };
+  }
+  if (name === 'get_proposed_actions') {
+    const status = typeof args.status === 'string' ? args.status : 'proposed';
+    const { rows } = await query(
+      `SELECT id, source, type, mode, payload, rationale, status, created_at, executed_at, result
+       FROM proposed_actions WHERE user_id=$1 AND status=$2 ORDER BY created_at DESC LIMIT 100`, [userId, status]);
+    return rows;
+  }
+  if (name === 'propose_trade') {
+    // Records a proposal ONLY. Never executes, never moves money. Live orders
+    // run solely via the human-approved web endpoint, behind every gate.
+    const ticker = String(args.ticker || '').toUpperCase().trim();
+    const side = args.side === 'sell' ? 'sell' : 'buy';
+    const notional = Number(args.notional);
+    if (!ticker) throw new Error('ticker is required');
+    if (!(notional > 0)) throw new Error('notional must be a positive number');
+    const mode = args.mode === 'live' ? 'live' : 'paper';
+    const payload = { ticker, side, notional, reason: args.rationale || null };
+    const { rows } = await query(
+      `INSERT INTO proposed_actions (user_id, source, type, mode, payload, rationale, status)
+       VALUES ($1,'ai','trade',$2,$3,$4,'proposed')
+       RETURNING id, mode, payload, rationale, status, created_at`,
+      [userId, mode, JSON.stringify(payload), args.rationale || null]);
+    return {
+      proposed: rows[0],
+      note: mode === 'live'
+        ? 'Proposal recorded. NOTHING has moved. A live order runs only after you approve it in the Persistence app, and only if live trading is enabled and within your risk limits.'
+        : 'Paper proposal recorded (simulation only — no real money).',
+    };
   }
 
   throw new Error(`Unknown tool: ${name}`);

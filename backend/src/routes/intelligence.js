@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { query } = require('../db');
+const { activeWorkspaceId } = require('../lib/workspace');
 
 // ─────────────────────────────────────────────────────────────────────────
 // Era-style proactive money intelligence. All heuristic/SQL except the
@@ -12,11 +13,11 @@ const { query } = require('../db');
 router.get('/subscriptions', async (req, res, next) => {
   try {
     const { rows } = await query(
-      `SELECT COALESCE(merchant_name, name) AS merchant, amount, date
-       FROM transactions
-       WHERE user_id = $1 AND amount > 0 AND date >= CURRENT_DATE - 400
-       ORDER BY merchant, date`,
-      [req.user.id]
+      `SELECT COALESCE(t.merchant_name, t.name) AS merchant, t.amount, t.date
+       FROM transactions t JOIN accounts a ON t.account_id = a.id
+       WHERE t.user_id = $1 AND a.workspace_id IS NOT DISTINCT FROM $2 AND t.amount > 0 AND t.date >= CURRENT_DATE - 400
+       ORDER BY merchant, t.date`,
+      [req.user.id, activeWorkspaceId(req)]
     );
 
     // Group by merchant + rounded amount (subscriptions are stable in price).
@@ -67,18 +68,18 @@ router.get('/subscriptions', async (req, res, next) => {
 // Project the cash balance forward using recurring income (negative txns) and
 // upcoming bills. Pure function so other features (e.g. the affordability tool)
 // reuse the SAME forecast the web Intelligence panel shows.
-async function projectCashFlow(userId, daysArg) {
+async function projectCashFlow(userId, daysArg, ws = null) {
   const days = Math.min(Math.max(parseInt(daysArg || 30, 10) || 30, 1), 90);
 
   const [accts, bills, income] = await Promise.all([
     query(`SELECT COALESCE(SUM(current_balance),0) AS cash FROM accounts
-           WHERE user_id=$1 AND type='depository' AND is_hidden=false`, [userId]),
+           WHERE user_id=$1 AND type='depository' AND is_hidden=false AND workspace_id IS NOT DISTINCT FROM $2`, [userId, ws]),
     query(`SELECT name, amount, next_due_date FROM bills
-           WHERE user_id=$1 AND active=true AND next_due_date IS NOT NULL
-             AND next_due_date <= CURRENT_DATE + $2`, [userId, days]),
+           WHERE user_id=$1 AND active=true AND next_due_date IS NOT NULL AND workspace_id IS NOT DISTINCT FROM $3
+             AND next_due_date <= CURRENT_DATE + $2`, [userId, days, ws]),
     // Average monthly income from the last 90 days of credits.
-    query(`SELECT COALESCE(SUM(ABS(amount)),0) AS total FROM transactions
-           WHERE user_id=$1 AND amount < 0 AND date >= CURRENT_DATE - 90`, [userId]),
+    query(`SELECT COALESCE(SUM(ABS(t.amount)),0) AS total FROM transactions t JOIN accounts a ON t.account_id=a.id
+           WHERE t.user_id=$1 AND a.workspace_id IS NOT DISTINCT FROM $2 AND t.amount < 0 AND t.date >= CURRENT_DATE - 90`, [userId, ws]),
   ]);
 
   let balance = parseFloat(accts.rows[0].cash);
@@ -115,7 +116,7 @@ async function projectCashFlow(userId, daysArg) {
 // GET /api/intelligence/cash-flow?days=30
 router.get('/cash-flow', async (req, res, next) => {
   try {
-    res.json(await projectCashFlow(req.user.id, req.query.days));
+    res.json(await projectCashFlow(req.user.id, req.query.days, activeWorkspaceId(req)));
   } catch (err) { next(err); }
 });
 

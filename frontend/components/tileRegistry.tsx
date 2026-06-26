@@ -6,6 +6,8 @@ import BillsList from './BillsList';
 import GoalsView from './GoalsView';
 import TransactionsView from './TransactionsView';
 import Analytics from './Analytics';
+import CashFlowTile from './CashFlowTile';
+import SubscriptionsTile from './SubscriptionsTile';
 
 export interface TileCtx { token: string; accounts: any[]; loading: boolean; }
 
@@ -26,6 +28,8 @@ export const TILE_REGISTRY: Record<string, TileDef> = {
   goals:        { key: 'goals',        label: 'Goals',        defaultW: 6,  defaultH: 5, render: (c) => <GoalsView token={c.token} /> },
   transactions: { key: 'transactions', label: 'Transactions', defaultW: 12, defaultH: 6, render: (c) => <TransactionsView token={c.token} accounts={c.accounts} /> },
   analytics:    { key: 'analytics',    label: 'Analytics',    defaultW: 12, defaultH: 7, render: (c) => <Analytics token={c.token} accounts={c.accounts} /> },
+  cashflow:     { key: 'cashflow',     label: 'Cash Flow',    defaultW: 6,  defaultH: 5, render: (c) => <CashFlowTile token={c.token} /> },
+  subscriptions:{ key: 'subscriptions', label: 'Services & Subscriptions', defaultW: 6, defaultH: 6, render: (c) => <SubscriptionsTile token={c.token} /> },
 };
 
 // Built-in layout for users with no saved layout (must never render blank).

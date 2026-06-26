@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { query } = require('../db');
+const { activeWorkspaceId } = require('../lib/workspace');
 
 // GET /api/summary/hud
 // Lightweight, no-AI summary for the desktop HUD (and anything else that wants
@@ -15,21 +16,22 @@ router.get('/hud', async (req, res, next) => {
     friday.setDate(now.getDate() + ((5 - now.getDay() + 7) % 7));
     const fridayStr = friday.toISOString().slice(0, 10);
 
+    const ws = activeWorkspaceId(req);
     const [accounts, bills7d, billsToFriday, creditWeek, goals] = await Promise.all([
       query(`SELECT type, subtype, current_balance FROM accounts
-             WHERE user_id=$1 AND is_hidden=false`, [userId]),
+             WHERE user_id=$1 AND is_hidden=false AND workspace_id IS NOT DISTINCT FROM $2`, [userId, ws]),
       query(`SELECT COALESCE(SUM(amount),0) AS total, COUNT(*) AS count FROM bills
-             WHERE user_id=$1 AND active=true
-               AND next_due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + 7`, [userId]),
+             WHERE user_id=$1 AND active=true AND workspace_id IS NOT DISTINCT FROM $2
+               AND next_due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + 7`, [userId, ws]),
       query(`SELECT COALESCE(SUM(amount),0) AS total FROM bills
-             WHERE user_id=$1 AND active=true
-               AND next_due_date BETWEEN CURRENT_DATE AND $2::date`, [userId, fridayStr]),
+             WHERE user_id=$1 AND active=true AND workspace_id IS NOT DISTINCT FROM $3
+               AND next_due_date BETWEEN CURRENT_DATE AND $2::date`, [userId, fridayStr, ws]),
       query(`SELECT COALESCE(SUM(t.amount),0) AS spent FROM transactions t
              JOIN accounts a ON t.account_id=a.id
-             WHERE t.user_id=$1 AND a.type='credit'
-               AND t.date >= CURRENT_DATE - 7`, [userId]),
+             WHERE t.user_id=$1 AND a.type='credit' AND a.workspace_id IS NOT DISTINCT FROM $2
+               AND t.date >= CURRENT_DATE - 7`, [userId, ws]),
       query(`SELECT target_amount, current_amount, target_date, monthly_contribution, created_at
-             FROM goals WHERE user_id=$1 AND completed=false`, [userId]),
+             FROM goals WHERE user_id=$1 AND completed=false AND workspace_id IS NOT DISTINCT FROM $2`, [userId, ws]),
     ]);
 
     // Same bucketing as buildFinancialContext in routes/ai.js — keep in sync.
@@ -40,7 +42,7 @@ router.get('/hud', async (req, res, next) => {
     const debt = accts.filter(a => ['credit','loan'].includes(a.type)).reduce((s, a) => s + Math.abs(parseFloat(a.current_balance || 0)), 0);
 
     const { rows: billRows } = await query(
-      `SELECT COALESCE(SUM(amount),0) AS total FROM bills WHERE user_id=$1 AND active=true`, [userId]);
+      `SELECT COALESCE(SUM(amount),0) AS total FROM bills WHERE user_id=$1 AND active=true AND workspace_id IS NOT DISTINCT FROM $2`, [userId, ws]);
     const monthlyBills = parseFloat(billRows[0].total);
 
     // Goal pacing: expected progress is linear from created_at to target_date

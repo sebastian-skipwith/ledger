@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const { query } = require('../db');
+const { activeWorkspaceId, resolveWriteWorkspace } = require('../lib/workspace');
 
 router.get('/', async (req, res, next) => {
   try {
-    const { rows } = await query('SELECT * FROM goals WHERE user_id=$1 ORDER BY created_at', [req.user.id]);
+    const { rows } = await query('SELECT * FROM goals WHERE user_id=$1 AND workspace_id IS NOT DISTINCT FROM $2 ORDER BY created_at', [req.user.id, activeWorkspaceId(req)]);
     res.json(rows);
   } catch (err) { next(err); }
 });
@@ -11,10 +12,11 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const { name, type, target_amount, target_date, linked_account_id, monthly_contribution, notes } = req.body;
+    const ws = await resolveWriteWorkspace(req);
     const { rows } = await query(
-      `INSERT INTO goals (user_id,name,type,target_amount,target_date,linked_account_id,monthly_contribution,notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [req.user.id, name, type, target_amount, target_date, linked_account_id, monthly_contribution, notes]
+      `INSERT INTO goals (user_id,name,type,target_amount,target_date,linked_account_id,monthly_contribution,notes,workspace_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [req.user.id, name, type, target_amount, target_date, linked_account_id, monthly_contribution, notes, ws]
     );
     res.status(201).json(rows[0]);
   } catch (err) { next(err); }

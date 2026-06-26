@@ -1,11 +1,12 @@
 const router = require('express').Router();
 const { query } = require('../db');
+const { activeWorkspaceId, resolveWriteWorkspace } = require('../lib/workspace');
 
 router.get('/', async (req, res, next) => {
   try {
     const { rows } = await query(
-      `SELECT * FROM bills WHERE user_id=$1 AND active=true ORDER BY next_due_date ASC NULLS LAST`,
-      [req.user.id]
+      `SELECT * FROM bills WHERE user_id=$1 AND active=true AND workspace_id IS NOT DISTINCT FROM $2 ORDER BY next_due_date ASC NULLS LAST`,
+      [req.user.id, activeWorkspaceId(req)]
     );
     res.json(rows);
   } catch (err) { next(err); }
@@ -14,10 +15,11 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const { name, amount, frequency, next_due_date, autopay, category, color } = req.body;
+    const ws = await resolveWriteWorkspace(req);
     const { rows } = await query(
-      `INSERT INTO bills (user_id, name, amount, frequency, next_due_date, autopay, category, color)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [req.user.id, name, amount, frequency, next_due_date, autopay, category, color]
+      `INSERT INTO bills (user_id, name, amount, frequency, next_due_date, autopay, category, color, workspace_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [req.user.id, name, amount, frequency, next_due_date, autopay, category, color, ws]
     );
     res.status(201).json(rows[0]);
   } catch (err) { next(err); }

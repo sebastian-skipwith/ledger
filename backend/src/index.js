@@ -37,6 +37,7 @@ const investmentsRouter = require('./routes/investments');
 const strategiesRouter = require('./routes/strategies');
 const brokerageRouter = require('./routes/brokerage');
 const layoutsRouter = require('./routes/layouts');
+const workspacesRouter = require('./routes/workspaces');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -112,6 +113,7 @@ app.use('/api/investments',  authenticate, investmentsRouter);
 app.use('/api/strategies',   authenticate, strategiesRouter);
 app.use('/api/brokerage',    authenticate, brokerageRouter);
 app.use('/api/layouts',      authenticate, layoutsRouter);
+app.use('/api/workspaces',   authenticate, workspacesRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -393,6 +395,25 @@ app.use((err, req, res, next) => {
     )`);
     await query("CREATE UNIQUE INDEX IF NOT EXISTS dashboard_layouts_personal_uq ON dashboard_layouts (user_id, name) WHERE workspace_id IS NULL");
     await query("CREATE UNIQUE INDEX IF NOT EXISTS dashboard_layouts_ws_uq ON dashboard_layouts (user_id, workspace_id, name) WHERE workspace_id IS NOT NULL");
+
+    // Business workspaces. workspace_id IS NULL = the user's Personal space, so
+    // all existing data stays personal with no backfill. Business workspaces are
+    // additive rows; financial data is tagged with workspace_id (FK SET NULL on
+    // delete, so deleting a workspace reverts its data to Personal).
+    await query(`CREATE TABLE IF NOT EXISTS workspaces (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'business',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS workspace_id UUID REFERENCES workspaces(id) ON DELETE SET NULL');
+    await query('ALTER TABLE bills ADD COLUMN IF NOT EXISTS workspace_id UUID REFERENCES workspaces(id) ON DELETE SET NULL');
+    await query('ALTER TABLE goals ADD COLUMN IF NOT EXISTS workspace_id UUID REFERENCES workspaces(id) ON DELETE SET NULL');
+    await query('CREATE INDEX IF NOT EXISTS accounts_workspace ON accounts(user_id, workspace_id)');
+    // Allow a dedicated 'business' tier (superset of the old check — no row can violate it).
+    await query('ALTER TABLE users DROP CONSTRAINT IF EXISTS users_tier_check');
+    await query("ALTER TABLE users ADD CONSTRAINT users_tier_check CHECK (tier IN ('free','pro','wealth','business'))");
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

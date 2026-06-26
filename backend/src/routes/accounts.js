@@ -2,6 +2,7 @@
 const router = require('express').Router();
 const { query } = require('../db');
 const { snapshotNetWorth } = require('./plaid');
+const { activeWorkspaceId, resolveWriteWorkspace } = require('../lib/workspace');
 
 const MANUAL_TYPES = ['depository', 'investment', 'credit', 'loan'];
 
@@ -11,9 +12,9 @@ router.get('/', async (req, res, next) => {
       `SELECT a.*, pi.institution_name as linked_institution
        FROM accounts a
        LEFT JOIN plaid_items pi ON a.plaid_item_id = pi.id
-       WHERE a.user_id = $1 AND a.is_hidden = false
+       WHERE a.user_id = $1 AND a.is_hidden = false AND a.workspace_id IS NOT DISTINCT FROM $2
        ORDER BY a.type, a.current_balance DESC`,
-      [req.user.id]
+      [req.user.id, activeWorkspaceId(req)]
     );
     res.json(rows);
   } catch (err) { next(err); }
@@ -26,10 +27,11 @@ router.post('/', async (req, res, next) => {
     if (!name || !MANUAL_TYPES.includes(type)) {
       return res.status(400).json({ error: 'name and a valid type (depository|investment|credit|loan) are required' });
     }
+    const ws = await resolveWriteWorkspace(req);
     const { rows } = await query(
-      `INSERT INTO accounts (user_id, name, type, subtype, current_balance, institution_name, mask, color, source)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8,'#888888'),'manual') RETURNING *`,
-      [req.user.id, name, type, subtype || null, current_balance || 0, institution_name || null, mask || null, color || null]
+      `INSERT INTO accounts (user_id, name, type, subtype, current_balance, institution_name, mask, color, source, workspace_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8,'#888888'),'manual',$9) RETURNING *`,
+      [req.user.id, name, type, subtype || null, current_balance || 0, institution_name || null, mask || null, color || null, ws]
     );
     snapshotNetWorth(req.user.id).catch(() => {});
     res.status(201).json(rows[0]);

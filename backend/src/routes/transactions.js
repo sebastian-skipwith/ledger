@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { query } = require('../db');
+const { activeWorkspaceId } = require('../lib/workspace');
 
 // GET /api/transactions?from=&to=&account_id=&category=&limit=&offset=
 router.get('/', async (req, res, next) => {
@@ -13,6 +14,7 @@ router.get('/', async (req, res, next) => {
     if (to)         { where.push(`t.date <= $${i++}`); params.push(to); }
     if (account_id) { where.push(`t.account_id = $${i++}`); params.push(account_id); }
     if (category)   { where.push(`$${i++} = ANY(t.category)`); params.push(category); }
+    where.push(`a.workspace_id IS NOT DISTINCT FROM $${i++}`); params.push(activeWorkspaceId(req));
 
     params.push(parseInt(limit), parseInt(offset));
     const { rows } = await query(
@@ -33,13 +35,14 @@ router.get('/summary', async (req, res, next) => {
     const { months = 6 } = req.query;
     const { rows } = await query(
       `SELECT
-         TO_CHAR(date, 'YYYY-MM') as month,
-         SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as expenses,
-         SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as income
-       FROM transactions
-       WHERE user_id = $1 AND date >= CURRENT_DATE - INTERVAL '${parseInt(months)} months'
+         TO_CHAR(t.date, 'YYYY-MM') as month,
+         SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as expenses,
+         SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as income
+       FROM transactions t JOIN accounts a ON t.account_id = a.id
+       WHERE t.user_id = $1 AND a.workspace_id IS NOT DISTINCT FROM $2
+         AND t.date >= CURRENT_DATE - INTERVAL '${parseInt(months)} months'
        GROUP BY month ORDER BY month DESC`,
-      [req.user.id]
+      [req.user.id, activeWorkspaceId(req)]
     );
     res.json(rows);
   } catch (err) { next(err); }

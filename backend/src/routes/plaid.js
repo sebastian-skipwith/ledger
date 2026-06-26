@@ -4,6 +4,7 @@ const { query, getClient } = require('../db');
 const { encryptSecret, decryptSecret } = require('../lib/crypto');
 const { applyPostSync } = require('../lib/post-sync');
 const portfolio = require('../lib/portfolio');
+const { resolveWriteWorkspace } = require('../lib/workspace');
 
 // Initialize Plaid client
 const plaidConfig = new Configuration({
@@ -82,12 +83,15 @@ router.post('/exchange-token', async (req, res, next) => {
     const accountsResp = await plaid.accountsGet({ access_token });
     const accounts = accountsResp.data.accounts;
 
+    // New accounts are tagged with the workspace that was active during linking;
+    // ON CONFLICT does NOT touch workspace_id, so re-linking preserves assignment.
+    const ws = await resolveWriteWorkspace(req);
     for (const acct of accounts) {
       await client.query(
         `INSERT INTO accounts
            (user_id, plaid_item_id, plaid_account_id, name, official_name, type, subtype,
-            current_balance, available_balance, currency, institution_name, mask, credit_limit)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+            current_balance, available_balance, currency, institution_name, mask, credit_limit, workspace_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
          ON CONFLICT (plaid_account_id) DO UPDATE SET
            previous_balance=accounts.current_balance, current_balance=$8, available_balance=$9,
            credit_limit=COALESCE($13, accounts.credit_limit), updated_at=NOW()`,
@@ -95,7 +99,7 @@ router.post('/exchange-token', async (req, res, next) => {
           req.user.id, plaidItemId, acct.account_id,
           acct.name, acct.official_name, acct.type, acct.subtype,
           acct.balances.current, acct.balances.available, acct.balances.iso_currency_code,
-          institution?.name, acct.mask, acct.balances.limit ?? null,
+          institution?.name, acct.mask, acct.balances.limit ?? null, ws,
         ]
       );
     }

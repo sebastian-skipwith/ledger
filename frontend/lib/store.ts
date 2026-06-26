@@ -52,6 +52,12 @@ interface AppState {
   setSidebarOpen: (open: boolean) => void;
   activeSection: string;
   setActiveSection: (section: string) => void;
+
+  // Workspaces (business vs personal). activeWorkspace null/id-null = Personal.
+  activeWorkspace: { id: string | null; name: string } | null;
+  workspaces: any[];
+  setActiveWorkspace: (w: { id: string | null; name: string } | null) => void;
+  setWorkspaces: (w: any[]) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -74,6 +80,11 @@ export const useStore = create<AppState>()(
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       activeSection: 'dashboard',
       setActiveSection: (activeSection) => set({ activeSection }),
+
+      activeWorkspace: null,
+      workspaces: [],
+      setActiveWorkspace: (activeWorkspace) => set({ activeWorkspace }),
+      setWorkspaces: (workspaces) => set({ workspaces }),
     }),
     {
       name: 'ledger-store',
@@ -81,6 +92,7 @@ export const useStore = create<AppState>()(
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        activeWorkspace: state.activeWorkspace,
       }),
     }
   )
@@ -129,12 +141,14 @@ export async function apiCall(
 ): Promise<any> {
   const { token, ...rest } = options;
 
+  const wsId = useStore.getState().activeWorkspace?.id;
   const send = (bearer?: string) =>
     fetch(`${API}${path}`, {
       ...rest,
       headers: {
         'Content-Type': 'application/json',
         ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...(wsId ? { 'X-Workspace-Id': wsId } : {}),
         ...(rest.headers || {}),
       },
       body: rest.body,
@@ -155,6 +169,16 @@ export async function apiCall(
     throw new Error(err.error || `API error ${res.status}`);
   }
   return res.json();
+}
+
+// Auth + active-workspace headers for components that use raw fetch() (not apiCall).
+export function wsHeaders(token?: string): Record<string, string> {
+  const s = useStore.getState();
+  const bearer = token ?? s.accessToken ?? '';
+  const h: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${bearer}` };
+  const wsId = s.activeWorkspace?.id;
+  if (wsId) h['X-Workspace-Id'] = wsId;
+  return h;
 }
 
 // Compute summary from accounts array

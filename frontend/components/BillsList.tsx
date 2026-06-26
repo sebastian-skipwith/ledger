@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { wsHeaders } from '@/lib/store';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -8,7 +9,7 @@ export default function BillsList({ token, full }: { token: string; full?: boole
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/api/bills`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API}/api/bills`, { headers: wsHeaders(token) })
       .then(r => r.json())
       .then(data => { setBills(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

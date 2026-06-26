@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { formatCurrency } from '@/lib/store';
+import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 
 interface TopBarProps {
   summary: any;
@@ -158,7 +159,10 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
       padding: '0 20px', gap: 0,
     }}>
       {/* Brand */}
-      <img className="plogo" src="/logo.png" alt="Persistence" style={{ height: 22, width: 'auto', marginRight: 28, flexShrink: 0 }} />
+      <img className="plogo" src="/logo.png" alt="Persistence" style={{ height: 22, width: 'auto', marginRight: 18, flexShrink: 0 }} />
+
+      {/* Workspace switcher (Personal / business) */}
+      <WorkspaceSwitcher />
 
       {/* Metric tiles - drag to reorder */}
       <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>

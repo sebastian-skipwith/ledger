@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { formatCurrency } from '@/lib/store';
+import { formatCurrency, wsHeaders } from '@/lib/store';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -21,7 +21,7 @@ export default function TransactionsView({ token, accounts }: { token: string; a
     setLoading(true);
     const params = new URLSearchParams({ limit: '100' });
     if (account) params.set('account_id', account);
-    fetch(`${API}/api/transactions?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API}/api/transactions?${params.toString()}`, { headers: wsHeaders(token) })
       .then(r => r.json())
       .then(data => { setTxns(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

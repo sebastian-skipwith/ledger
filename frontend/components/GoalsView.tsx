@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { formatCurrency } from '@/lib/store';
+import { formatCurrency, wsHeaders } from '@/lib/store';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -25,7 +25,7 @@ export default function GoalsView({ token }: { token: string }) {
 
   function load() {
     setLoading(true);
-    fetch(`${API}/api/goals`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API}/api/goals`, { headers: wsHeaders(token) })
       .then(r => r.json())
       .then(d => { setGoals(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -36,13 +36,13 @@ export default function GoalsView({ token }: { token: string }) {
     if (!name.trim() || !Number(target)) return;
     await fetch(`${API}/api/goals`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: wsHeaders(token),
       body: JSON.stringify({ name: name.trim(), type: 'savings', target_amount: Number(target) }),
     });
     setName(''); setTarget(''); setAdding(false); load();
   }
   async function removeGoal(id: string) {
-    await fetch(`${API}/api/goals/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    await fetch(`${API}/api/goals/${id}`, { method: 'DELETE', headers: wsHeaders(token) });
     load();
   }
 

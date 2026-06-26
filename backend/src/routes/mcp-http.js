@@ -14,6 +14,13 @@ const WRITE_CATS = ['Groceries', 'Dining', 'Transport', 'Shopping', 'Utilities',
 // propose_trade ONLY records a proposal — it does not execute or move money.
 const WRITE_TOOLS = new Set(['set_transaction_category', 'create_goal', 'update_goal', 'create_bill', 'add_credit_score', 'remember_fact', 'forget_fact', 'create_rule', 'add_manual_account', 'propose_trade']);
 
+// The AI-trade-proposal surface is OFF by default — it is not exposed in the
+// connector until the owner explicitly decides to be in the action game and sets
+// TRADING_TOOLS_ENABLED=true. (It still moves no money even when on; see executor.)
+const TRADING_TOOLS = new Set(['propose_trade']);
+const tradingToolsEnabled = () => process.env.TRADING_TOOLS_ENABLED === 'true';
+const visibleTools = () => (tradingToolsEnabled() ? TOOLS : TOOLS.filter((t) => !TRADING_TOOLS.has(t.name)));
+
 // ─────────────────────────────────────────────────────────────────────────
 // Remote MCP endpoint (JSON-RPC over HTTP). Lets ANY MCP client connect with
 // just a URL + API key — no local Node install or config file needed.
@@ -442,11 +449,15 @@ router.post('/', async (req, res) => {
       });
     }
     if (method === 'tools/list') {
-      return reply({ tools: TOOLS });
+      return reply({ tools: visibleTools() });
     }
     if (method === 'tools/call') {
       const p = params || {};
       if (!p.name) return fail(-32602, 'Missing params.name');
+      // Trade-proposal surface is gated behind TRADING_TOOLS_ENABLED.
+      if (TRADING_TOOLS.has(p.name) && !tradingToolsEnabled()) {
+        return fail(-32601, 'This tool is disabled (trade proposals are turned off).');
+      }
       // Read-only developer API keys (a scopes array without 'write') can't mutate.
       if (WRITE_TOOLS.has(p.name) && Array.isArray(req.user.scopes) && !req.user.scopes.includes('write')) {
         return fail(-32003, 'This credential is read-only (missing write scope).');
@@ -464,6 +475,6 @@ router.post('/', async (req, res) => {
 });
 
 // GET for discovery / health
-router.get('/', (req, res) => res.json({ server: 'persistence-mcp', tools: TOOLS.map(t => t.name) }));
+router.get('/', (req, res) => res.json({ server: 'persistence-mcp', tools: visibleTools().map(t => t.name) }));
 
 module.exports = router;

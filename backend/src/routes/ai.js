@@ -80,7 +80,7 @@ router.post('/chat', async (req, res, next) => {
       [req.user.id, sid, 'user', message]
     );
 
-    const systemPrompt = `You are Ledger AI, a brilliant, concise personal financial advisor embedded in the Ledger app.
+    const systemPrompt = `You are Persistence AI, a brilliant, concise personal financial advisor embedded in the Persistence app.
 You have real-time access to the user's complete financial picture. Always ground your answers in their actual data.
 
 FINANCIAL SNAPSHOT (live data as of today):

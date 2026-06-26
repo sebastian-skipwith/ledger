@@ -93,9 +93,11 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
     e.dataTransfer.dropEffect = 'move';
     const from = dragKey.current;
     if (!from || from === key) return;
+    // Read geometry from the event NOW — React nulls e.currentTarget once the
+    // handler returns, so it can't be touched inside the (deferred) setState updater.
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const before = e.clientX < rect.left + rect.width / 2;
     setOrder(o => {
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      const before = e.clientX < rect.left + rect.width / 2;
       const next = o.filter(k => k !== from);
       let idx = next.indexOf(key);
       if (!before) idx++;

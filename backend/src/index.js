@@ -35,6 +35,7 @@ const rulesRouter = require('./routes/rules');
 const householdRouter = require('./routes/household');
 const investmentsRouter = require('./routes/investments');
 const strategiesRouter = require('./routes/strategies');
+const brokerageRouter = require('./routes/brokerage');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -108,6 +109,7 @@ app.use('/api/rules',        authenticate, rulesRouter);
 app.use('/api/household',    authenticate, householdRouter);
 app.use('/api/investments',  authenticate, investmentsRouter);
 app.use('/api/strategies',   authenticate, strategiesRouter);
+app.use('/api/brokerage',    authenticate, brokerageRouter);
 
 // Error handler
 app.use((err, req, res, next) => {

@@ -1,4 +1,5 @@
 const { query } = require('../db');
+const { decryptSecret } = require('./crypto');
 
 // ─────────────────────────────────────────────────────────────────────────
 // Trade executor + SAFETY GATES. Real money cannot move unless EVERY gate
@@ -42,15 +43,18 @@ async function getLimits(userId, accountId) {
   return rows[0] || DEFAULT_LIMITS;
 }
 
-// Server-side risk limits, re-checked at approve time for LIVE orders.
-async function checkRiskLimits(userId, accountId, order) {
+// Server-side risk limits. opts.requireAllowlist defaults true (firm-managed
+// path); self-directed users trading their OWN account pass false — an allowlist
+// is then optional, but still enforced if they've set one.
+async function checkRiskLimits(userId, accountId, order, opts = {}) {
+  const requireAllowlist = opts.requireAllowlist !== false;
   const lim = await getLimits(userId, accountId);
   const notional = Number(order.notional) || 0;
   if (notional <= 0) return { ok: false, reason: 'Order notional must be positive.' };
   if (notional > Number(lim.max_order_notional)) return { ok: false, reason: `Order $${notional} exceeds the per-order cap $${lim.max_order_notional}.` };
   const allow = Array.isArray(lim.allowlist) ? lim.allowlist : [];
-  if (!allow.length) return { ok: false, reason: 'No symbol allowlist is set — live trading requires an explicit allowlist.' };
-  if (!allow.includes(order.ticker)) return { ok: false, reason: `${order.ticker} is not on the allowlist.` };
+  if (requireAllowlist && !allow.length) return { ok: false, reason: 'No symbol allowlist is set — live trading requires an explicit allowlist.' };
+  if (allow.length && !allow.includes(order.ticker)) return { ok: false, reason: `${order.ticker} is not on the allowlist.` };
   const { rows } = await query(
     `SELECT COALESCE(SUM((result->>'notional')::numeric),0) AS spent FROM proposed_actions
      WHERE user_id=$1 AND mode='live' AND status='executed' AND executed_at::date = CURRENT_DATE`,
@@ -85,7 +89,51 @@ async function placeLiveOrder(order) {
   return { ...data, notional: order.notional };
 }
 
+// ── Self-directed ("bring your own brokerage") path ──────────────────────
+// The user connects their OWN brokerage with their OWN keys and trades their
+// OWN account. Persistence is a tool here, not a discretionary manager — so this
+// is gated by a separate feature flag, not the firm/RIA gates. Off by default.
+const selfDirectedEnabled = () => process.env.SELF_DIRECTED_TRADING_ENABLED === 'true';
+
+function alpacaHost(env) {
+  return env === 'live' ? 'https://api.alpaca.markets' : 'https://paper-api.alpaca.markets';
+}
+
+async function alpacaRequest(creds, env, method, path, body) {
+  const res = await fetch(alpacaHost(env) + path, {
+    method,
+    headers: {
+      'APCA-API-KEY-ID': creds.key_id,
+      'APCA-API-SECRET-KEY': creds.secret,
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || `Broker error ${res.status}`);
+  return data;
+}
+
+// Decrypt a user's stored brokerage keys for an env, or null if not connected.
+async function getUserBrokerCreds(userId, env) {
+  const { rows } = await query(
+    "SELECT key_id_enc, secret_enc FROM broker_credentials WHERE user_id=$1 AND broker='alpaca' AND env=$2 LIMIT 1",
+    [userId, env]
+  );
+  if (!rows.length || !rows[0].key_id_enc || !rows[0].secret_enc) return null;
+  return { key_id: decryptSecret(rows[0].key_id_enc), secret: decryptSecret(rows[0].secret_enc) };
+}
+
+// Place a market order on the USER'S OWN connected brokerage (self-directed).
+async function placeOrderForUser(creds, env, order) {
+  const data = await alpacaRequest(creds, env, 'POST', '/v2/orders', {
+    symbol: order.ticker, notional: order.notional, side: order.side, type: 'market', time_in_force: 'day',
+  });
+  return { ...data, notional: order.notional };
+}
+
 module.exports = {
   checkGates, checkRiskLimits, executePaper, placeLiveOrder, getLimits,
   liveGloballyEnabled, usersLiveEnabled, isOwnerEmail, DEFAULT_LIMITS,
+  selfDirectedEnabled, alpacaRequest, getUserBrokerCreds, placeOrderForUser,
 };

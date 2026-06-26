@@ -14,6 +14,7 @@ import TransactionsView from '@/components/TransactionsView';
 import GoalsView from '@/components/GoalsView';
 import CreditCardDetails from '@/components/CreditCardDetails';
 import TileGrid from '@/components/TileGrid';
+import CommunityPage from '@/components/CommunityPage';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -93,6 +94,8 @@ export default function DashboardPage() {
         return <BillsList token={token} full />;
       case 'goals':
         return <GoalsView token={token} />;
+      case 'community':
+        return <CommunityPage token={token} />;
       case 'dashboard':
       default:
         return <TileGrid ctx={{ token, accounts, loading }} />;

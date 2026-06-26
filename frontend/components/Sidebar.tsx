@@ -76,6 +76,7 @@ export default function Sidebar() {
     { id: 'transactions', label: 'Transactions', icon: '≡' },
     { id: 'bills',        label: 'Bills',        icon: '◷' },
     { id: 'goals',        label: 'Goals',        icon: '◎' },
+    { id: 'community',    label: 'Community',    icon: '❖' },
     { id: 'ai',           label: 'AI Chat',      icon: '◇' },
   ];
 

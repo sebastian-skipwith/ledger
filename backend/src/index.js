@@ -38,6 +38,7 @@ const strategiesRouter = require('./routes/strategies');
 const brokerageRouter = require('./routes/brokerage');
 const layoutsRouter = require('./routes/layouts');
 const workspacesRouter = require('./routes/workspaces');
+const communityRouter = require('./routes/community');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -114,6 +115,7 @@ app.use('/api/strategies',   authenticate, strategiesRouter);
 app.use('/api/brokerage',    authenticate, brokerageRouter);
 app.use('/api/layouts',      authenticate, layoutsRouter);
 app.use('/api/workspaces',   authenticate, workspacesRouter);
+app.use('/api/community',    authenticate, communityRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -414,6 +416,43 @@ app.use((err, req, res, next) => {
     // Allow a dedicated 'business' tier (superset of the old check — no row can violate it).
     await query('ALTER TABLE users DROP CONSTRAINT IF EXISTS users_tier_check');
     await query("ALTER TABLE users ADD CONSTRAINT users_tier_check CHECK (tier IN ('free','pro','wealth','business'))");
+
+    // Community: shared dashboard layouts / prompts / bot strategies. Payloads are
+    // server-built snapshots (no PII); imported strategies are forced paper+disabled.
+    await query(`CREATE TABLE IF NOT EXISTS shared_items (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      author_name TEXT,
+      kind TEXT NOT NULL CHECK (kind IN ('layout','prompt','strategy')),
+      title TEXT NOT NULL,
+      description TEXT,
+      payload JSONB NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','hidden','removed')),
+      like_count INT NOT NULL DEFAULT 0,
+      install_count INT NOT NULL DEFAULT 0,
+      report_count INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query('CREATE INDEX IF NOT EXISTS shared_items_feed ON shared_items (status, kind, like_count DESC, created_at DESC)');
+    await query(`CREATE TABLE IF NOT EXISTS shared_item_likes (
+      shared_item_id UUID NOT NULL REFERENCES shared_items(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (shared_item_id, user_id)
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS shared_item_installs (
+      shared_item_id UUID NOT NULL REFERENCES shared_items(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (shared_item_id, user_id)
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS shared_item_reports (
+      shared_item_id UUID NOT NULL REFERENCES shared_items(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reason TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (shared_item_id, user_id)
+    )`);
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

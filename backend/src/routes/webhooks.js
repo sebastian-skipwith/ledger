@@ -2,7 +2,7 @@ const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { query } = require('../db');
-const { syncTransactions, plaid } = require('./plaid');
+const { syncTransactions, syncLiabilities, plaid } = require('./plaid');
 const { decryptSecret } = require('../lib/crypto');
 
 // ── Plaid webhook signature verification ───────────────────────────────
@@ -75,6 +75,18 @@ router.post('/plaid', async (req, res) => {
       if (['SYNC_UPDATES_AVAILABLE', 'INITIAL_UPDATE', 'DEFAULT_UPDATE'].includes(webhook_code)) {
         await syncTransactions(item.user_id, item.id, decryptSecret(item.access_token));
         console.log(`Webhook: synced transactions for item ${item_id}`);
+      }
+    }
+
+    // Credit-card detail refresh — fires ~daily when Plaid sees liability changes.
+    // Only here (not on every transaction webhook) to keep the billable call rare.
+    if (webhook_type === 'LIABILITIES' && webhook_code === 'DEFAULT_UPDATE') {
+      const { rows } = await query(
+        'SELECT id, user_id, access_token FROM plaid_items WHERE item_id=$1', [item_id]
+      );
+      if (rows.length) {
+        await syncLiabilities(rows[0].user_id, rows[0].id, decryptSecret(rows[0].access_token));
+        console.log(`Webhook: synced liabilities for item ${item_id}`);
       }
     }
 

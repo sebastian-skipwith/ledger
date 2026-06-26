@@ -36,6 +36,7 @@ const householdRouter = require('./routes/household');
 const investmentsRouter = require('./routes/investments');
 const strategiesRouter = require('./routes/strategies');
 const brokerageRouter = require('./routes/brokerage');
+const layoutsRouter = require('./routes/layouts');
 const billingRouter = require('./routes/billing');
 const creditRouter = require('./routes/credit');
 const stripeWebhookRouter = require('./routes/webhooks-stripe');
@@ -110,6 +111,7 @@ app.use('/api/household',    authenticate, householdRouter);
 app.use('/api/investments',  authenticate, investmentsRouter);
 app.use('/api/strategies',   authenticate, strategiesRouter);
 app.use('/api/brokerage',    authenticate, brokerageRouter);
+app.use('/api/layouts',      authenticate, layoutsRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -375,6 +377,22 @@ app.use((err, req, res, next) => {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
     await query('CREATE INDEX IF NOT EXISTS proposed_actions_user_status ON proposed_actions(user_id, status)');
+
+    // Customizable dashboard tile layouts (per user, per workspace). workspace_id
+    // is a nullable plain UUID with NO FK — the workspaces table doesn't exist yet;
+    // NULL = personal dashboard. This lets the business-workspaces feature drop in
+    // later with zero layout migration.
+    await query(`CREATE TABLE IF NOT EXISTS dashboard_layouts (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      workspace_id UUID,
+      name TEXT NOT NULL DEFAULT 'default',
+      tiles JSONB NOT NULL DEFAULT '[]',
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query("CREATE UNIQUE INDEX IF NOT EXISTS dashboard_layouts_personal_uq ON dashboard_layouts (user_id, name) WHERE workspace_id IS NULL");
+    await query("CREATE UNIQUE INDEX IF NOT EXISTS dashboard_layouts_ws_uq ON dashboard_layouts (user_id, workspace_id, name) WHERE workspace_id IS NOT NULL");
   } catch (err) {
     console.error('Schema ensure failed:', err.message);
   }

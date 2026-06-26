@@ -13,6 +13,7 @@ import Analytics from '@/components/Analytics';
 import TransactionsView from '@/components/TransactionsView';
 import GoalsView from '@/components/GoalsView';
 import CreditCardDetails from '@/components/CreditCardDetails';
+import TileGrid from '@/components/TileGrid';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -94,15 +95,7 @@ export default function DashboardPage() {
         return <GoalsView token={token} />;
       case 'dashboard':
       default:
-        return (
-          <>
-            <NetWorthChart token={token} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <AccountCards accounts={accounts} loading={loading} />
-              <BillsList token={token} />
-            </div>
-          </>
-        );
+        return <TileGrid ctx={{ token, accounts, loading }} />;
     }
   }
 

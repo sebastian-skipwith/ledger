@@ -280,8 +280,11 @@ footer {
     <a href="#desktop-hud">Desktop</a>
     <a href="#web-app">Web app</a>
     <a href="#connect-ai">AI</a>
+    <a href="#investing">Investing</a>
+    <a href="#business">Business</a>
     <a href="#mobile-watch">Mobile</a>
     <a href="#household">Household</a>
+    <a href="#community">Community</a>
     <a href="#features">Features</a>
     <a href="#pricing">Pricing</a>
     <a href="/security.html">Security</a>
@@ -493,7 +496,7 @@ footer {
 <section id="connect-ai" style="padding-top:0;">
   <div class="section-label">Agentic AI</div>
   <h2>Now your AI can <em>organize your money</em><br>— not just read it.</h2>
-  <p class="section-sub">Persistence ships a hosted MCP server, now <strong style="color:var(--text);">18 tools</strong> deep. Connect the assistants you already use and let them categorize spending, set goals, build automation rules, log accounts, and remember what matters. The one thing they can <strong style="color:var(--text);">never</strong> do: move your money.</p>
+  <p class="section-sub">Persistence ships a hosted MCP server, now <strong style="color:var(--text);">24 tools</strong> deep. Connect the assistants you already use and let them categorize spending, set goals, build automation rules, log accounts, read your portfolio and credit cards, propose trades for your approval, and remember what matters. The one thing they can <strong style="color:var(--text);">never</strong> do: move your money on their own.</p>
 
   <div class="mcp-logos">
     <span class="mcp-chip"><svg width="17" height="17" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="17.5" y2="4.5"/><line x1="12" y1="12" x2="21" y2="9"/><line x1="12" y1="12" x2="20" y2="15.5"/><line x1="12" y1="12" x2="16" y2="20.5"/><line x1="12" y1="12" x2="10" y2="21"/><line x1="12" y1="12" x2="5.5" y2="18.5"/><line x1="12" y1="12" x2="3" y2="13"/><line x1="12" y1="12" x2="4.5" y2="7"/><line x1="12" y1="12" x2="8.5" y2="3.5"/></g></svg>Claude</span>
@@ -507,7 +510,7 @@ footer {
   </div>
 
   <div class="mcp-demo">
-    <div class="hdr"><span class="dot"></span> PERSISTENCE CONNECTED · 18 TOOLS AVAILABLE</div>
+    <div class="hdr"><span class="dot"></span> PERSISTENCE CONNECTED · 24 TOOLS AVAILABLE</div>
     <div class="mcp-msg user">Tidy up my spending — tag every Chipotle charge as Dining, and flag anything weird.</div>
     <div class="mcp-tool"><svg width="12" height="12" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="4"/><line x1="12" y1="12" x2="19" y2="7"/><line x1="12" y1="12" x2="19" y2="17"/><line x1="12" y1="12" x2="12" y2="20"/><line x1="12" y1="12" x2="5" y2="17"/><line x1="12" y1="12" x2="5" y2="7"/></g></svg> persistence · create_rule · get_anomalies</div>
     <div class="mcp-msg ai">Done. I made a rule that tags Chipotle as <strong>Dining</strong> and applied it to 14 past charges. Two flags: a possible <strong>duplicate</strong> — two $64.20 Whole Foods charges two days apart — and your <strong>Spotify went $10.99 → $11.99</strong> last month. Nothing was moved; I only organize your data.</div>
@@ -517,14 +520,72 @@ footer {
   </div>
 
   <div class="mcp-caps">
-    <span><strong>Reads</strong> net worth · transactions · subscriptions · bills · goals · household</span>
-    <span><strong>Organizes</strong> categories · goals · bills · rules · manual accounts · memory</span>
-    <span class="never"><strong>Never</strong> moves money · pays · transfers · trades</span>
+    <span><strong>Reads</strong> net worth · transactions · subscriptions · bills · goals · portfolio · credit cards · anomalies · household</span>
+    <span><strong>Organizes</strong> categories · goals · bills · rules · manual accounts · memory · trade proposals</span>
+    <span class="never"><strong>Never</strong> moves money on its own · every trade needs your approval</span>
   </div>
 
   <div style="text-align:center;">
     <a class="btn-claude" href="/developers"><svg width="20" height="20" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="17.5" y2="4.5"/><line x1="12" y1="12" x2="21" y2="9"/><line x1="12" y1="12" x2="20" y2="15.5"/><line x1="12" y1="12" x2="16" y2="20.5"/><line x1="12" y1="12" x2="10" y2="21"/><line x1="12" y1="12" x2="5.5" y2="18.5"/><line x1="12" y1="12" x2="3" y2="13"/><line x1="12" y1="12" x2="4.5" y2="7"/><line x1="12" y1="12" x2="8.5" y2="3.5"/></g></svg>Connect to Claude</a>
     <div style="font-size:12px;color:var(--muted);margin-top:12px;">Two minutes: create a key, paste the config, ask your first question.</div>
+  </div>
+</section>
+
+<!-- INVESTING -->
+<section id="investing" style="padding-top:0;">
+  <div class="section-label">Investing</div>
+  <h2>Strategies your AI runs —<br><em>with your hand on the switch.</em></h2>
+  <p class="section-sub">See your whole portfolio, set a target allocation, and let pluggable strategies <strong style="color:var(--text);">propose</strong> the trades to get there. You approve every order. Practice on paper first, then connect your own brokerage — nothing ever moves without your explicit say-so. <em>Persistence is a tool, not an adviser, and this isn't investment advice.</em></p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">◴</div>
+      <div class="feature-title">Your portfolio, clearly</div>
+      <div class="feature-body">Holdings across every linked brokerage, allocation by asset type, and how far you've drifted from your target — pulled in automatically through Plaid.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⟳</div>
+      <div class="feature-title">Strategies you choose</div>
+      <div class="feature-body">Dollar-cost averaging, target-allocation rebalancing, equal-weight — pick a strategy and its parameters and it proposes the exact orders to run it. Transparent and configurable.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✓</div>
+      <div class="feature-title">Propose &amp; approve</div>
+      <div class="feature-body">The AI never executes on its own. Every order is a proposal you review and approve, inside server-enforced risk limits — per-order and daily caps, a symbol allowlist, and a kill-switch.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚗</div>
+      <div class="feature-title">Paper-first, then your own broker</div>
+      <div class="feature-body">Try any strategy in simulation with zero risk. When you're ready, connect your own brokerage and trade your own account on your own keys — you stay in control of every fill.</div>
+    </div>
+  </div>
+</section>
+
+<!-- BUSINESS + PERSONAL -->
+<section id="business" style="padding-top:0;">
+  <div class="section-label">Business + Personal</div>
+  <h2>Run your business books<br><em>in the same app.</em></h2>
+  <p class="section-sub">Keep business finances completely separate from personal — then toggle between them in one click. Each workspace has its own accounts, its own dashboard, and its own money-in / money-out and subscriptions view.</p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">⇄</div>
+      <div class="feature-title">One toggle, two worlds</div>
+      <div class="feature-body">Switch between Personal and any business workspace from the top bar. Accounts, transactions, bills and goals all re-scope instantly — nothing bleeds across.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">↕</div>
+      <div class="feature-title">Money in, money out</div>
+      <div class="feature-body">A per-workspace cash-flow tile shows what came in versus what went out this month, and the net — the number that actually runs a business.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◷</div>
+      <div class="feature-title">Every service you're paying</div>
+      <div class="feature-body">Automatic detection of recurring charges and subscriptions for that workspace, with the total monthly burn — so nothing renews unnoticed.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⊟</div>
+      <div class="feature-title">Separate, by design</div>
+      <div class="feature-body">Your books stay isolated to each workspace. Link a business bank to the business; keep your personal accounts personal — and see them all in one app.</div>
+    </div>
   </div>
 </section>
 
@@ -610,6 +671,54 @@ footer {
   </div>
 </section>
 
+<!-- BUILD YOUR DASHBOARD -->
+<section id="build" style="padding-top:0;">
+  <div class="section-label">Make It Yours</div>
+  <h2>A dashboard you <em>build yourself.</em></h2>
+  <p class="section-sub">Drag, resize, recolor. Add the tiles you care about, drop the ones you don't. Your layout saves to your account and follows you across devices.</p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">⠿</div>
+      <div class="feature-title">Drag &amp; resize</div>
+      <div class="feature-body">Grab any tile, move it, stretch it. Build the exact view you want — net worth up top, transactions wide, cash flow in the corner.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◑</div>
+      <div class="feature-title">Recolor &amp; toggle</div>
+      <div class="feature-body">Give each tile its own accent and switch tiles on or off. Add new ones — accounts, bills, goals, analytics, cash flow, subscriptions — from one menu.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⟲</div>
+      <div class="feature-title">Saved &amp; synced</div>
+      <div class="feature-body">Your layout lives on your account, so it's the same on every device — and you can share it with the community or start from someone else's.</div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section id="community" style="padding-top:0;">
+  <div class="section-label">Community</div>
+  <h2>Borrow the best setups<br><em>from everyone else.</em></h2>
+  <p class="section-sub">Share and discover dashboard layouts, AI prompts, and trading-bot strategies. Find a setup you like and install it in a click — strategies always arrive on paper and disabled, so you review before anything is ever live.</p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">❖</div>
+      <div class="feature-title">Layouts &amp; prompts</div>
+      <div class="feature-body">Start from a dashboard someone already perfected, or grab a great AI prompt for analyzing your money — one click to apply.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⟳</div>
+      <div class="feature-title">Strategies, safely</div>
+      <div class="feature-body">Install a community strategy and it lands as paper + disabled, re-validated on the way in. You enable it yourself — sharing can never move anyone's money.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">↑</div>
+      <div class="feature-title">Share your own</div>
+      <div class="feature-body">Publish your layout, prompt, or strategy with a click. No account numbers or balances are ever shared — only the setup itself.</div>
+    </div>
+  </div>
+</section>
+
 <!-- FEATURES -->
 <section id="features">
   <div class="section-label">Built Different</div>
@@ -630,7 +739,7 @@ footer {
     <div class="feature-card">
       <div class="feature-icon">🔗</div>
       <div class="feature-title">MCP Server</div>
-      <div class="feature-body">Connect your finances to Claude, Cursor, ChatGPT — any MCP-compatible client. 18 tools let your AI read and organize your money (categorize, set goals, build rules) — but never move it.</div>
+      <div class="feature-body">Connect your finances to Claude, Cursor, ChatGPT — any MCP-compatible client. 24 tools let your AI read and organize your money (categorize, set goals, build rules, read your portfolio, propose trades) — but never move it on its own.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon">⚡</div>
@@ -771,7 +880,9 @@ footer {
   <div style="max-width:760px;">
     <details class="faq-item"><summary>What is Persistence?</summary><div class="faq-a">Persistence is a personal-finance app built around an always-on-top desktop HUD (a thin overlay for Windows and macOS) plus a full web app. It shows your net worth, safe-to-spend, and upcoming bills at a glance, and adds AI insights on top of your real accounts — connected securely through Plaid.</div></details>
     <details class="faq-item"><summary>Is my bank data safe?</summary><div class="faq-a">Yes. Your bank login credentials never touch our servers — Plaid handles the connection — and the access tokens we hold are encrypted at rest with AES&#8209;256&#8209;GCM. Data is read-only, sessions are short-lived, and app updates are cryptographically signed. Full detail on our <a href="/security.html">Security</a> and <a href="/privacy.html">Privacy</a> pages.</div></details>
-    <details class="faq-item"><summary>Can Persistence move my money or make payments?</summary><div class="faq-a">No. Persistence can never move money, make payments, place trades, or change anything at your bank — full stop. A connected AI can read your finances and help <em>organize</em> them (categorize transactions, set goals, build rules, add manual accounts), but it has no tool that moves a single dollar. Your money stays exactly where it is.</div></details>
+    <details class="faq-item"><summary>Can the AI move my money or trade on its own?</summary><div class="faq-a">No — never autonomously. A connected AI can read your finances and help <em>organize</em> them (categorize transactions, set goals, build rules, add accounts), and it can <em>propose</em> trades — but it cannot execute anything. Every trade is a proposal you explicitly approve, and any execution happens on <strong>your own</strong> connected brokerage, on your own keys, inside risk limits you control (per-order and daily caps, an allowlist, a kill-switch). No tool moves a single dollar on its own.</div></details>
+    <details class="faq-item"><summary>Can Persistence actually invest for me?</summary><div class="faq-a">It helps you run your own strategy — it is a tool, not an adviser, and nothing here is investment advice. You see your full portfolio and set a target allocation; built-in strategies (dollar-cost averaging, target-allocation rebalancing, equal-weight) <em>propose</em> the orders to get there. You can practice on paper with zero risk, and when you're ready, connect your own brokerage and approve each trade yourself. Persistence never holds your money or makes discretionary decisions for you.</div></details>
+    <details class="faq-item"><summary>Can I keep business and personal finances separate?</summary><div class="faq-a">Yes. Create a business workspace and toggle between it and Personal from the top bar. Each workspace has its own accounts, transactions, bills, goals and dashboard — including a money-in / money-out view and detected subscriptions — and they never mix. Link your business bank to the business and keep personal accounts personal, all in one app.</div></details>
     <details class="faq-item"><summary>Which banks and accounts work?</summary><div class="faq-a">Persistence connects through Plaid, which supports thousands of US banks, credit unions, brokerages, and card issuers. You can link checking and savings, credit cards, loans, and investment and retirement accounts — grouped into cash, investments, retirement, and debt. The free plan includes up to 2 linked accounts; paid plans remove the limit.</div></details>
     <details class="faq-item"><summary>What does it cost?</summary><div class="faq-a">There's a free tier covering the dashboard, up to 2 linked accounts, the phone widget, and 10 AI messages a day. Pro is $9/month and unlocks unlimited accounts, unlimited AI chat, the desktop HUD on all platforms, MCP server access, and automation — with a 14-day trial. A $29/month Wealth plan adds portfolio and tax-focused tools for investors.</div></details>
     <details class="faq-item"><summary>Do I have to switch from the finance app I already use?</summary><div class="faq-a">No. Persistence is designed to run alongside whatever you already use — it reads your accounts through Plaid rather than replacing your bank or budgeting tool. Many people keep their existing app and add Persistence for the always-visible HUD and the AI connection.</div></details>

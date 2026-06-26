@@ -127,6 +127,17 @@ app.use((err, req, res, next) => {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT');
     // Per-account prior balance so the UI can show change since the last sync.
     await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS previous_balance NUMERIC');
+    // Credit-card detail. credit_limit comes free from accountsGet (balances.limit);
+    // the rest require Plaid Liabilities (last/min payment, APR, due date).
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS credit_limit NUMERIC(14,2)');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_payment_amount NUMERIC(14,2)');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_payment_date DATE');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_statement_balance NUMERIC(14,2)');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS minimum_payment_amount NUMERIC(14,2)');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS next_payment_due_date DATE');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS aprs JSONB');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS is_overdue BOOLEAN');
+    await query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS liabilities_updated_at TIMESTAMPTZ');
     // Manually-tracked credit scores (Plaid does not provide credit scores).
     await query(`CREATE TABLE IF NOT EXISTS credit_scores (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

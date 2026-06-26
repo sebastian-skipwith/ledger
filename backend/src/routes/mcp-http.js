@@ -153,6 +153,12 @@ const TOOLS = [
     annotations: { title: 'Get portfolio performance', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
   {
+    name: 'get_credit_cards',
+    description: 'Your credit cards: current balance, credit limit, available to spend before maxed out, utilization %, last payment (amount + date), minimum payment due (amount + date), and purchase APR.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { title: 'Get credit cards', readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  },
+  {
     name: 'list_strategies',
     description: 'Investment strategies available (DCA, target-allocation rebalance, equal-weight) and the ones you have configured, with mode (paper or live) and parameters.',
     inputSchema: { type: 'object', properties: {} },
@@ -348,6 +354,39 @@ async function callTool(userId, name, args = {}) {
        WHERE user_id=$1 AND snapshot_date >= CURRENT_DATE - $2 ORDER BY snapshot_date`,
       [userId, days]);
     return rows;
+  }
+  if (name === 'get_credit_cards') {
+    const { rows } = await query(
+      `SELECT name, institution_name, current_balance, available_balance, credit_limit,
+              last_payment_amount, last_payment_date, minimum_payment_amount, next_payment_due_date,
+              last_statement_balance, aprs, is_overdue, liabilities_updated_at
+       FROM accounts WHERE user_id=$1 AND type='credit' AND is_hidden=false
+       ORDER BY current_balance DESC`, [userId]);
+    return rows.map((r) => {
+      const bal = Math.abs(Number(r.current_balance) || 0);
+      const limit = r.credit_limit != null ? Number(r.credit_limit) : null;
+      const available = r.available_balance != null ? Number(r.available_balance)
+        : (limit != null ? Math.round((limit - bal) * 100) / 100 : null);
+      const utilization_pct = limit && limit > 0 ? Math.round((bal / limit) * 1000) / 10 : null;
+      const aprs = Array.isArray(r.aprs) ? r.aprs : [];
+      const purchase = aprs.find((a) => (a.apr_type || '').includes('purchase')) || aprs[0] || null;
+      return {
+        name: r.name,
+        institution: r.institution_name,
+        current_balance: bal,
+        credit_limit: limit,
+        available_to_spend: available,
+        utilization_pct,
+        last_payment_amount: r.last_payment_amount != null ? Number(r.last_payment_amount) : null,
+        last_payment_date: r.last_payment_date,
+        minimum_payment_amount: r.minimum_payment_amount != null ? Number(r.minimum_payment_amount) : null,
+        next_payment_due_date: r.next_payment_due_date,
+        last_statement_balance: r.last_statement_balance != null ? Number(r.last_statement_balance) : null,
+        purchase_apr_pct: purchase ? Number(purchase.apr_percentage) : null,
+        is_overdue: r.is_overdue,
+        as_of: r.liabilities_updated_at,
+      };
+    });
   }
   if (name === 'list_strategies') {
     const { STRATEGIES } = require('../lib/strategies');

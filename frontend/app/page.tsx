@@ -12,6 +12,7 @@ import IntelligencePanel from '@/components/IntelligencePanel';
 import Analytics from '@/components/Analytics';
 import TransactionsView from '@/components/TransactionsView';
 import GoalsView from '@/components/GoalsView';
+import CreditCardDetails from '@/components/CreditCardDetails';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -180,6 +181,9 @@ function DrillModal({ metric, accounts, summary, onClose }: { metric: string | n
         {rows.length === 0 ? (
           <div style={{ color: 'var(--muted)', fontSize: 13, padding: '12px 0' }}>No accounts contributing to this yet.</div>
         ) : rows.map(a => {
+          if (metric === 'total_debt' && a.type === 'credit') {
+            return <CreditCardDetails key={a.id} account={a} />;
+          }
           const bal = Number(a.current_balance) || 0;
           const prev = (a.previous_balance === null || a.previous_balance === undefined) ? null : Number(a.previous_balance);
           const change = prev === null ? null : bal - prev;

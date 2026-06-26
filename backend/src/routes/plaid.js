@@ -86,15 +86,16 @@ router.post('/exchange-token', async (req, res, next) => {
       await client.query(
         `INSERT INTO accounts
            (user_id, plaid_item_id, plaid_account_id, name, official_name, type, subtype,
-            current_balance, available_balance, currency, institution_name, mask)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+            current_balance, available_balance, currency, institution_name, mask, credit_limit)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
          ON CONFLICT (plaid_account_id) DO UPDATE SET
-           previous_balance=accounts.current_balance, current_balance=$8, available_balance=$9, updated_at=NOW()`,
+           previous_balance=accounts.current_balance, current_balance=$8, available_balance=$9,
+           credit_limit=COALESCE($13, accounts.credit_limit), updated_at=NOW()`,
         [
           req.user.id, plaidItemId, acct.account_id,
           acct.name, acct.official_name, acct.type, acct.subtype,
           acct.balances.current, acct.balances.available, acct.balances.iso_currency_code,
-          institution?.name, acct.mask,
+          institution?.name, acct.mask, acct.balances.limit ?? null,
         ]
       );
     }
@@ -104,6 +105,7 @@ router.post('/exchange-token', async (req, res, next) => {
     // Kick off async transaction + holdings sync (don't await — returns immediately)
     syncTransactions(req.user.id, plaidItemId, access_token).catch(console.error);
     syncHoldings(req.user.id, plaidItemId, access_token).catch(console.error);
+    syncLiabilities(req.user.id, plaidItemId, access_token).catch(console.error);
 
     res.json({ success: true, accounts_synced: accounts.length });
   } catch (err) {
@@ -125,6 +127,7 @@ router.post('/sync', async (req, res, next) => {
       const token = decryptSecret(item.access_token);
       syncTransactions(req.user.id, item.id, token).catch(console.error);
       syncHoldings(req.user.id, item.id, token).catch(console.error);
+      syncLiabilities(req.user.id, item.id, token).catch(console.error);
     }
     res.json({ message: `Syncing ${items.length} institution(s) in background` });
   } catch (err) {
@@ -238,9 +241,10 @@ async function syncTransactions(userId, plaidItemId, accessToken) {
     const balResp = await plaid.accountsGet({ access_token: decryptSecret(items[0].access_token) });
     for (const acct of balResp.data.accounts) {
       await query(
-        `UPDATE accounts SET previous_balance=current_balance, current_balance=$1, available_balance=$2, updated_at=NOW()
-         WHERE plaid_account_id=$3`,
-        [acct.balances.current, acct.balances.available, acct.account_id]
+        `UPDATE accounts SET previous_balance=current_balance, current_balance=$1, available_balance=$2,
+           credit_limit=COALESCE($3, credit_limit), updated_at=NOW()
+         WHERE plaid_account_id=$4`,
+        [acct.balances.current, acct.balances.available, acct.balances.limit ?? null, acct.account_id]
       );
     }
   }
@@ -365,8 +369,54 @@ async function snapshotPortfolio(userId) {
   );
 }
 
+// Pull credit-card liabilities (last/min payment, APR, statement, due date) and
+// store them on the account. Best-effort + error-swallowed like syncHoldings —
+// institutions without liabilities support / consent simply return early.
+// NOTE: uses the billable Plaid Liabilities product. The free balances.limit
+// (credit limit + available-to-spend) is already captured in accountsGet above.
+async function syncLiabilities(userId, plaidItemId, accessToken) {
+  let resp;
+  try {
+    resp = await plaid.liabilitiesGet({ access_token: accessToken });
+  } catch (err) {
+    return; // institution/consent doesn't support liabilities
+  }
+  const credit = resp.data.liabilities?.credit || [];
+  const accountsList = resp.data.accounts || [];
+  const limitByAcct = {};
+  for (const a of accountsList) limitByAcct[a.account_id] = a.balances?.limit ?? null;
+
+  for (const c of credit) {
+    await query(
+      `UPDATE accounts SET
+         credit_limit = COALESCE($1, credit_limit),
+         last_payment_amount = $2,
+         last_payment_date = $3,
+         last_statement_balance = $4,
+         minimum_payment_amount = $5,
+         next_payment_due_date = $6,
+         aprs = $7,
+         is_overdue = $8,
+         liabilities_updated_at = NOW()
+       WHERE plaid_account_id = $9 AND user_id = $10`,
+      [
+        limitByAcct[c.account_id] ?? null,
+        c.last_payment_amount ?? null,
+        c.last_payment_date ?? null,
+        c.last_statement_balance ?? null,
+        c.minimum_payment_amount ?? null,
+        c.next_payment_due_date ?? null,
+        JSON.stringify(c.aprs || []),
+        c.is_overdue ?? null,
+        c.account_id, userId,
+      ]
+    );
+  }
+}
+
 module.exports = router;
 module.exports.syncTransactions = syncTransactions;
 module.exports.syncHoldings = syncHoldings; // used by webhooks.js for HOLDINGS updates
+module.exports.syncLiabilities = syncLiabilities; // used by webhooks.js for LIABILITIES updates
 module.exports.snapshotNetWorth = snapshotNetWorth; // used by manual-account writes
 module.exports.plaid = plaid; // used by routes/webhooks.js for signature verification

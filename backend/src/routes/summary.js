@@ -34,6 +34,18 @@ router.get('/hud', async (req, res, next) => {
              FROM goals WHERE user_id=$1 AND completed=false AND workspace_id IS NOT DISTINCT FROM $2`, [userId, ws]),
     ]);
 
+    // This calendar month's income (credits, amount<0) vs expenses (debits, >0).
+    const { rows: flowRows } = await query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END),0) AS income,
+         COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END),0) AS expenses
+       FROM transactions t JOIN accounts a ON t.account_id=a.id
+       WHERE t.user_id=$1 AND a.workspace_id IS NOT DISTINCT FROM $2
+         AND t.date >= date_trunc('month', CURRENT_DATE)`,
+      [userId, ws]);
+    const monthIncome = parseFloat(flowRows[0].income);
+    const monthExpenses = parseFloat(flowRows[0].expenses);
+
     // Same bucketing as buildFinancialContext in routes/ai.js — keep in sync.
     const accts = accounts.rows;
     const cash = accts.filter(a => a.type === 'depository').reduce((s, a) => s + parseFloat(a.current_balance || 0), 0);
@@ -87,6 +99,11 @@ router.get('/hud', async (req, res, next) => {
         diff: Math.round(goalDiff),
         goals_count: pacedGoals,
         status: pacedGoals === 0 ? 'none' : goalDiff < -1 ? 'behind' : goalDiff > 1 ? 'ahead' : 'on_track',
+      },
+      month_flow: {
+        income: Math.round(monthIncome),
+        expenses: Math.round(monthExpenses),
+        net: Math.round(monthIncome - monthExpenses),
       },
     });
   } catch (err) { next(err); }

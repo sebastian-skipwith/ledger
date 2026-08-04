@@ -17,6 +17,7 @@ import TileGrid from '@/components/TileGrid';
 import CommunityPage from '@/components/CommunityPage';
 import SpreadsheetView from '@/components/SpreadsheetView';
 import DetectedBills from '@/components/DetectedBills';
+import FlowDrillModal from '@/components/FlowDrillModal';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -116,7 +117,11 @@ export default function DashboardPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <TopBar summary={summary} hud={hud} loading={loading} deltas={deltas} period={period} onPeriodChange={setPeriod} onTileClick={setDrill} lastSynced={lastSynced} />
-      <DrillModal metric={drill} accounts={accounts} summary={summary} onClose={() => setDrill(null)} />
+      {FLOW_METRICS.includes(drill || '') ? (
+        <FlowDrillModal metric={drill} onClose={() => setDrill(null)} />
+      ) : (
+        <DrillModal metric={drill} accounts={accounts} summary={summary} onClose={() => setDrill(null)} />
+      )}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', marginTop: 52 }}>
         <Sidebar />
         {activeSection === 'ai' ? (
@@ -163,6 +168,10 @@ const DRILL_LABELS: Record<string, string> = {
   net_worth: 'Net Worth', cash: 'Cash', investments: 'Investments',
   retirement: 'Retirement', total_debt: 'Credit & Debt',
 };
+
+// Metrics whose click-through shows a flow breakdown (bills / income / expenses)
+// rather than the account list.
+const FLOW_METRICS = ['monthly_bills', 'net_income', 'income', 'expenses'];
 
 function DrillModal({ metric, accounts, summary, onClose }: { metric: string | null; accounts: any[]; summary: any; onClose: () => void }) {
   if (!metric || !DRILL_LABELS[metric]) return null;

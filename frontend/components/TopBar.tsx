@@ -30,6 +30,7 @@ const METRIC_LABELS: Record<string, string> = {
   cash: 'Cash', investments: 'Investments', retirement: 'Retirement',
   safe_to_spend: 'Safe to Spend', credit_week: 'Credit Cards (week)',
   bills_7d: 'Bills Next 7 Days', goal_progress: 'Goal Progress',
+  net_income: 'Net Monthly Income',
 };
 const SUMMARY_KEYS = ['net_worth', 'total_debt', 'monthly_bills', 'cash', 'investments', 'retirement'];
 const DEFAULT_ORDER = Object.keys(METRIC_LABELS);
@@ -139,6 +140,10 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
     }
     if (key === 'bills_7d' && hud.bills_7d) {
       return { value: formatCurrency(Math.round(Number(hud.bills_7d.total) || 0), true), sub: (hud.bills_7d.count || 0) + ' due', color: 'var(--text)' };
+    }
+    if (key === 'net_income' && hud.month_flow) {
+      const n = Math.round(Number(hud.month_flow.net) || 0);
+      return { value: (n > 0 ? '+' : '') + formatCurrency(n, true), sub: 'this month', color: n >= 0 ? '#16a34a' : '#dc2626' };
     }
     if (key === 'goal_progress' && hud.goal_progress && hud.goal_progress.status !== 'none') {
       const g = hud.goal_progress;

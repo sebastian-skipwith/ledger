@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { formatCurrency, wsHeaders } from '@/lib/store';
+import FlowDrillModal from './FlowDrillModal';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -11,6 +12,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function MonthlyFlowTile({ token, mode }: { token: string; mode: 'income' | 'expenses' }) {
   const [txns, setTxns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [drill, setDrill] = useState(false);
   const isIncome = mode === 'income';
 
   useEffect(() => {
@@ -38,8 +40,11 @@ export default function MonthlyFlowTile({ token, mode }: { token: string; mode: 
 
   return (
     <div className="card" style={{ padding: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Monthly {isIncome ? 'Income' : 'Expenses'}</div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 24, fontWeight: 600, color, marginBottom: 12 }}>{formatCurrency(total)}</div>
+      {drill && <FlowDrillModal metric={mode} onClose={() => setDrill(false)} />}
+      <div onClick={() => setDrill(true)} title="Click for the full breakdown" style={{ cursor: 'pointer' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Monthly {isIncome ? 'Income' : 'Expenses'} <span style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 500 }}>· details</span></div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 24, fontWeight: 600, color, marginBottom: 12 }}>{formatCurrency(total)}</div>
+      </div>
       {breakdown.length === 0 ? (
         <p style={{ color: 'rgba(var(--fg),0.4)', fontSize: 12 }}>Nothing detected this month yet.</p>
       ) : breakdown.map((b, i) => (

@@ -38,6 +38,12 @@ export const TILE_REGISTRY: Record<string, TileDef> = {
 // Built-in layout for users with no saved layout (must never render blank).
 export const DEFAULT_TILES = [
   { key: 'networth', x: 0, y: 0, w: 12, h: 4, visible: true, theme: null },
-  { key: 'accounts', x: 0, y: 4, w: 6,  h: 5, visible: true, theme: null },
-  { key: 'bills',    x: 6, y: 4, w: 6,  h: 5, visible: true, theme: null },
+  { key: 'income',   x: 0, y: 4, w: 6,  h: 6, visible: true, theme: null },
+  { key: 'expenses', x: 6, y: 4, w: 6,  h: 6, visible: true, theme: null },
+  { key: 'accounts', x: 0, y: 10, w: 6, h: 5, visible: true, theme: null },
+  { key: 'bills',    x: 6, y: 10, w: 6, h: 5, visible: true, theme: null },
 ];
+
+// Tiles that should appear automatically for users with an older saved layout
+// that predates them (appended once, visible, below existing content).
+export const AUTO_ADD_TILES = ['income', 'expenses'];

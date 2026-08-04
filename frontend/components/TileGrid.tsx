@@ -3,7 +3,20 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { CSSProperties } from 'react';
 import GridLayout, { WidthProvider } from 'react-grid-layout';
 import TileFrame from './TileFrame';
-import { TILE_REGISTRY, DEFAULT_TILES, type TileCtx } from './tileRegistry';
+import { TILE_REGISTRY, DEFAULT_TILES, AUTO_ADD_TILES, type TileCtx } from './tileRegistry';
+
+// Users with a saved layout from before a tile existed get it appended once
+// (visible, below existing content) instead of never discovering it.
+function withAutoAdds(tiles: any[]): any[] {
+  const present = new Set(tiles.map((t) => t.key));
+  const missing = AUTO_ADD_TILES.filter((k) => !present.has(k) && TILE_REGISTRY[k]);
+  if (!missing.length) return tiles;
+  const maxY = tiles.reduce((m, t) => Math.max(m, (+t.y || 0) + (+t.h || 0)), 0);
+  return [
+    ...tiles,
+    ...missing.map((k, i) => ({ key: k, x: (i % 2) * 6, y: maxY + Math.floor(i / 2) * 6, w: TILE_REGISTRY[k].defaultW, h: TILE_REGISTRY[k].defaultH, visible: true, theme: null })),
+  ];
+}
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const Grid = WidthProvider(GridLayout);
@@ -23,11 +36,11 @@ export default function TileGrid({ ctx }: { ctx: TileCtx }) {
   // localStorage gives an instant render; the server is the source of truth.
   useEffect(() => {
     let initial: any[] = DEFAULT_TILES;
-    try { const ls = localStorage.getItem(LS_KEY); if (ls) { const p = JSON.parse(ls); if (Array.isArray(p) && p.length) initial = p; } } catch {}
+    try { const ls = localStorage.getItem(LS_KEY); if (ls) { const p = JSON.parse(ls); if (Array.isArray(p) && p.length) initial = withAutoAdds(p); } } catch {}
     setTiles(initial);
     fetch(`${API}/api/layouts/default`, { headers: { Authorization: `Bearer ${ctx.token}` } })
       .then((r) => r.json())
-      .then((d) => { if (d && Array.isArray(d.tiles) && d.tiles.length) setTiles(d.tiles); })
+      .then((d) => { if (d && Array.isArray(d.tiles) && d.tiles.length) setTiles(withAutoAdds(d.tiles)); })
       .catch(() => {});
   }, [ctx.token]);
 

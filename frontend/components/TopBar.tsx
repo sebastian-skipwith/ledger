@@ -159,7 +159,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
 
   const tileStyle: React.CSSProperties = {
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
-    padding: '0 16px', borderRight: '1px solid rgba(var(--fg),0.07)',
+    padding: '4px 16px', borderRight: '1px solid rgba(var(--fg),0.07)',
     cursor: 'grab', flexShrink: 0, transition: 'background 0.15s',
   };
   const labelStyle: React.CSSProperties = {
@@ -169,13 +169,13 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
 
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      height: 52,
+      position: 'relative', zIndex: 100, width: '100%',
+      minHeight: 52,
       background: 'var(--bar-bg)',
       borderBottom: '1px solid rgba(var(--fg),0.07)',
       backdropFilter: 'blur(20px)',
-      display: 'flex', alignItems: 'center',
-      padding: '0 20px', gap: 0,
+      display: 'flex', alignItems: 'center', flexWrap: 'wrap',
+      padding: '4px 20px', gap: 0, rowGap: 4,
     }}>
       {/* Brand */}
       <img className="plogo" src="/logo.png" alt="Persistence" style={{ height: 22, width: 'auto', marginRight: 18, flexShrink: 0 }} />
@@ -183,8 +183,8 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
       {/* Workspace switcher (Personal / business) */}
       <WorkspaceSwitcher />
 
-      {/* Metric tiles - drag to reorder */}
-      <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
+      {/* Metric tiles - drag to reorder; wraps so every toggled tile stays visible */}
+      <div style={{ display: 'flex', flex: 1, minWidth: 0, flexWrap: 'wrap', alignItems: 'stretch', rowGap: 4 }}>
         {order.filter(k => vis[k]).map(key => {
           if (SUMMARY_KEYS.includes(key)) {
             const d = deltas ? deltas[key] : undefined;

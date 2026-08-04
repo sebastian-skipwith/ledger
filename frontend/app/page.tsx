@@ -122,7 +122,7 @@ export default function DashboardPage() {
       ) : (
         <DrillModal metric={drill} accounts={accounts} summary={summary} onClose={() => setDrill(null)} />
       )}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', marginTop: 52 }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <Sidebar />
         {activeSection === 'ai' ? (
           <main style={{ flex: 1, overflow: 'hidden', display: 'flex', minHeight: 0 }}>

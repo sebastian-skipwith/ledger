@@ -16,6 +16,7 @@ import CreditCardDetails from '@/components/CreditCardDetails';
 import TileGrid from '@/components/TileGrid';
 import CommunityPage from '@/components/CommunityPage';
 import SpreadsheetView from '@/components/SpreadsheetView';
+import DetectedBills from '@/components/DetectedBills';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -70,6 +71,8 @@ export default function DashboardPage() {
   if (!user || !accessToken) return <AuthScreen />;
   const token = accessToken; // narrowed to string for use in nested closures
   const deltas = computeDeltas();
+  // Most-recent account sync = when the financial data was last refreshed.
+  const lastSynced = accounts.reduce<string | null>((max, a: any) => (a.updated_at && (!max || a.updated_at > max) ? a.updated_at : max), null);
 
   function renderSection() {
     switch (activeSection) {
@@ -94,7 +97,12 @@ export default function DashboardPage() {
       case 'spreadsheet':
         return <SpreadsheetView token={token} />;
       case 'bills':
-        return <BillsList token={token} full />;
+        return (
+          <>
+            <DetectedBills token={token} />
+            <BillsList token={token} full />
+          </>
+        );
       case 'goals':
         return <GoalsView token={token} />;
       case 'community':
@@ -107,7 +115,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <TopBar summary={summary} hud={hud} loading={loading} deltas={deltas} period={period} onPeriodChange={setPeriod} onTileClick={setDrill} />
+      <TopBar summary={summary} hud={hud} loading={loading} deltas={deltas} period={period} onPeriodChange={setPeriod} onTileClick={setDrill} lastSynced={lastSynced} />
       <DrillModal metric={drill} accounts={accounts} summary={summary} onClose={() => setDrill(null)} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', marginTop: 52 }}>
         <Sidebar />
@@ -193,6 +201,12 @@ function DrillModal({ metric, accounts, summary, onClose }: { metric: string | n
               <div style={{ minWidth: 0, marginRight: 12 }}>
                 <div style={{ fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
                 <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{a.linked_institution || a.institution_name || a.subtype || a.type}</div>
+                {a.type === 'loan' && (a.minimum_payment_amount != null || a.next_payment_due_date) && (
+                  <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
+                    {a.minimum_payment_amount != null ? `Payment ${formatCurrency(Number(a.minimum_payment_amount))}` : ''}
+                    {a.next_payment_due_date ? ` · due ${new Date(a.next_payment_due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                  </div>
+                )}
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: liability ? '#dc2626' : 'var(--text)' }}>{liability ? '-' : ''}{formatCurrency(Math.abs(bal))}</div>

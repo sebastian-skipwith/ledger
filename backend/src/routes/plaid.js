@@ -416,6 +416,23 @@ async function syncLiabilities(userId, plaidItemId, accessToken) {
       ]
     );
   }
+
+  // Student loans + mortgages → populate the same payment columns on loan
+  // accounts, so loan bills/payments (next due, minimum, last payment) surface
+  // just like credit cards. Mortgages use next_monthly_payment as the payment.
+  const loanUpdate = (acctId, lastAmt, lastDate, minAmt, dueDate, overdue) =>
+    query(
+      `UPDATE accounts SET last_payment_amount=$1, last_payment_date=$2,
+         minimum_payment_amount=$3, next_payment_due_date=$4, is_overdue=$5, liabilities_updated_at=NOW()
+       WHERE plaid_account_id=$6 AND user_id=$7`,
+      [lastAmt ?? null, lastDate ?? null, minAmt ?? null, dueDate ?? null, overdue ?? null, acctId, userId]
+    );
+  for (const s of resp.data.liabilities?.student || []) {
+    await loanUpdate(s.account_id, s.last_payment_amount, s.last_payment_date, s.minimum_payment_amount, s.next_payment_due_date, s.is_overdue);
+  }
+  for (const m of resp.data.liabilities?.mortgage || []) {
+    await loanUpdate(m.account_id, m.last_payment_amount, m.last_payment_date, m.next_monthly_payment, m.next_payment_due_date, m.is_overdue);
+  }
 }
 
 module.exports = router;

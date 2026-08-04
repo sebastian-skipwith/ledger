@@ -11,6 +11,18 @@ interface TopBarProps {
   period?: 'day'|'week'|'month';
   onPeriodChange?: (p: 'day'|'week'|'month') => void;
   onTileClick?: (key: string) => void;
+  lastSynced?: string | null;
+}
+
+function timeAgo(iso?: string | null): string {
+  if (!iso) return '';
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return '';
+  const s = Math.floor((Date.now() - t) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
 }
 
 const METRIC_LABELS: Record<string, string> = {
@@ -46,7 +58,7 @@ function weekdayShort(iso: string): string {
   catch { return ''; }
 }
 
-export default function TopBar({ summary, hud, loading, deltas, period = 'day', onPeriodChange, onTileClick }: TopBarProps) {
+export default function TopBar({ summary, hud, loading, deltas, period = 'day', onPeriodChange, onTileClick, lastSynced }: TopBarProps) {
   const [vis, setVis] = useState<Record<string, boolean>>(() => {
     const all: Record<string, boolean> = {};
     for (const k of DEFAULT_ORDER) all[k] = true;
@@ -255,8 +267,15 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
         </div>
 
         <button onClick={() => { const el=document.documentElement; const n=el.dataset.theme==='dark'?'light':'dark'; el.dataset.theme=n; try{localStorage.setItem('persistence-theme',n)}catch(e){} }} title="Toggle light/dark" style={{ background:'transparent', border:'none', color:'var(--text)', cursor:'pointer', fontSize:15, opacity:0.65, padding:'2px 4px' }}>{'\u25D0'}</button>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(var(--fg),0.3)' }}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.25 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(var(--fg),0.3)' }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          </div>
+          {lastSynced && (
+            <div title={`Data last refreshed ${new Date(lastSynced).toLocaleString()}`} style={{ fontSize: 8.5, color: 'rgba(var(--fg),0.35)' }}>
+              Updated {timeAgo(lastSynced)}
+            </div>
+          )}
         </div>
         <button style={{
           background: 'rgba(var(--fg),0.15)',

@@ -18,6 +18,7 @@ import CommunityPage from '@/components/CommunityPage';
 import SpreadsheetView from '@/components/SpreadsheetView';
 import DetectedBills from '@/components/DetectedBills';
 import FlowDrillModal from '@/components/FlowDrillModal';
+import CashFlowView from '@/components/CashFlowView';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -97,6 +98,8 @@ export default function DashboardPage() {
         return <TransactionsView token={token} accounts={accounts} />;
       case 'spreadsheet':
         return <SpreadsheetView token={token} />;
+      case 'cashflow':
+        return <CashFlowView token={token} />;
       case 'bills':
         return (
           <>

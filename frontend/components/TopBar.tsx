@@ -66,6 +66,11 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
     return all;
   });
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
+  // Shrink-to-fit: scale the tile row down so every toggled tile stays visible
+  // inside the fixed 52px bar (never scaling up past 1).
+  const [scale, setScale] = useState(1);
+  const rowOuterRef = useRef<HTMLDivElement>(null);
+  const rowInnerRef = useRef<HTMLDivElement>(null);
   const [custOpen, setCustOpen] = useState(false);
   const custRef = useRef<HTMLDivElement>(null);
   const dragKey = useRef<string | null>(null);
@@ -79,6 +84,23 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
   }
 
   useEffect(() => { setVis(loadVisibility()); setOrder(loadOrder()); }, []);
+
+  // Recompute the fit scale whenever tiles change or the window resizes.
+  useEffect(() => {
+    function fit() {
+      const outer = rowOuterRef.current, inner = rowInnerRef.current;
+      if (!outer || !inner) return;
+      const available = outer.clientWidth;
+      const needed = inner.scrollWidth;
+      setScale(needed > 0 ? Math.min(1, available / needed) : 1);
+    }
+    fit();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+    if (ro && rowOuterRef.current) ro.observe(rowOuterRef.current);
+    if (ro && rowInnerRef.current) ro.observe(rowInnerRef.current);
+    window.addEventListener('resize', fit);
+    return () => { ro?.disconnect(); window.removeEventListener('resize', fit); };
+  }, [order, vis, hud, summary, loading, deltas]);
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (custRef.current && !custRef.current.contains(e.target as Node)) setCustOpen(false);
@@ -159,7 +181,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
 
   const tileStyle: React.CSSProperties = {
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
-    padding: '4px 16px', borderRight: '1px solid rgba(var(--fg),0.07)',
+    padding: '0 16px', borderRight: '1px solid rgba(var(--fg),0.07)',
     cursor: 'grab', flexShrink: 0, transition: 'background 0.15s',
   };
   const labelStyle: React.CSSProperties = {
@@ -170,12 +192,12 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
   return (
     <div style={{
       position: 'relative', zIndex: 100, width: '100%',
-      minHeight: 52,
+      height: 52, flexShrink: 0,
       background: 'var(--bar-bg)',
       borderBottom: '1px solid rgba(var(--fg),0.07)',
       backdropFilter: 'blur(20px)',
-      display: 'flex', alignItems: 'center', flexWrap: 'wrap',
-      padding: '4px 20px', gap: 0, rowGap: 4,
+      display: 'flex', alignItems: 'center',
+      padding: '0 20px', gap: 0,
     }}>
       {/* Brand */}
       <img className="plogo" src="/logo.png" alt="Persistence" style={{ height: 22, width: 'auto', marginRight: 18, flexShrink: 0 }} />
@@ -183,8 +205,9 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
       {/* Workspace switcher (Personal / business) */}
       <WorkspaceSwitcher />
 
-      {/* Metric tiles - drag to reorder; wraps so every toggled tile stays visible */}
-      <div style={{ display: 'flex', flex: 1, minWidth: 0, flexWrap: 'wrap', alignItems: 'stretch', rowGap: 4 }}>
+      {/* Metric tiles - drag to reorder; the row scales down to fit the fixed bar */}
+      <div ref={rowOuterRef} style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+        <div ref={rowInnerRef} style={{ display: 'flex', alignItems: 'center', width: 'max-content', height: '100%', transform: `scale(${scale})`, transformOrigin: 'left center' }}>
         {order.filter(k => vis[k]).map(key => {
           if (SUMMARY_KEYS.includes(key)) {
             const d = deltas ? deltas[key] : undefined;
@@ -227,6 +250,7 @@ export default function TopBar({ summary, hud, loading, deltas, period = 'day', 
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* Right side */}

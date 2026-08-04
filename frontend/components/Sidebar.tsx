@@ -74,6 +74,7 @@ export default function Sidebar() {
     { id: 'intelligence', label: 'Intelligence', icon: '✦' },
     { id: 'networth',     label: 'Net Worth',    icon: '↗' },
     { id: 'transactions', label: 'Transactions', icon: '≡' },
+    { id: 'spreadsheet',  label: 'Spreadsheet',  icon: '▦' },
     { id: 'bills',        label: 'Bills',        icon: '◷' },
     { id: 'goals',        label: 'Goals',        icon: '◎' },
     { id: 'community',    label: 'Community',    icon: '❖' },

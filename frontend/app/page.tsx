@@ -15,6 +15,7 @@ import GoalsView from '@/components/GoalsView';
 import CreditCardDetails from '@/components/CreditCardDetails';
 import TileGrid from '@/components/TileGrid';
 import CommunityPage from '@/components/CommunityPage';
+import SpreadsheetView from '@/components/SpreadsheetView';
 import AuthScreen from '@/components/AuthScreen';
 import PlaidLinkButton from '@/components/PlaidLink';
 
@@ -90,6 +91,8 @@ export default function DashboardPage() {
         );
       case 'transactions':
         return <TransactionsView token={token} accounts={accounts} />;
+      case 'spreadsheet':
+        return <SpreadsheetView token={token} />;
       case 'bills':
         return <BillsList token={token} full />;
       case 'goals':

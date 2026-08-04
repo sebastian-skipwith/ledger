@@ -16,7 +16,7 @@ router.get('/', async (req, res, next) => {
     if (category)   { where.push(`$${i++} = ANY(t.category)`); params.push(category); }
     where.push(`a.workspace_id IS NOT DISTINCT FROM $${i++}`); params.push(activeWorkspaceId(req));
 
-    params.push(parseInt(limit), parseInt(offset));
+    params.push(Math.min(parseInt(limit) || 50, 1000), parseInt(offset) || 0);
     const { rows } = await query(
       `SELECT t.*, a.name as account_name, a.institution_name
        FROM transactions t JOIN accounts a ON t.account_id = a.id
